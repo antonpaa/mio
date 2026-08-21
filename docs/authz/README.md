@@ -14,7 +14,7 @@ It is a **compliance artifact**. Changes to it are reviewed and audited.
         ▼                     ▼                     ▼
   Cedar policy          UI capability        Human-readable
   test suite            flags                matrix for the
-  (288 assertions)      (web client)         compliance pack
+  (324 assertions)      (web client)         compliance pack
 ```
 
 Cedar policies themselves are hand-written and reviewed — a policy language is

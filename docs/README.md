@@ -11,6 +11,7 @@ records the decisions the system will be built on and the questions still open.
 | | |
 |---|---|
 | [`architecture/overview.md`](architecture/overview.md) | The system, in one document |
+| [`design/README.md`](design/README.md) | The approved design package, analyzed |
 | [`adr/`](adr/) | Why it is built this way |
 | [`authz/capability-matrix.yaml`](authz/capability-matrix.yaml) | Who can do what — the source of truth |
 | [`compliance/register.md`](compliance/register.md) | What is still open, and who must answer it |
@@ -29,6 +30,7 @@ records the decisions the system will be built on and the questions still open.
 | [0008](adr/0008-job-queue-in-postgresql.md) | Job queue in PostgreSQL |
 | [0009](adr/0009-iec-62304-shaped-development.md) | IEC 62304-shaped development; MDR decided before go-live |
 | [0010](adr/0010-cloud-agnostic-container-platform.md) | Cloud-agnostic container platform |
+| [0011](adr/0011-absorb-design-package-scope.md) | Absorb the design-package scope: observations and generalized rule outcomes |
 
 ## Architecture
 
@@ -38,17 +40,28 @@ records the decisions the system will be built on and the questions still open.
 | [data-model](architecture/data-model.md) | Schemas, identity/clinical split, RLS, audit, retention |
 | [authentication](architecture/authentication.md) | The in-app auth work package, specified |
 | [authorization](architecture/authorization.md) | Cedar runtime, care relationships, Cedar/SQL split |
-| [surveys-and-alerts](architecture/surveys-and-alerts.md) | Versioning, alert rules, body map |
+| [surveys-and-alerts](architecture/surveys-and-alerts.md) | Versioning, conditional logic, the rule engine, body map |
+| [observations](architecture/observations.md) | Values, the symptom taxonomy, program-specific interpretation |
 | [scheduling](architecture/scheduling.md) | Phased recurrence, materialisation, time zones |
 | [messaging-and-attachments](architecture/messaging-and-attachments.md) | Rich text, upload pipeline, serving |
 | [platform](architecture/platform.md) | Environments, CI/CD, testing, observability, backups |
+
+## Design
+
+| | |
+|---|---|
+| [`design/README.md`](design/README.md) | Package analysis, reconciliation items, design-answered questions |
+| [`design/design-system.md`](design/design-system.md) | Tokens, components, logo, voice, accessibility hotspots |
+| [`design/screen-inventory.md`](design/screen-inventory.md) | Every artboard → module, route, capabilities |
+
+The canvases themselves live in `design/handoff-2026-08-21/` at the repo root.
 
 ## Reference
 
 | | |
 |---|---|
 | [`conventions.md`](conventions.md) | Branches, commits, pull requests, dependencies |
-| [`glossary.md`](glossary.md) | EN / FI / SV vocabulary |
+| [`glossary.md`](glossary.md) | EN / FI / SV vocabulary, incl. the symptom taxonomy |
 | [`authz/README.md`](authz/README.md) | How to read and change the capability matrix |
 
 ## The shape of the argument
@@ -71,9 +84,10 @@ Four properties are guaranteed structurally rather than by review discipline:
 
 ## Status
 
-Documentation only. No implementation yet, and phasing is not yet set — it will
-follow the design package.
+Documentation and the approved design package. No implementation yet; phasing
+is next, now that the design fixes the application's extent.
 
-The highest-priority open item is
-[R1: MDR classification](compliance/register.md) — it has external lead time and
-should not be discovered late.
+The highest-priority open item remains
+[R1: MDR classification](compliance/register.md) — the design's rule engine
+(graded alerts, notifications and tasks initiated from clinical conditions)
+deepens Rule 11 exposure, and the item has external lead time.

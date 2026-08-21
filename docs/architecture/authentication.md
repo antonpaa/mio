@@ -32,7 +32,11 @@ lockout behaviour and onboarding flow are all realm-specific.
 - Policy follows **NIST SP 800-63B**: minimum 12 characters, screened against a
   local common-password list, **no composition rules and no forced rotation**.
   Both of those measurably worsen real-world security, and clinicians rotating
-  passwords on shift produce predictable ones.
+  passwords on shift produce predictable ones. The first-login canvas (L3)
+  says "at least 10" and hints "a number or symbol" — the spec stands at 12
+  with screening and no composition hints; the design copy updates
+  (reconciliation X1). L3's third checklist line — not your name or birth
+  date — is part of the screening.
 - Password changes revoke all of that user's sessions.
 
 ## Sessions
@@ -54,8 +58,19 @@ with extra steps and worse failure modes.
 - Sliding renewal within the idle window, hard stop at the absolute cap.
 - Staff work on shared workstations, so a visible session timer and a fast
   re-lock are UX requirements, not niceties.
+- The designed expiry flow (S2): a warning dialog with a live countdown
+  ("you'll be signed out in 1:54") offering Stay signed in / Sign out now,
+  then a signed-out screen that explains why and reassures about drafts.
+  Unsent composer text survives the timeout client-side (reconciliation X3);
+  survey answers are already server-side drafts. Stay signed in extends the
+  idle window only — never the absolute cap.
 
 ## Email OTP
+
+The designed step (L2) verifies on every sign-in: six digit-boxes behaving as
+one field (`autocomplete="one-time-code"`), the destination shown masked
+("ann•••nen@email.fi"), resend behind a visible cooldown ("Resend code in
+0:42"), and a plain-language why-line. Mechanics:
 
 - Six digits from a CSPRNG.
 - **Stored hashed**, never in plaintext.
@@ -97,7 +112,14 @@ Administrator creates account
 ```
 
 Terms acceptance records *which version* was accepted and when. A new version
-re-prompts.
+re-prompts. The designed acceptance (L3 inline; S3 as its own step) pairs a
+plain-language summary — EU storage, every access logged, download and access
+history available in Settings — with the full document link and two explicit
+checkboxes (terms; privacy notice). The summary copy is part of the terms
+content, versioned with it.
+
+The language switcher (EN / FI / SV) is available **pre-authentication** on
+every login screen; the choice persists to the account after sign-in.
 
 **Administrator reset** requires step-up re-authentication from the
 administrator, touches credentials only, and never data. The schema split in
@@ -112,7 +134,10 @@ path has no grant on `clinical.*`.
 **Progressive delay, not hard lockout.** A hard lockout on a clinical system is a
 denial-of-service vector against clinicians mid-shift — an attacker who knows a
 clinician's email address can lock them out of patient care. Progressive delay
-raises attacker cost without handing them that capability.
+raises attacker cost without handing them that capability. The sign-in canvas
+(L7) currently promises "after 5 tries, sign-in pauses for 15 minutes" — that
+fixed per-account pause is exactly the lever this rule exists to deny, so the
+implementation stays progressive and the copy softens (reconciliation X2).
 
 Rate limits apply per account and per source address, on login, OTP verification,
 OTP resend and reset requests.

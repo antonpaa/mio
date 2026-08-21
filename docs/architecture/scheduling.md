@@ -66,13 +66,19 @@ resolve against it.
 Recurrence expansion happens in the patient's local time zone, not UTC. "Monthly
 on the 15th" means the 15th where the patient is.
 
-## Reminders and escalation
+## Answer window, reminders and escalation
 
-Attached to the assignment, not the schedule: reminder offsets before due,
-escalation on non-response after due.
+Attached to the assignment, not the schedule (T3/T4 in the canvases): an
+**answer window** per occurrence (e.g. 7 days), reminder offsets after the due
+date ("after 2 days"), and an if-unanswered action ("remind, then notify
+team").
 
-Escalation raises a task or an alert for the care team, because non-response is
-itself a clinical signal
+When an occurrence's window passes unanswered, the worker marks it missed and
+runs the **missed-response rules** of the survey's effective rule set — which
+may raise an alert, send a custom notification, or create a task ("no response
+for 2 surveys in a row → notify care coordinator + create task", B7). This is
+why occurrences are materialised: non-response is a clinical signal, and a
+signal needs a concrete row to be evaluated against
 ([`surveys-and-alerts.md`](surveys-and-alerts.md)).
 
 Reminder emails carry no clinical content — only that something is waiting in
@@ -88,7 +94,9 @@ and it is used by clinicians under time pressure.
   nobody can verify is a recurrence rule nobody trusts.
 - Phased schedules need the segment structure visible, not buried behind an
   "advanced" toggle — the brief's own example is a phased schedule, so it is a
-  primary case.
+  primary case. The designed dialog (T3) shows it: Once / Weekly / Monthly /
+  Phased, ordered phases with "+ Add phase", and a natural-language preview
+  with the next occurrence date — the preview is the verification device.
 - Keyboard-operable throughout, per WCAG 2.2 AA. React Aria's date primitives
   ([ADR-0004](../adr/0004-spa-frontend-with-openapi-contract.md)) exist for
   exactly this.
