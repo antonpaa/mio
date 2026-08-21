@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#f0eee9;font-family:'Schibsted Grotesk',system-ui,sans-serif}a{color:#115E59}a:hover{color:#0D4A46}@keyframes mioShimmer{0%{background-position:150% 0}100%{background-position:-50% 0}}</style>
+</helmet>
+<section style="padding:40px 44px 32px" data-screen-label="Patient views">
+<div style="display:flex;align-items:baseline;gap:10px;margin:0 0 20px"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px">PATIENT</span><span style="font:600 13px/1.2 system-ui,sans-serif;color:#1a1a1a">Loading, home, check-in + complete, history, messages, notifications, profile (framed) — care plan (flat)</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+
+<div id="P0" style="flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="P0 Loading home">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#P0" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">P0</a>Loading — skeleton shimmer, chrome stays put</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="430px,880px">
+  <div style="display:flex;flex-direction:column;min-height:100%;background:#F6F4EF;box-sizing:border-box">
+    <div style="flex:1;padding:60px 20px 24px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:8px"><svg width="28" height="28" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg><span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:19px;color:#221F1A">mio</span></div>
+        <span style="width:40px;height:40px;border-radius:99px;background:linear-gradient(90deg,#ECE8DE 25%,#F5F2EA 50%,#ECE8DE 75%);background-size:200% 100%;animation:mioShimmer 1.8s linear infinite"></span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="width:210px;height:24px;border-radius:8px;background:linear-gradient(90deg,#ECE8DE 25%,#F5F2EA 50%,#ECE8DE 75%);background-size:200% 100%;animation:mioShimmer 1.8s linear infinite"></span>
+        <span style="width:120px;height:13px;border-radius:6px;background:linear-gradient(90deg,#ECE8DE 25%,#F5F2EA 50%,#ECE8DE 75%);background-size:200% 100%;animation:mioShimmer 1.8s linear infinite"></span>
+      </div>
+      <span style="height:150px;border-radius:16px;background:linear-gradient(90deg,#ECE8DE 25%,#F5F2EA 50%,#ECE8DE 75%);background-size:200% 100%;animation:mioShimmer 1.8s linear infinite"></span>
+      <span style="height:86px;border-radius:16px;background:linear-gradient(90deg,#ECE8DE 25%,#F5F2EA 50%,#ECE8DE 75%);background-size:200% 100%;animation:mioShimmer 1.8s linear infinite;animation-delay:.15s"></span>
+      <span style="height:86px;border-radius:16px;background:linear-gradient(90deg,#ECE8DE 25%,#F5F2EA 50%,#ECE8DE 75%);background-size:200% 100%;animation:mioShimmer 1.8s linear infinite;animation-delay:.3s"></span>
+    </div>
+    <div style="background:#FFFEFB;border-top:1px solid #E8E4DA;display:flex;padding:10px 8px 6px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#115E59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg><span style="font-size:11px;font-weight:600;color:#115E59">Home</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5 11 13.5 15 9.5"></path><rect x="4" y="4" width="16" height="17" rx="3"></rect></svg><span style="font-size:11px;font-weight:500;color:#9C9585">Check-in</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span style="font-size:11px;font-weight:500;color:#9C9585">Messages</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg><span style="font-size:11px;font-weight:500;color:#9C9585">Plan</span></div>
+    </div>
+  </div>
+</x-import>
+</div>
+
+<div id="P1" style="flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="P1 Home">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#P1" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">P1</a>Home</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="430px,880px">
+  <div style="display:flex;flex-direction:column;min-height:100%;background:#F6F4EF;box-sizing:border-box">
+    <div style="flex:1;padding:60px 20px 24px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:8px"><svg width="28" height="28" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg><span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:19px;color:#221F1A">mio</span></div>
+        <span style="width:40px;height:40px;border-radius:99px;background:#FFFEFB;border:1px solid #E8E4DA;display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#55503F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg></span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <div style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:27px;color:#221F1A">Good morning, Anna</div>
+        <div style="font-size:13.5px;color:#9C9585">Friday 21 August</div>
+      </div>
+      <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 2px 12px rgba(60,52,36,0.10),0 1px 2px rgba(60,52,36,0.08);padding:18px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:15.5px;font-weight:600;color:#221F1A">Weekly check-in</span>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#A16207;background:#F7EEDA;border:1px solid #E5D3A8;border-radius:99px;padding:4px 11px"><span style="width:6px;height:6px;border-radius:99px;background:#A16207"></span>Due today</span>
+        </div>
+        <div style="font-size:13.5px;color:#7C766A;line-height:1.5">8 short questions about how this week felt. Your answers go straight to your care team.</div>
+        <div style="background:#115E59;color:#FDFBF5;border-radius:99px;padding:13px;text-align:center;font-size:15px;font-weight:600">Start check-in</div>
+      </div>
+      <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:16px 18px;display:flex;gap:14px;align-items:center">
+        <div style="width:52px;border-radius:12px;background:#EFECE4;display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:0"><span style="font-size:11px;font-weight:600;color:#7C766A;letter-spacing:0.06em">MON</span><span style="font-size:20px;font-weight:600;color:#221F1A">24</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:14.5px;font-weight:600;color:#221F1A">Dr Elina Koskinen</span>
+          <span style="font-size:13px;color:#7C766A">Oncology outpatient clinic</span>
+          <span style="font-size:13px;color:#7C766A">10:30 — bring your medication list</span>
+        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+      </div>
+      <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:16px 18px;display:flex;gap:12px;align-items:flex-start">
+        <span style="width:40px;height:40px;border-radius:99px;background:#E9F0EC;color:#115E59;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex:none">MA</span>
+        <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:14px;font-weight:600;color:#221F1A">Mikael Aho, nurse</span><span style="font-size:12px;color:#9C9585">Yesterday</span></div>
+          <span style="font-size:13.5px;color:#7C766A;line-height:1.45">Your blood test results look good. We'll go through them on Monday…</span>
+        </div>
+        <span style="width:8px;height:8px;border-radius:99px;background:#115E59;margin-top:6px;flex:none"></span>
+      </div>
+      <div style="font-family:'Newsreader',serif;font-style:italic;font-size:13.5px;color:#9C9585;text-align:center;padding:2px 0">That's everything for today.</div>
+    </div>
+    <div style="background:#FFFEFB;border-top:1px solid #E8E4DA;display:flex;padding:10px 8px 6px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#115E59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg><span style="font-size:11px;font-weight:600;color:#115E59">Home</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5 11 13.5 15 9.5"></path><rect x="4" y="4" width="16" height="17" rx="3"></rect></svg><span style="font-size:11px;font-weight:500;color:#9C9585">Check-in</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;position:relative"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span style="position:absolute;top:0;right:24px;width:8px;height:8px;border-radius:99px;background:#B3372B"></span><span style="font-size:11px;font-weight:500;color:#9C9585">Messages</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg><span style="font-size:11px;font-weight:500;color:#9C9585">Plan</span></div>
+    </div>
+  </div>
+</x-import>
+</div>
+
+<div id="P2" style="flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="P2 Weekly check-in">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#P2" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">P2</a>Weekly check-in — one question per step</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="430px,880px">
+  <div style="display:flex;flex-direction:column;min-height:100%;background:#F6F4EF;padding:60px 20px 30px;box-sizing:border-box;gap:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:14.5px;color:#115E59;font-weight:500">← Back</span>
+      <span style="font-size:13px;color:#9C9585;font-weight:500">3 of 8</span>
+      <span style="font-size:14.5px;color:#9C9585;font-weight:500">Save &amp; exit</span>
+    </div>
+    <div style="display:flex;gap:5px">
+      <span style="flex:1;height:4px;border-radius:99px;background:#115E59"></span><span style="flex:1;height:4px;border-radius:99px;background:#115E59"></span><span style="flex:1;height:4px;border-radius:99px;background:#115E59"></span><span style="flex:1;height:4px;border-radius:99px;background:#DDD8CB"></span><span style="flex:1;height:4px;border-radius:99px;background:#DDD8CB"></span><span style="flex:1;height:4px;border-radius:99px;background:#DDD8CB"></span><span style="flex:1;height:4px;border-radius:99px;background:#DDD8CB"></span><span style="flex:1;height:4px;border-radius:99px;background:#DDD8CB"></span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;padding-top:6px">
+      <div style="font-size:12.5px;font-weight:600;color:#A16207;letter-spacing:0.05em">NAUSEA</div>
+      <div style="font-family:'Newsreader',serif;font-weight:500;font-size:24px;color:#221F1A;line-height:1.3">In the past week, how severe was your nausea at its worst?</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="border:1px solid #DDD8CB;border-radius:14px;background:#FFFEFB;padding:16px;font-size:15.5px;color:#221F1A;min-height:22px;display:flex;align-items:center">None</div>
+      <div style="border:1px solid #DDD8CB;border-radius:14px;background:#FFFEFB;padding:16px;font-size:15.5px;color:#221F1A;display:flex;align-items:center">Mild</div>
+      <div style="border:1.5px solid #115E59;border-radius:14px;background:#E9F0EC;box-shadow:0 0 0 3px rgba(17,94,89,0.13);padding:16px;font-size:15.5px;font-weight:600;color:#115E59;display:flex;align-items:center;justify-content:space-between">Moderate<svg width="18" height="18" viewBox="0 0 16 16"><path d="M3 8.5 6.5 12 13 4.5" fill="none" stroke="#115E59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+      <div style="border:1px solid #DDD8CB;border-radius:14px;background:#FFFEFB;padding:16px;font-size:15.5px;color:#221F1A;display:flex;align-items:center">Severe</div>
+      <div style="border:1px solid #DDD8CB;border-radius:14px;background:#FFFEFB;padding:16px;font-size:15.5px;color:#221F1A;display:flex;align-items:center">Very severe</div>
+    </div>
+    <div style="font-size:13.5px;color:#115E59;font-weight:500;text-decoration:underline;text-underline-offset:3px;padding:2px 4px">Add a note for your care team</div>
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:14px">
+      <div style="background:#115E59;color:#FDFBF5;border-radius:99px;padding:15px;text-align:center;font-size:16px;font-weight:600">Next</div>
+      <div style="text-align:center;font-size:13px;color:#9C9585;line-height:1.5">Feeling very unwell right now? <span style="color:#B3372B;font-weight:600;text-decoration:underline;text-underline-offset:3px">Call the clinic</span></div>
+    </div>
+  </div>
+</x-import>
+</div>
+
+<div id="P5" style="flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="P5 Check-in complete">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#P5" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">P5</a>Check-in complete</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="430px,880px">
+  <div style="display:flex;flex-direction:column;min-height:100%;background:#F6F4EF;padding:60px 24px 34px;box-sizing:border-box">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:22px">
+      <div style="display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center">
+        <span style="width:64px;height:64px;border-radius:99px;background:#E9F0EC;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 16 16"><path d="M3 8.5 6.5 12 13 4.5" fill="none" stroke="#115E59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
+          <div style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:30px;color:#221F1A">Thank you, Anna</div>
+          <div style="font-size:15px;color:#7C766A;line-height:1.55;max-width:300px">Your answers are with your care team.</div>
+        </div>
+      </div>
+      <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+        <div style="padding:14px 16px;border-bottom:1px solid #EFEBE0;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13.5px;font-weight:600;color:#221F1A">This week's summary</span>
+          <span style="font-size:12.5px;color:#9C9585">8 answers</span>
+        </div>
+        <div style="padding:13px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EFEBE0">
+          <span style="font-size:13.5px;color:#221F1A">Nausea</span>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#A16207;background:#F7EEDA;border:1px solid #E5D3A8;border-radius:99px;padding:4px 11px"><span style="width:6px;height:6px;border-radius:99px;background:#A16207"></span>Moderate</span>
+        </div>
+        <div style="padding:13px 16px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13.5px;color:#221F1A">Everything else</span>
+          <span style="font-size:12.5px;color:#7C766A">Mild or none</span>
+        </div>
+      </div>
+      <div style="font-size:13.5px;color:#7C766A;line-height:1.55;text-align:center;padding:0 8px">Because nausea has increased, your care team takes a closer look. They may be in touch before your Monday visit.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="background:#115E59;color:#FDFBF5;border-radius:99px;padding:15px;text-align:center;font-size:16px;font-weight:600">Done</div>
+      <div style="text-align:center;font-size:13.5px;color:#115E59;font-weight:500;text-decoration:underline;text-underline-offset:3px;padding:4px">Review my answers</div>
+    </div>
+  </div>
+</x-import>
+</div>
+
+<div id="P6" style="flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="P6 Symptom history">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#P6" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">P6</a>Symptom history &amp; trends</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="430px,880px">
+  <div style="display:flex;flex-direction:column;min-height:100%;background:#F6F4EF;box-sizing:border-box">
+    <div style="flex:1;padding:60px 20px 24px;display:flex;flex-direction:column;gap:16px">
+      <div style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:26px;color:#221F1A">My check-ins</div>
+      <div style="display:flex;gap:6px;background:#EDE9DF;border-radius:99px;padding:4px;align-self:flex-start">
+        <span style="border-radius:99px;padding:8px 18px;font-size:13px;font-weight:600;background:#FFFEFB;color:#221F1A;box-shadow:0 1px 3px rgba(60,52,36,0.10)">6 weeks</span>
+        <span style="border-radius:99px;padding:8px 18px;font-size:13px;font-weight:500;color:#7C766A">3 months</span>
+      </div>
+      <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:14px;font-size:12px;color:#7C766A"><span style="display:flex;align-items:center;gap:6px"><span style="width:16px;height:3px;border-radius:99px;background:#115E59"></span>Nausea</span><span style="display:flex;align-items:center;gap:6px"><span style="width:16px;height:3px;border-radius:99px;background:#A16207"></span>Fatigue</span></div>
+        <svg width="100%" height="130" viewBox="0 0 320 130" preserveAspectRatio="none" style="display:block">
+          <line x1="0" y1="15" x2="320" y2="15" stroke="#EFEBE0" stroke-width="1"></line>
+          <line x1="0" y1="45" x2="320" y2="45" stroke="#EFEBE0" stroke-width="1"></line>
+          <line x1="0" y1="75" x2="320" y2="75" stroke="#EFEBE0" stroke-width="1"></line>
+          <line x1="0" y1="105" x2="320" y2="105" stroke="#EFEBE0" stroke-width="1"></line>
+          <path d="M15 105 L73 110 L131 88 L189 93 L247 70 L305 24" fill="none" stroke="#115E59" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+          <path d="M15 99 L73 101 L131 83 L189 86 L247 77 L305 68" fill="none" stroke="#A16207" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"></path>
+          <circle cx="305" cy="24" r="4.5" fill="#115E59"></circle>
+        </svg>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#9C9585;padding:0 6px"><span>13 Jul</span><span>27 Jul</span><span>10 Aug</span><span style="color:#221F1A;font-weight:600">Today</span></div>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:#55503F;letter-spacing:0.05em">PAST CHECK-INS</div>
+      <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+        <div style="padding:13px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EFEBE0">
+          <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Today</span><span style="font-size:12.5px;color:#7C766A">Nausea severe, appetite poor</span></div>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#B3372B;background:#F8E7E2;border:1px solid #EBC5BC;border-radius:99px;padding:4px 11px"><span style="width:6px;height:6px;border-radius:99px;background:#B3372B"></span>High</span>
+        </div>
+        <div style="padding:13px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EFEBE0">
+          <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:600;color:#221F1A">14 August</span><span style="font-size:12.5px;color:#7C766A">Nausea and fatigue moderate</span></div>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#A16207;background:#F7EEDA;border:1px solid #E5D3A8;border-radius:99px;padding:4px 11px"><span style="width:6px;height:6px;border-radius:99px;background:#A16207"></span>Moderate</span>
+        </div>
+        <div style="padding:13px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:600;color:#221F1A">7 August</span><span style="font-size:12.5px;color:#7C766A">Mild nausea, sleeping well</span></div>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#115E59;background:#E9F0EC;border:1px solid #BFD6CE;border-radius:99px;padding:4px 11px"><span style="width:6px;height:6px;border-radius:99px;background:#115E59"></span>Low</span>
+        </div>
+      </div>
+    </div>
+    <div style="background:#FFFEFB;border-top:1px solid #E8E4DA;display:flex;padding:10px 8px 6px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg><span style="font-size:11px;font-weight:500;color:#9C9585">Home</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#115E59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5 11 13.5 15 9.5"></path><rect x="4" y="4" width="16" height="17" rx="3"></rect></svg><span style="font-size:11px;font-weight:600;color:#115E59">Check-in</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span style="font-size:11px;font-weight:500;color:#9C9585">Messages</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg><span style="font-size:11px;font-weight:500;color:#9C9585">Plan</span></div>
+    </div>
+  </div>
+</x-import>
+</div>
+
+<div id="P3" style="flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="P3 Messages">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#P3" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">P3</a>Messages — care team thread</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="430px,880px">
+  <div style="display:flex;flex-direction:column;min-height:100%;background:#F6F4EF;box-sizing:border-box">
+    <div style="padding:58px 20px 14px;border-bottom:1px solid #E8E4DA;background:#F6F4EF;display:flex;align-items:center;gap:12px">
+      <span style="font-size:14.5px;color:#115E59;font-weight:500">←</span>
+      <div style="flex:1;display:flex;flex-direction:column">
+        <span style="font-size:15.5px;font-weight:600;color:#221F1A">Your care team</span>
+        <span style="font-size:12.5px;color:#9C9585">Oncology clinic</span>
+      </div>
+      <span style="width:40px;height:40px;border-radius:99px;background:#E9F0EC;color:#115E59;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">MA</span>
+    </div>
+    <div style="flex:1;padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+      <div style="text-align:center;font-size:12px;color:#9C9585;padding:4px 0">Replies usually within 1 working day. Not for emergencies.</div>
+      <div style="align-self:flex-end;max-width:270px;background:#115E59;color:#FDFBF5;border-radius:16px 16px 4px 16px;padding:12px 15px;font-size:14.5px;line-height:1.45">Hi, I've had more nausea than usual after this cycle. Is that expected?</div>
+      <div style="align-self:flex-end;font-size:11.5px;color:#9C9585">Wed 14:02</div>
+      <div style="display:flex;gap:10px;align-items:flex-end">
+        <span style="width:32px;height:32px;border-radius:99px;background:#E9F0EC;color:#115E59;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex:none">MA</span>
+        <div style="max-width:280px;background:#FFFEFB;border-radius:16px 16px 16px 4px;padding:12px 15px;font-size:14.5px;line-height:1.45;color:#221F1A;box-shadow:0 1px 6px rgba(60,52,36,0.08)">Hi Anna, some increase can happen in cycle 3. Take the ondansetron as prescribed, and log it in your check-in so we can follow it.</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-end">
+        <span style="width:32px;flex:none"></span>
+        <div style="max-width:280px;background:#FFFEFB;border-radius:16px 16px 16px 4px;padding:12px 15px;font-size:14.5px;line-height:1.45;color:#221F1A;box-shadow:0 1px 6px rgba(60,52,36,0.08)">Your blood test results look good. We'll go through them on Monday at your visit.</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;padding-left:42px"><span style="font-size:11.5px;color:#9C9585">Mikael Aho, nurse — Yesterday 09:41</span></div>
+    </div>
+    <div style="padding:12px 16px 14px;background:#F6F4EF;display:flex;gap:10px;align-items:center">
+      <div style="flex:1;border:1px solid #DDD8CB;border-radius:99px;background:#FFFEFB;padding:13px 18px;font-size:14.5px;color:#9C9585">Write a message…</div>
+      <span style="width:46px;height:46px;border-radius:99px;background:#115E59;display:flex;align-items:center;justify-content:center;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#FDFBF5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"></path></svg></span>
+    </div>
+  </div>
+</x-import>
+</div>
+
+<div id="P4" style="flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="P4 Care plan (flat)">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#P4" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">P4</a>My plan — flat</div>
+<div style="width:390px;background:#F6F4EF;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:flex;flex-direction:column">
+  <div style="padding:22px 20px 24px;display:flex;flex-direction:column;gap:16px">
+    <div style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:26px;color:#221F1A">My plan</div>
+    <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 2px 12px rgba(60,52,36,0.10),0 1px 2px rgba(60,52,36,0.08);padding:18px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <span style="font-size:15.5px;font-weight:600;color:#221F1A">Chemotherapy</span>
+        <span style="font-size:12.5px;color:#7C766A">Cycle 3 of 6</span>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span style="flex:1;height:6px;border-radius:99px;background:#115E59"></span><span style="flex:1;height:6px;border-radius:99px;background:#115E59"></span><span style="flex:1;height:6px;border-radius:99px;background:#115E59"></span><span style="flex:1;height:6px;border-radius:99px;background:#E3DECF"></span><span style="flex:1;height:6px;border-radius:99px;background:#E3DECF"></span><span style="flex:1;height:6px;border-radius:99px;background:#E3DECF"></span>
+      </div>
+      <div style="font-size:13.5px;color:#7C766A;line-height:1.5">Next infusion Thursday 3 September at the day hospital. Your care team reviews each cycle beforehand.</div>
+    </div>
+    <div style="font-size:13px;font-weight:600;color:#55503F;letter-spacing:0.05em;padding-top:4px">COMING UP</div>
+    <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+      <div style="padding:14px 16px;display:flex;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0">
+        <div style="width:46px;border-radius:10px;background:#EFECE4;display:flex;flex-direction:column;align-items:center;padding:6px 0"><span style="font-size:10px;font-weight:600;color:#7C766A;letter-spacing:0.06em">MON</span><span style="font-size:17px;font-weight:600;color:#221F1A">24</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;font-weight:600;color:#221F1A">Clinic visit, Dr Koskinen</span><span style="font-size:12.5px;color:#7C766A">10:30, Oncology outpatient clinic</span></div>
+      </div>
+      <div style="padding:14px 16px;display:flex;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0">
+        <div style="width:46px;border-radius:10px;background:#EFECE4;display:flex;flex-direction:column;align-items:center;padding:6px 0"><span style="font-size:10px;font-weight:600;color:#7C766A;letter-spacing:0.06em">FRI</span><span style="font-size:17px;font-weight:600;color:#221F1A">28</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;font-weight:600;color:#221F1A">Blood test</span><span style="font-size:12.5px;color:#7C766A">Any time 7:30–15:00, lab, floor 1</span></div>
+      </div>
+      <div style="padding:14px 16px;display:flex;gap:12px;align-items:center">
+        <div style="width:46px;border-radius:10px;background:#EFECE4;display:flex;flex-direction:column;align-items:center;padding:6px 0"><span style="font-size:10px;font-weight:600;color:#7C766A;letter-spacing:0.06em">THU</span><span style="font-size:17px;font-weight:600;color:#221F1A">3</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;font-weight:600;color:#221F1A">Infusion, cycle 4</span><span style="font-size:12.5px;color:#7C766A">8:15, day hospital, floor 4</span></div>
+      </div>
+    </div>
+    <div style="font-size:13px;font-weight:600;color:#55503F;letter-spacing:0.05em;padding-top:4px">MY MEDICATIONS</div>
+    <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+      <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EFEBE0">
+        <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;font-weight:600;color:#221F1A">Ondansetron 8 mg</span><span style="font-size:12.5px;color:#7C766A">For nausea — morning and evening</span></div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+      </div>
+      <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;font-weight:600;color:#221F1A">Filgrastim injection</span><span style="font-size:12.5px;color:#7C766A">Days 5–9 of each cycle</span></div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+      </div>
+    </div>
+  </div>
+  <div style="background:#FFFEFB;border-top:1px solid #E8E4DA;display:flex;padding:10px 8px 20px;margin-top:auto">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg><span style="font-size:11px;font-weight:500;color:#9C9585">Home</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5 11 13.5 15 9.5"></path><rect x="4" y="4" width="16" height="17" rx="3"></rect></svg><span style="font-size:11px;font-weight:500;color:#9C9585">Check-in</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span style="font-size:11px;font-weight:500;color:#9C9585">Messages</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#115E59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg><span style="font-size:11px;font-weight:600;color:#115E59">Plan</span></div>
+  </div>
+</div>
+</div>
+
+<div id="P7" style="flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="P7 Notifications">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#P7" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">P7</a>Notifications — pushed screen, from the bell</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="430px,880px">
+  <div style="display:flex;flex-direction:column;min-height:100%;background:#F6F4EF;box-sizing:border-box">
+    <div style="padding:58px 20px 14px;border-bottom:1px solid #E8E4DA;display:flex;align-items:center;gap:12px">
+      <span style="font-size:14.5px;color:#115E59;font-weight:500">←</span>
+      <span style="flex:1;font-size:15.5px;font-weight:600;color:#221F1A">Notifications</span>
+      <span style="font-size:12.5px;color:#115E59;font-weight:500;text-decoration:underline;text-underline-offset:3px">Mark all read</span>
+    </div>
+    <div style="flex:1;padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+      <div style="font-size:12px;font-weight:600;color:#9C9585;letter-spacing:0.05em">TODAY</div>
+      <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:14px 16px;display:flex;gap:12px;align-items:flex-start">
+        <span style="width:38px;height:38px;border-radius:99px;background:#E9F0EC;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#115E59" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span>
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:13.5px;font-weight:600;color:#221F1A;line-height:1.4">New message from Mikael Aho</span>
+          <span style="font-size:12.5px;color:#7C766A;line-height:1.45">About your blood test results</span>
+          <span style="font-size:11.5px;color:#9C9585">9:41</span>
+        </div>
+        <span style="width:8px;height:8px;border-radius:99px;background:#115E59;margin-top:5px;flex:none"></span>
+      </div>
+      <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:14px 16px;display:flex;gap:12px;align-items:flex-start">
+        <span style="width:38px;height:38px;border-radius:99px;background:#F7EEDA;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#A16207" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5 11 13.5 15 9.5"></path><rect x="4" y="4" width="16" height="17" rx="3"></rect></svg></span>
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:13.5px;font-weight:600;color:#221F1A;line-height:1.4">Your weekly check-in is due today</span>
+          <span style="font-size:12.5px;color:#7C766A;line-height:1.45">Takes about 3 minutes</span>
+          <span style="font-size:11.5px;color:#9C9585">8:00</span>
+        </div>
+        <span style="width:8px;height:8px;border-radius:99px;background:#115E59;margin-top:5px;flex:none"></span>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:#9C9585;letter-spacing:0.05em;padding-top:6px">EARLIER</div>
+      <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+        <div style="padding:14px 16px;display:flex;gap:12px;align-items:flex-start;border-bottom:1px solid #EFEBE0">
+          <span style="width:38px;height:38px;border-radius:99px;background:#EFECE4;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></span>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+            <span style="font-size:13.5px;font-weight:500;color:#221F1A;line-height:1.4">Appointment Monday 24 August, 10:30</span>
+            <span style="font-size:12.5px;color:#7C766A;line-height:1.45">Dr Koskinen, oncology outpatient clinic</span>
+            <span style="font-size:11.5px;color:#9C9585">Yesterday</span>
+          </div>
+        </div>
+        <div style="padding:14px 16px;display:flex;gap:12px;align-items:flex-start">
+          <span style="width:38px;height:38px;border-radius:99px;background:#EFECE4;display:flex;align-items:center;justify-content:center;flex:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg></span>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+            <span style="font-size:13.5px;font-weight:500;color:#221F1A;line-height:1.4">Lab results received</span>
+            <span style="font-size:12.5px;color:#7C766A;line-height:1.45">Reviewed by your care team</span>
+            <span style="font-size:11.5px;color:#9C9585">Wednesday</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</x-import>
+</div>
+
+<div id="P8" style="flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="P8 Profile and settings">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#P8" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">P8</a>Profile &amp; settings — pushed screen</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="430px,880px">
+  <div style="display:flex;flex-direction:column;min-height:100%;background:#F6F4EF;box-sizing:border-box">
+    <div style="padding:58px 20px 14px;border-bottom:1px solid #E8E4DA;display:flex;align-items:center;gap:12px">
+      <span style="font-size:14.5px;color:#115E59;font-weight:500">←</span>
+      <span style="flex:1;font-size:15.5px;font-weight:600;color:#221F1A">Profile &amp; settings</span>
+    </div>
+    <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;gap:14px;align-items:center">
+        <span style="width:56px;height:56px;border-radius:99px;background:#E9F0EC;color:#115E59;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600">AV</span>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:22px;color:#221F1A">Anna Virtanen</span>
+          <span style="font-size:13px;color:#7C766A">In care at the oncology clinic</span>
+        </div>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:#9C9585;letter-spacing:0.05em;padding-top:2px">ACCOUNT</div>
+      <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+        <div style="padding:15px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EFEBE0"><span style="font-size:14px;color:#221F1A">Personal details</span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg></div>
+        <div style="padding:15px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EFEBE0"><span style="font-size:14px;color:#221F1A">Email &amp; phone</span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg></div>
+        <div style="padding:15px 16px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:14px;color:#221F1A">Language</span><span style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;color:#7C766A">English</span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg></span></div>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:#9C9585;letter-spacing:0.05em;padding-top:2px">REMINDERS</div>
+      <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+        <div style="padding:13px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EFEBE0">
+          <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;color:#221F1A">Weekly check-in</span><span style="font-size:12px;color:#9C9585">Fridays at 8:00</span></div>
+          <span style="width:46px;height:28px;border-radius:99px;background:#115E59;position:relative;flex:none"><span style="position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:99px;background:#FDFBF5"></span></span>
+        </div>
+        <div style="padding:13px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EFEBE0">
+          <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;color:#221F1A">New messages</span><span style="font-size:12px;color:#9C9585">Email and in-app</span></div>
+          <span style="width:46px;height:28px;border-radius:99px;background:#115E59;position:relative;flex:none"><span style="position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:99px;background:#FDFBF5"></span></span>
+        </div>
+        <div style="padding:13px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:14px;color:#221F1A">Appointment reminders</span><span style="font-size:12px;color:#9C9585">1 day before</span></div>
+          <span style="width:46px;height:28px;border-radius:99px;background:#D6D0C2;position:relative;flex:none"><span style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:99px;background:#FDFBF5"></span></span>
+        </div>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:#9C9585;letter-spacing:0.05em;padding-top:2px">PRIVACY</div>
+      <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+        <div style="padding:15px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EFEBE0"><span style="font-size:14px;color:#221F1A">Privacy policy</span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg></div>
+        <div style="padding:15px 16px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:14px;color:#221F1A">Download my data</span><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg></div>
+      </div>
+      <div style="text-align:center;font-size:14px;font-weight:600;color:#B3372B;padding:8px 0 4px">Sign out</div>
+    </div>
+  </div>
+</x-import>
+</div>
+
+</div>
+</section>
+</x-dc>
+</body>
+</html>
