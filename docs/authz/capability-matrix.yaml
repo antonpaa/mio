@@ -1,0 +1,865 @@
+# Mio capability matrix
+#
+# THE single source of truth for authorization. See ADR-0006.
+#
+# This file generates:
+#   1. The Cedar policy test suite — every role x action x resource, asserted.
+#   2. UI capability flags consumed by the web client.
+#   3. The human-readable matrix in the compliance pack.
+#
+# Cedar policies are hand-written and reviewed; this file generates the tests
+# that prove those policies match the agreed matrix. Editing a policy without
+# editing this file fails CI, and vice versa.
+#
+# Changing this file is a reviewed, audited change. It is a compliance artifact.
+
+version: 1
+
+# ---------------------------------------------------------------------------
+# Scope vocabulary
+#
+# A grant is a role -> scope mapping. The scope is the CONDITION under which the
+# action is permitted; it is never simply "yes".
+# ---------------------------------------------------------------------------
+scopes:
+  deny:
+    description: Never permitted. Generates a negative test.
+  self:
+    description: The principal is the subject of the resource.
+  own:
+    description: The resource was created by, or is assigned to, the principal.
+  care_relationship:
+    description: >
+      An active care relationship exists between the principal and the patient
+      the resource concerns. Derived from team membership on a treatment the
+      patient is enrolled in. Materialised in clinical.care_relationship and
+      used for SQL scoping of list endpoints.
+  team_member:
+    description: The principal is a member of the treatment's care team.
+  team_lead:
+    description: The principal is a lead of the treatment's care team.
+  any:
+    description: >
+      Permitted unconditionally within the principal's realm. Used sparingly and
+      never for patient-scoped clinical data.
+
+# ---------------------------------------------------------------------------
+# Roles
+# ---------------------------------------------------------------------------
+roles:
+  - id: patient
+    realm: patient
+    label: { en: Patient, fi: Potilas, sv: Patient }
+
+  - id: treatment_member
+    realm: staff
+    label:
+      { en: Treatment Member, fi: Hoitotiimin jäsen, sv: Vårdteammedlem }
+    description: Clinician working within treatments they are a team member of.
+
+  - id: treatment_lead
+    realm: staff
+    label:
+      { en: Treatment Lead, fi: Hoidon vastuuhenkilö, sv: Behandlingsansvarig }
+    description: >
+      Clinician with treatment lifecycle, team composition and catalogue
+      authoring rights. Grants are a strict superset of treatment_member —
+      asserted by invariant superset_lead_member below.
+
+  - id: administrator
+    realm: staff
+    label: { en: Administrator, fi: Ylläpitäjä, sv: Administratör }
+    description: >
+      Account and team administration only. Holds NO access to clinical data;
+      enforced at the database level by the mio_admin role having no grant on
+      clinical.* (ADR-0007), not by these policies alone.
+
+# ---------------------------------------------------------------------------
+# Resources and actions
+# ---------------------------------------------------------------------------
+resources:
+
+  # -- Patient -------------------------------------------------------------
+  - id: patient_identity
+    schema: identity
+    patient_scoped: true
+    description: >-
+      Name, contact details, address, account status.
+    actions:
+      - id: view
+        audit: always
+        grants:
+          patient: self
+          treatment_member: care_relationship
+          treatment_lead: care_relationship
+          administrator: any
+      - id: update_contact_details
+        audit: always
+        grants:
+          patient: self
+          treatment_member: care_relationship
+          treatment_lead: care_relationship
+          administrator: any
+
+  - id: patient_clinical_profile
+    schema: clinical
+    patient_scoped: true
+    description: >-
+      Aggregate clinical view: treatments, survey history and trends,
+      messages, activity log.
+    actions:
+      - id: view
+        audit: always
+        grants:
+          patient: self
+          treatment_member: care_relationship
+          treatment_lead: care_relationship
+          administrator: deny
+        notes: >-
+          The defining row of the matrix. Administrators are denied here in
+          policy AND lack the database grant to execute the query at all.
+
+  - id: care_relationship
+    schema: clinical
+    patient_scoped: true
+    actions:
+      - id: view
+        audit: always
+        grants:
+          patient: self
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+        notes: >-
+          Patients can see which teams have access to their data.
+      - id: create
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: end
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+
+  # -- Treatments ----------------------------------------------------------
+  - id: treatment
+    schema: clinical
+    patient_scoped: true
+    actions:
+      - id: view
+        audit: always
+        grants:
+          patient: self
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: create
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: any
+          administrator: deny
+      - id: update
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: change_lifecycle_state
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: team_lead
+          administrator: deny
+        notes: >-
+          draft | active | paused | completed | discontinued
+      - id: manage_team
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: team_lead
+          administrator: deny
+      - id: enrol_patient
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: enter_on_behalf_of_patient
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+        notes: >-
+          Records provenance on the entity itself, rendered in the UI as
+          "entered by X on behalf of patient".
+
+  - id: treatment_template
+    schema: clinical
+    patient_scoped: false
+    description: >-
+      Reusable treatment definitions; draft / published / archived.
+    actions:
+      - id: view
+        audit: never
+        grants:
+          patient: deny
+          treatment_member: any
+          treatment_lead: any
+          administrator: deny
+      - id: create
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: any
+          administrator: deny
+      - id: update_draft
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: any
+          administrator: deny
+      - id: publish
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: any
+          administrator: deny
+      - id: archive
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: any
+          administrator: deny
+
+  - id: activity
+    schema: clinical
+    patient_scoped: true
+    description: >-
+      A scheduled activity within a treatment.
+    actions:
+      - id: view
+        audit: always
+        grants:
+          patient: self
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: create
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: update
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: cancel
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+
+  # -- Tasks ---------------------------------------------------------------
+  - id: task
+    schema: clinical
+    patient_scoped: true
+    description: >-
+      Clinician-side work item.
+    actions:
+      - id: view
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+        notes: >-
+          A task names a patient, so rendering a worklist discloses patient
+          information. Audited accordingly. List views emit one audit event
+          naming the patients disclosed, not one event per row - see
+          docs/architecture/data-model.md.
+      - id: create
+        audit: never
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: claim
+        audit: never
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: assign_to_other
+        audit: never
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: complete
+        audit: never
+        grants:
+          patient: deny
+          treatment_member: own
+          treatment_lead: team_member
+          administrator: deny
+
+  # -- Surveys -------------------------------------------------------------
+  - id: survey_template
+    schema: clinical
+    patient_scoped: false
+    description: >-
+      Survey definitions; draft / published / archived, versioned.
+    actions:
+      - id: view
+        audit: never
+        grants:
+          patient: deny
+          treatment_member: any
+          treatment_lead: any
+          administrator: deny
+      - id: create
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: any
+          administrator: deny
+      - id: update_draft
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: any
+          administrator: deny
+      - id: publish
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: any
+          administrator: deny
+      - id: archive
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: any
+          administrator: deny
+      - id: configure_alert_rules
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: any
+          administrator: deny
+        notes: >-
+          REGULATED-ADJACENT. This capability defines how the software
+          grades clinical risk and is the crux of the MDR question in
+          ADR-0009. Deliberately the most restricted authoring capability in
+          the system. A dedicated survey-author capability is an open
+          question below.
+
+  - id: survey_assignment
+    schema: clinical
+    patient_scoped: true
+    actions:
+      - id: view
+        audit: always
+        grants:
+          patient: self
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: create
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: schedule_recurring
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: cancel
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: send_reminder
+        audit: never
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+
+  - id: survey_response
+    schema: clinical
+    patient_scoped: true
+    actions:
+      - id: view
+        audit: always
+        grants:
+          patient: self
+          treatment_member: care_relationship
+          treatment_lead: care_relationship
+          administrator: deny
+      - id: save_draft
+        audit: never
+        grants:
+          patient: self
+          treatment_member: deny
+          treatment_lead: deny
+          administrator: deny
+      - id: submit
+        audit: always
+        grants:
+          patient: self
+          treatment_member: deny
+          treatment_lead: deny
+          administrator: deny
+      - id: submit_on_behalf_of_patient
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: care_relationship
+          treatment_lead: care_relationship
+          administrator: deny
+        notes: >-
+          Records provenance on the response.
+      - id: view_trend
+        audit: always
+        grants:
+          patient: self
+          treatment_member: care_relationship
+          treatment_lead: care_relationship
+          administrator: deny
+        notes: >-
+          Same survey over time, for one patient.
+
+  # -- Alerts --------------------------------------------------------------
+  - id: alert
+    schema: clinical
+    patient_scoped: true
+    description: >-
+      Survey-raised flag with severity; new / acknowledged / resolved.
+    actions:
+      - id: view
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+        notes: >-
+          Patients do not see alerts. Alerts are a care-team triage signal,
+          and exposing a machine-graded risk score to a patient without
+          clinical context would be actively harmful. Open question below.
+      - id: view_evaluation_trace
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+        notes: >-
+          Why this alert fired. Required by ADR-0009.
+      - id: acknowledge
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: assign
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: comment
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: resolve
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+
+  # -- Messaging -----------------------------------------------------------
+  - id: message_thread
+    schema: clinical
+    patient_scoped: true
+    description: >-
+      Per-treatment-programme thread, shared across the care team.
+    actions:
+      - id: view
+        audit: always
+        grants:
+          patient: self
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: post
+        audit: always
+        grants:
+          patient: self
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+
+  - id: internal_note
+    schema: clinical
+    patient_scoped: true
+    description: >-
+      Care-team note attached to a thread, invisible to the patient.
+    actions:
+      - id: view
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+        notes: >-
+          CRITICAL ROW. A patient must never see an internal note. Internal
+          notes are a distinct entity, not a flag on message, so that a
+          serialisation mistake cannot expose one.
+      - id: post
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+
+  - id: attachment
+    schema: clinical
+    patient_scoped: true
+    actions:
+      - id: upload
+        audit: always
+        grants:
+          patient: self
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+      - id: download
+        audit: always
+        grants:
+          patient: self
+          treatment_member: care_relationship
+          treatment_lead: care_relationship
+          administrator: deny
+
+  # -- Administration ------------------------------------------------------
+  - id: staff_account
+    schema: identity
+    patient_scoped: false
+    actions:
+      - id: view
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: any
+          treatment_lead: any
+          administrator: any
+        notes: >-
+          Name, role and team only — clinicians need this to assemble teams
+          and assign tasks. Never credentials or account security state.
+      - id: create
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: deny
+          administrator: any
+      - id: deactivate
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: deny
+          administrator: any
+      - id: reset_credentials
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: deny
+          administrator: any
+        notes: >-
+          Requires step-up re-authentication. Credentials only, never data.
+
+  - id: patient_account
+    schema: identity
+    patient_scoped: true
+    actions:
+      - id: create
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: any
+          administrator: any
+        notes: >-
+          OPEN QUESTION below — granting this to treatment_lead avoids an
+          administrative bottleneck at enrolment, at the cost of widening
+          who can create identities.
+      - id: deactivate
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: deny
+          administrator: any
+      - id: reset_credentials
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: deny
+          administrator: any
+        notes: >-
+          Requires step-up re-authentication. Credentials only, never data.
+
+  - id: team
+    schema: identity
+    patient_scoped: false
+    description: >-
+      A named group of staff users.
+    actions:
+      - id: view
+        audit: never
+        grants:
+          patient: deny
+          treatment_member: any
+          treatment_lead: any
+          administrator: any
+      - id: create
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: any
+          administrator: any
+      - id: update_membership
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: any
+          administrator: any
+
+  # -- Audit, reporting and self-service -----------------------------------
+  - id: audit_log
+    schema: audit
+    patient_scoped: false
+    actions:
+      - id: view_own_access_history
+        audit: never
+        grants:
+          patient: self
+          treatment_member: self
+          treatment_lead: self
+          administrator: self
+        notes: >-
+          "Who has accessed my records." A first-class patient feature, not
+          an internal tool. Reading one's own access history is not itself
+          audited, to avoid unbounded recursion.
+      - id: view_full
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: deny
+          administrator: any
+        notes: >-
+          OPEN QUESTION below. Audit records reveal that a given patient has
+          a treatment — sensitive metadata even without clinical content. A
+          dedicated auditor/DPO role may be warranted instead.
+
+  - id: report
+    schema: clinical
+    patient_scoped: false
+    description: >-
+      Light reporting — response rates and open alerts per programme.
+    actions:
+      - id: view
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+        notes: >-
+          Aggregate but still clinical. Administrators are denied,
+          consistent with patient_clinical_profile.
+
+  - id: own_settings
+    schema: identity
+    patient_scoped: false
+    description: >-
+      Personal details, notification preferences, language, formats.
+    actions:
+      - id: view
+        audit: never
+        grants:
+          patient: self
+          treatment_member: self
+          treatment_lead: self
+          administrator: self
+      - id: update
+        audit: always
+        grants:
+          patient: self
+          treatment_member: self
+          treatment_lead: self
+          administrator: self
+
+  - id: own_data_export
+    schema: identity
+    patient_scoped: false
+    description: >-
+      GDPR access and portability.
+    actions:
+      - id: request
+        audit: always
+        grants:
+          patient: self
+          treatment_member: self
+          treatment_lead: self
+          administrator: self
+      - id: download
+        audit: always
+        grants:
+          patient: self
+          treatment_member: self
+          treatment_lead: self
+          administrator: self
+# ---------------------------------------------------------------------------
+# Invariants — asserted by generated tests, not by review
+# ---------------------------------------------------------------------------
+invariants:
+  - id: superset_lead_member
+    description: >
+      treatment_lead's grants are a superset of treatment_member's for every
+      action. Catches editing mistakes that would silently reduce a lead's
+      access.
+
+  - id: administrator_no_clinical
+    description: >
+      administrator is 'deny' for every action on every resource whose schema is
+      'clinical'. Backed independently by the absence of a database grant
+      (ADR-0007), so this is a defence-in-depth assertion.
+
+  - id: patient_self_only
+    description: >
+      patient is never granted a scope other than 'self' or 'deny'. A patient
+      can never reach another patient's data by any path.
+
+  - id: internal_notes_never_patient
+    description: patient is 'deny' for every action on internal_note.
+
+  - id: patient_scoped_reads_are_audited
+    description: >
+      Every action with id 'view', 'download' or 'view_trend' on a resource
+      marked patient_scoped has audit 'always'. Keyed on patient_scoped rather
+      than schema: catalogue resources such as survey_template live in the
+      clinical schema but disclose nothing about any patient, and auditing
+      catalogue browsing would bury the signal a patient's access history is
+      meant to carry.
+
+  - id: exhaustive
+    description: >
+      Every (role, resource, action) triple has an explicit grant. A missing
+      grant fails the build; it is never treated as an implicit deny, because a
+      silent default is how access rules rot.
+
+# ---------------------------------------------------------------------------
+# Open questions — product decisions, not technical ones.
+# Mirrored in docs/compliance/register.md.
+# ---------------------------------------------------------------------------
+open_questions:
+  - id: who_creates_patient_accounts
+    question: >
+      Should treatment_lead be able to create patient accounts, or is that
+      administrator-only?
+    tension: >
+      Administrator-only is a cleaner separation of duties but puts an
+      administrator in the enrolment path for every new patient, which is an
+      operational bottleneck in a clinic. Current draft grants it to both.
+
+  - id: audit_log_full_access
+    question: Who may read the full audit log?
+    tension: >
+      Administrators need operational access, but audit metadata reveals which
+      patients have treatments. A dedicated auditor/DPO role would separate
+      these concerns at the cost of another role in the model.
+
+  - id: dedicated_survey_author
+    question: >
+      Should survey authoring and alert-rule configuration be a separate
+      capability rather than bundled into treatment_lead?
+    tension: >
+      Authoring surveys is a specialist activity, and alert-rule configuration
+      is the regulated-adjacent capability in this system (ADR-0009). Bundling
+      it into treatment_lead grants it to every lead. A fifth role, or a
+      capability flag on staff accounts, would narrow it.
+
+  - id: patient_visibility_of_alerts
+    question: Should patients see that an alert was raised from their responses?
+    tension: >
+      Transparency is a genuine GDPR and trust consideration, and Mio's audit
+      posture is otherwise strongly pro-transparency. But a machine-graded risk
+      score shown without clinical context could cause real distress. Current
+      draft denies it. Needs a clinical opinion, not an engineering one.
+
+  - id: break_glass
+    question: Is emergency access outside a care relationship required?
+    tension: >
+      Clinically plausible in acute situations; a standing risk otherwise.
+      Current draft has no break-glass path. If added, it should be an explicit,
+      reason-required, heavily-alerted action rather than a role.

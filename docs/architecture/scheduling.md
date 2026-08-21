@@ -1,0 +1,94 @@
+# Scheduling and recurrence
+
+The brief asks for Outlook-grade recurrence configuration, including phased
+patterns: monthly surveys for six months, then one every three months.
+
+## Model: ordered RRULE segments
+
+Do not invent a recurrence syntax. Use **RFC 5545 RRULE**, extended by ordering
+segments.
+
+A schedule is an **ordered list of segments**, each an RRULE with its own
+`COUNT` or `UNTIL`, plus `RDATE` additions and `EXDATE` exclusions.
+
+```
+Segment 1   FREQ=MONTHLY;COUNT=6
+Segment 2   FREQ=MONTHLY;INTERVAL=3
+```
+
+That is the brief's example, exactly, in a standard notation. Segments run in
+sequence; each begins when the previous one ends. Arbitrary phasing follows.
+
+Library: `rrule.js`. RFC 5545 also means the semantics are specified by someone
+other than us, and the edge cases — "the 31st in a 30-day month", "the last
+Friday" — already have defined answers.
+
+## Materialise occurrences
+
+Store the rule, and **materialise occurrences** into a schedule table on a
+rolling horizon of roughly twelve months, extended by a worker job.
+
+Why not expand on read:
+
+- Calendar, worklist and overdue queries become ordinary SQL with ordinary
+  indexes. Expanding recurrence rules inside a query is not something to
+  attempt.
+- A materialised occurrence is a **thing that can be modified**. Skipping one
+  survey, moving another by two days, or attaching a response all need an
+  identity to attach to.
+- "This occurrence" versus "this and all future" — the semantics every user
+  expects from a calendar — need materialised rows to be expressible at all.
+
+Editing a rule rewrites unmaterialised future occurrences and leaves the past
+untouched. Occurrences with responses attached are never destroyed.
+
+## Time zones
+
+The trap, stated plainly:
+
+**Survey due dates are dates, not instants.**
+
+| Kind | Storage |
+|---|---|
+| Appointment, activity with a time | UTC instant |
+| Survey due date, deadline | Local date + IANA time zone |
+
+Storing "due 15 March" as a UTC instant means it becomes overdue at 01:00 or
+02:00 local depending on the season, and twice a year the daylight saving
+transition moves the boundary. Patients receive "your survey is overdue"
+notifications at hours that make no sense, on a system that is asking them about
+cancer symptoms.
+
+Patients carry an IANA time zone (`Europe/Helsinki`, `Europe/Stockholm`) on
+their account. Overdue evaluation, reminder dispatch and calendar rendering all
+resolve against it.
+
+Recurrence expansion happens in the patient's local time zone, not UTC. "Monthly
+on the 15th" means the 15th where the patient is.
+
+## Reminders and escalation
+
+Attached to the assignment, not the schedule: reminder offsets before due,
+escalation on non-response after due.
+
+Escalation raises a task or an alert for the care team, because non-response is
+itself a clinical signal
+([`surveys-and-alerts.md`](surveys-and-alerts.md)).
+
+Reminder emails carry no clinical content — only that something is waiting in
+Mio.
+
+## Configuration UI
+
+The recurrence editor is one of the harder interaction problems in the product,
+and it is used by clinicians under time pressure.
+
+- Always offer a custom option; presets are shortcuts, never the whole surface.
+- Show the next several occurrences as the rule is edited. A recurrence rule
+  nobody can verify is a recurrence rule nobody trusts.
+- Phased schedules need the segment structure visible, not buried behind an
+  "advanced" toggle — the brief's own example is a phased schedule, so it is a
+  primary case.
+- Keyboard-operable throughout, per WCAG 2.2 AA. React Aria's date primitives
+  ([ADR-0004](../adr/0004-spa-frontend-with-openapi-contract.md)) exist for
+  exactly this.
