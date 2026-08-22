@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#f0eee9;font-family:'Schibsted Grotesk',system-ui,sans-serif}a{color:#115E59}a:hover{color:#0D4A46}</style>
+</helmet>
+<section style="padding:40px 44px 32px" data-screen-label="Clinician views">
+<div style="display:flex;align-items:baseline;gap:10px;margin:0 0 20px"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px">CLINICIAN</span><span style="font:600 13px/1.2 system-ui,sans-serif;color:#1a1a1a">Overview, patient detail, patients list, messages, schedule</span></div>
+<div style="display:flex;flex-direction:column;gap:32px;align-items:flex-start">
+
+<div id="C1" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px;max-width:100%" data-screen-label="C1 Overview">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#C1" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">C1</a>Overview — alerts sorted by severity, today at a glance</div>
+<div style="width:1360px;background:#F6F4EF;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:flex;min-height:820px">
+  <div style="width:224px;flex:none;background:#FFFEFB;border-right:1px solid #E8E4DA;display:flex;flex-direction:column;padding:22px 14px 18px;box-sizing:border-box">
+    <div style="display:flex;align-items:center;gap:9px;padding:0 10px 22px">
+      <svg width="30" height="30" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg>
+      <span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:23px;color:#221F1A">mio</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;background:#E9F0EC;color:#115E59;font-size:13.5px;font-weight:600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#115E59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg>Overview</div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Patients</div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;justify-content:space-between;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><span style="display:flex;align-items:center;gap:11px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>Messages</span><span style="background:#B3372B;color:#fff;font-size:10.5px;font-weight:600;border-radius:99px;padding:2px 7px">7</span></div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5 11 13.5 15 9.5"></path><rect x="4" y="4" width="16" height="17" rx="3"></rect></svg>Check-ins</div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>Schedule</div>
+    </div>
+    <div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 10px;border-top:1px solid #EFEBE0">
+      <span style="width:36px;height:36px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">EK</span>
+      <div style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:600;color:#221F1A">Dr Elina Koskinen</span><span style="font-size:11.5px;color:#9C9585">Oncology</span></div>
+    </div>
+  </div>
+  <div style="flex:1;padding:26px 30px;display:flex;flex-direction:column;gap:20px;min-width:0;box-sizing:border-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:25px;color:#221F1A">Overview</span>
+        <span style="font-size:13px;color:#9C9585">Friday 21 August, 8:56</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <div style="display:flex;align-items:center;gap:9px;border:1px solid #DDD8CB;border-radius:99px;background:#FFFEFB;padding:9px 16px;width:240px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg><span style="font-size:13px;color:#9C9585">Find a patient</span></div>
+        <span style="background:#115E59;color:#FDFBF5;border-radius:99px;padding:10px 18px;font-size:13px;font-weight:600;transition:all .3s ease;cursor:pointer" style-hover="background:#0D4A46;transform:translateY(-1px);box-shadow:0 8px 20px rgba(17,94,89,0.22)">New message</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+      <div style="border-radius:14px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:16px 18px;display:flex;flex-direction:column;gap:4px;transition:all .35s ease" style-hover="transform:translateY(-2px);box-shadow:0 8px 22px rgba(60,52,36,0.13)"><span style="font-size:26px;font-weight:600;color:#B3372B">3</span><span style="font-size:12.5px;color:#7C766A">Alerts to review</span></div>
+      <div style="border-radius:14px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:16px 18px;display:flex;flex-direction:column;gap:4px;transition:all .35s ease" style-hover="transform:translateY(-2px);box-shadow:0 8px 22px rgba(60,52,36,0.13)"><span style="font-size:26px;font-weight:600;color:#221F1A">7</span><span style="font-size:12.5px;color:#7C766A">Unread messages</span></div>
+      <div style="border-radius:14px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:16px 18px;display:flex;flex-direction:column;gap:4px;transition:all .35s ease" style-hover="transform:translateY(-2px);box-shadow:0 8px 22px rgba(60,52,36,0.13)"><span style="font-size:26px;font-weight:600;color:#221F1A">5</span><span style="font-size:12.5px;color:#7C766A">Check-ins overdue</span></div>
+      <div style="border-radius:14px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:16px 18px;display:flex;flex-direction:column;gap:4px;transition:all .35s ease" style-hover="transform:translateY(-2px);box-shadow:0 8px 22px rgba(60,52,36,0.13)"><span style="font-size:26px;font-weight:600;color:#221F1A">48</span><span style="font-size:12.5px;color:#7C766A">Patients monitored</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;min-width:0">
+      <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);min-width:0">
+        <div style="padding:15px 20px;border-bottom:1px solid #EFEBE0;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-family:'Newsreader',serif;font-style:italic;font-size:17px;font-weight:500;color:#221F1A">Needs review</span>
+          <span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px">All alerts</span>
+        </div>
+        <div style="padding:14px 20px;display:flex;gap:14px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+          <span style="width:40px;height:40px;border-radius:99px;background:#F8E7E2;color:#B3372B;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600;flex:none">AV</span>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+            <span style="font-size:14px;font-weight:600;color:#221F1A">Anna Virtanen <span style="font-weight:400;color:#9C9585;font-size:12.5px">51, breast ca, FEC cycle 3</span></span>
+            <span style="font-size:13px;color:#7C766A">Check-in: severe nausea, vomiting twice since yesterday</span>
+          </div>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#B3372B;background:#F8E7E2;border:1px solid #EBC5BC;border-radius:99px;padding:4px 11px;flex:none"><span style="width:6px;height:6px;border-radius:99px;background:#B3372B"></span>High</span>
+          <span style="font-size:12px;color:#9C9585;flex:none;width:44px;text-align:right">08:12</span>
+          <span style="border:1px solid #D6D0C2;color:#55503F;border-radius:99px;padding:7px 15px;font-size:12.5px;font-weight:600;flex:none;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#E9F0EC;border-color:#BFD6CE;color:#115E59;transform:translateY(-1px)">Review</span>
+        </div>
+        <div style="padding:14px 20px;display:flex;gap:14px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+          <span style="width:40px;height:40px;border-radius:99px;background:#F8E7E2;color:#B3372B;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600;flex:none">JM</span>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+            <span style="font-size:14px;font-weight:600;color:#221F1A">Juhani Mäkelä <span style="font-weight:400;color:#9C9585;font-size:12.5px">64, colorectal ca, FOLFOX cycle 5</span></span>
+            <span style="font-size:13px;color:#7C766A">Self-report: fever 38.4°C this morning</span>
+          </div>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#B3372B;background:#F8E7E2;border:1px solid #EBC5BC;border-radius:99px;padding:4px 11px;flex:none"><span style="width:6px;height:6px;border-radius:99px;background:#B3372B"></span>High</span>
+          <span style="font-size:12px;color:#9C9585;flex:none;width:44px;text-align:right">07:48</span>
+          <span style="border:1px solid #D6D0C2;color:#55503F;border-radius:99px;padding:7px 15px;font-size:12.5px;font-weight:600;flex:none;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#E9F0EC;border-color:#BFD6CE;color:#115E59;transform:translateY(-1px)">Review</span>
+        </div>
+        <div style="padding:14px 20px;display:flex;gap:14px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+          <span style="width:40px;height:40px;border-radius:99px;background:#F7EEDA;color:#A16207;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600;flex:none">SN</span>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+            <span style="font-size:14px;font-weight:600;color:#221F1A">Sofia Nieminen <span style="font-weight:400;color:#9C9585;font-size:12.5px">58, lymphoma, R-CHOP cycle 2</span></span>
+            <span style="font-size:13px;color:#7C766A">Check-in: fatigue worsening two weeks in a row</span>
+          </div>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#A16207;background:#F7EEDA;border:1px solid #E5D3A8;border-radius:99px;padding:4px 11px;flex:none"><span style="width:6px;height:6px;border-radius:99px;background:#A16207"></span>Moderate</span>
+          <span style="font-size:12px;color:#9C9585;flex:none;width:44px;text-align:right">Yest.</span>
+          <span style="border:1px solid #D6D0C2;color:#55503F;border-radius:99px;padding:7px 15px;font-size:12.5px;font-weight:600;flex:none;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#E9F0EC;border-color:#BFD6CE;color:#115E59;transform:translateY(-1px)">Review</span>
+        </div>
+        <div style="padding:14px 20px;display:flex;gap:14px;align-items:center;transition:background .35s ease" style-hover="background:#FBF8F1">
+          <span style="width:40px;height:40px;border-radius:99px;background:#F7EEDA;color:#A16207;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600;flex:none">PL</span>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+            <span style="font-size:14px;font-weight:600;color:#221F1A">Pekka Laine <span style="font-weight:400;color:#9C9585;font-size:12.5px">69, prostate ca, docetaxel cycle 4</span></span>
+            <span style="font-size:13px;color:#7C766A">Check-in: new tingling in fingers and toes</span>
+          </div>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#A16207;background:#F7EEDA;border:1px solid #E5D3A8;border-radius:99px;padding:4px 11px;flex:none"><span style="width:6px;height:6px;border-radius:99px;background:#A16207"></span>Moderate</span>
+          <span style="font-size:12px;color:#9C9585;flex:none;width:44px;text-align:right">Yest.</span>
+          <span style="border:1px solid #D6D0C2;color:#55503F;border-radius:99px;padding:7px 15px;font-size:12.5px;font-weight:600;flex:none;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#E9F0EC;border-color:#BFD6CE;color:#115E59;transform:translateY(-1px)">Review</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+        <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+          <div style="padding:15px 20px;border-bottom:1px solid #EFEBE0;font-family:'Newsreader',serif;font-style:italic;font-size:17px;font-weight:500;color:#221F1A">Today</div>
+          <div style="padding:13px 20px;display:flex;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0"><span style="font-size:12.5px;color:#7C766A;width:38px;flex:none">09:30</span><div style="display:flex;flex-direction:column"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Ward round, day hospital</span><span style="font-size:12px;color:#9C9585">Floor 4</span></div></div>
+          <div style="padding:13px 20px;display:flex;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0"><span style="font-size:12.5px;color:#7C766A;width:38px;flex:none">11:00</span><div style="display:flex;flex-direction:column"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Ritva Salo, follow-up</span><span style="font-size:12px;color:#9C9585">Room 12</span></div></div>
+          <div style="padding:13px 20px;display:flex;gap:12px;align-items:center"><span style="font-size:12.5px;color:#7C766A;width:38px;flex:none">13:15</span><div style="display:flex;flex-direction:column"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Tumor board</span><span style="font-size:12px;color:#9C9585">Meeting room B</span></div></div>
+        </div>
+        <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:13.5px;font-weight:600;color:#221F1A">Weekly check-ins</span>
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:21px;font-weight:600;color:#115E59">41 of 48</span><span style="font-size:12px;color:#9C9585">completed</span></div>
+          <div style="height:8px;border-radius:99px;background:#EFECE4;overflow:hidden"><span style="display:block;width:85%;height:100%;background:#115E59;border-radius:99px"></span></div>
+          <span style="font-size:12.5px;color:#7C766A">5 overdue — reminders sent this morning</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="C2" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px;max-width:100%" data-screen-label="C2 Patient detail">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#C2" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">C2</a>Patient detail — opened from the High alert</div>
+<div style="width:1360px;background:#F6F4EF;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:flex;min-height:820px">
+  <div style="width:224px;flex:none;background:#FFFEFB;border-right:1px solid #E8E4DA;display:flex;flex-direction:column;padding:22px 14px 18px;box-sizing:border-box">
+    <div style="display:flex;align-items:center;gap:9px;padding:0 10px 22px">
+      <svg width="30" height="30" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg>
+      <span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:23px;color:#221F1A">mio</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg>Overview</div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;background:#E9F0EC;color:#115E59;font-size:13.5px;font-weight:600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#115E59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Patients</div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;justify-content:space-between;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><span style="display:flex;align-items:center;gap:11px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>Messages</span><span style="background:#B3372B;color:#fff;font-size:10.5px;font-weight:600;border-radius:99px;padding:2px 7px">7</span></div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5 11 13.5 15 9.5"></path><rect x="4" y="4" width="16" height="17" rx="3"></rect></svg>Check-ins</div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>Schedule</div>
+    </div>
+    <div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 10px;border-top:1px solid #EFEBE0">
+      <span style="width:36px;height:36px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">EK</span>
+      <div style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:600;color:#221F1A">Dr Elina Koskinen</span><span style="font-size:11.5px;color:#9C9585">Oncology</span></div>
+    </div>
+  </div>
+  <div style="flex:1;padding:26px 30px;display:flex;flex-direction:column;gap:18px;min-width:0;box-sizing:border-box">
+    <div style="font-size:12.5px;color:#9C9585"><span style="color:#115E59;font-weight:500;text-decoration:underline;text-underline-offset:3px">Patients</span>&nbsp;&nbsp;/&nbsp;&nbsp;Anna Virtanen</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;gap:14px;align-items:center">
+        <span style="width:52px;height:52px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">AV</span>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span style="font-family:'Newsreader',serif;font-weight:500;font-size:24px;color:#221F1A;font-style:italic">Anna Virtanen</span>
+          <span style="font-size:13px;color:#7C766A">51, breast cancer — FEC adjuvant, cycle 3 of 6 — next visit Mon 24 Aug 10:30</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <span style="border:1px solid #D6D0C2;color:#55503F;border-radius:99px;padding:9px 17px;font-size:13px;font-weight:600;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#E9F0EC;border-color:#BFD6CE;color:#115E59;transform:translateY(-1px)">Call</span>
+        <span style="border:1px solid #D6D0C2;color:#55503F;border-radius:99px;padding:9px 17px;font-size:13px;font-weight:600;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#E9F0EC;border-color:#BFD6CE;color:#115E59;transform:translateY(-1px)">Message</span>
+        <span style="background:#115E59;color:#FDFBF5;border-radius:99px;padding:9px 17px;font-size:13px;font-weight:600;transition:all .3s ease;cursor:pointer" style-hover="background:#0D4A46;transform:translateY(-1px);box-shadow:0 8px 20px rgba(17,94,89,0.22)">Mark reviewed</span>
+      </div>
+    </div>
+    <div style="border:1px solid #EBC5BC;background:#F8E7E2;border-radius:14px;padding:14px 18px;display:flex;gap:12px;align-items:center">
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#B3372B;background:#FFFEFB;border:1px solid #EBC5BC;border-radius:99px;padding:4px 11px;flex:none"><span style="width:6px;height:6px;border-radius:99px;background:#B3372B"></span>High</span>
+      <span style="font-size:13.5px;color:#7A2A20;line-height:1.5"><span style="font-weight:600">Today 08:12 —</span> check-in reports severe nausea and vomiting twice since yesterday. Antiemetic adherence unclear from note.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;min-width:0">
+      <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+        <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:18px 20px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-family:'Newsreader',serif;font-style:italic;font-size:17px;font-weight:500;color:#221F1A">Symptom trend, 6 weeks</span>
+            <span style="display:flex;gap:14px;font-size:12px;color:#7C766A"><span style="display:flex;align-items:center;gap:6px"><span style="width:16px;height:3px;border-radius:99px;background:#115E59"></span>Nausea</span><span style="display:flex;align-items:center;gap:6px"><span style="width:16px;height:3px;border-radius:99px;background:#A16207"></span>Fatigue</span></span>
+          </div>
+          <svg width="100%" height="180" viewBox="0 0 720 180" preserveAspectRatio="none" style="display:block">
+            <line x1="0" y1="20" x2="720" y2="20" stroke="#EFEBE0" stroke-width="1"></line>
+            <line x1="0" y1="60" x2="720" y2="60" stroke="#EFEBE0" stroke-width="1"></line>
+            <line x1="0" y1="100" x2="720" y2="100" stroke="#EFEBE0" stroke-width="1"></line>
+            <line x1="0" y1="140" x2="720" y2="140" stroke="#EFEBE0" stroke-width="1"></line>
+            <path d="M30 140 L168 148 L306 120 L444 128 L582 96 L690 34" fill="none" stroke="#115E59" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+            <path d="M30 132 L168 136 L306 112 L444 116 L582 104 L690 92" fill="none" stroke="#A16207" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"></path>
+            <circle cx="690" cy="34" r="5" fill="#B3372B"></circle>
+            <circle cx="690" cy="34" r="10" fill="#B3372B" opacity="0.2"></circle>
+          </svg>
+          <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#9C9585;padding:0 10px"><span>13 Jul</span><span>20 Jul</span><span>27 Jul</span><span>3 Aug</span><span>10 Aug</span><span style="color:#B3372B;font-weight:600">Today</span></div>
+        </div>
+        <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+          <div style="padding:15px 20px;border-bottom:1px solid #EFEBE0;font-family:'Newsreader',serif;font-style:italic;font-size:17px;font-weight:500;color:#221F1A">Recent check-ins</div>
+          <div style="padding:13px 20px;display:flex;gap:14px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+            <span style="font-size:12.5px;color:#7C766A;width:56px;flex:none">Today</span>
+            <span style="flex:1;font-size:13.5px;color:#221F1A">Nausea severe, vomiting, appetite poor</span>
+            <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#B3372B;background:#F8E7E2;border:1px solid #EBC5BC;border-radius:99px;padding:4px 11px"><span style="width:6px;height:6px;border-radius:99px;background:#B3372B"></span>High</span>
+          </div>
+          <div style="padding:13px 20px;display:flex;gap:14px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+            <span style="font-size:12.5px;color:#7C766A;width:56px;flex:none">14 Aug</span>
+            <span style="flex:1;font-size:13.5px;color:#221F1A">Nausea moderate, fatigue moderate</span>
+            <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#A16207;background:#F7EEDA;border:1px solid #E5D3A8;border-radius:99px;padding:4px 11px"><span style="width:6px;height:6px;border-radius:99px;background:#A16207"></span>Moderate</span>
+          </div>
+          <div style="padding:13px 20px;display:flex;gap:14px;align-items:center;transition:background .35s ease" style-hover="background:#FBF8F1">
+            <span style="font-size:12.5px;color:#7C766A;width:56px;flex:none">7 Aug</span>
+            <span style="flex:1;font-size:13.5px;color:#221F1A">Mild nausea, sleeping well</span>
+            <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#115E59;background:#E9F0EC;border:1px solid #BFD6CE;border-radius:99px;padding:4px 11px"><span style="width:6px;height:6px;border-radius:99px;background:#115E59"></span>Low</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+        <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+          <span style="font-size:13.5px;font-weight:600;color:#221F1A">Current medication</span>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:#55503F">
+            <div style="display:flex;justify-content:space-between"><span>Ondansetron 8 mg</span><span style="color:#9C9585">2×/day</span></div>
+            <div style="display:flex;justify-content:space-between"><span>Filgrastim 30 MU</span><span style="color:#9C9585">days 5–9</span></div>
+            <div style="display:flex;justify-content:space-between"><span>Dexamethasone 4 mg</span><span style="color:#9C9585">days 1–3</span></div>
+          </div>
+          <span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px">Full medication list</span>
+        </div>
+        <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+          <span style="font-size:13.5px;font-weight:600;color:#221F1A">Activity</span>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;gap:10px"><span style="width:8px;height:8px;border-radius:99px;background:#B3372B;margin-top:5px;flex:none"></span><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13px;color:#221F1A;line-height:1.45">High alert raised from weekly check-in</span><span style="font-size:11.5px;color:#9C9585">Today 08:12</span></div></div>
+            <div style="display:flex;gap:10px"><span style="width:8px;height:8px;border-radius:99px;background:#115E59;margin-top:5px;flex:none"></span><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13px;color:#221F1A;line-height:1.45">Mikael Aho replied about blood test results</span><span style="font-size:11.5px;color:#9C9585">Yesterday 09:41</span></div></div>
+            <div style="display:flex;gap:10px"><span style="width:8px;height:8px;border-radius:99px;background:#9C9585;margin-top:5px;flex:none"></span><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13px;color:#221F1A;line-height:1.45">Lab results received, reviewed by Dr Koskinen</span><span style="font-size:11.5px;color:#9C9585">Wed 16:20</span></div></div>
+          </div>
+        </div>
+        <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:16px 20px;display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:13.5px;font-weight:600;color:#221F1A">Care team</span>
+          <div style="display:flex;gap:10px;align-items:center"><span style="width:32px;height:32px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">EK</span><div style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:600;color:#221F1A">Dr Elina Koskinen</span><span style="font-size:11.5px;color:#9C9585">Responsible oncologist</span></div></div>
+          <div style="display:flex;gap:10px;align-items:center"><span style="width:32px;height:32px;border-radius:99px;background:#E9F0EC;color:#115E59;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">MA</span><div style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:600;color:#221F1A">Mikael Aho</span><span style="font-size:11.5px;color:#9C9585">Care coordinator, nurse</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="C3" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px;max-width:100%" data-screen-label="C3 Patients list">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#C3" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">C3</a>Patients — monitored list, severity first</div>
+<div style="width:1360px;background:#F6F4EF;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:flex;min-height:820px">
+  <div style="width:224px;flex:none;background:#FFFEFB;border-right:1px solid #E8E4DA;display:flex;flex-direction:column;padding:22px 14px 18px;box-sizing:border-box">
+    <div style="display:flex;align-items:center;gap:9px;padding:0 10px 22px">
+      <svg width="30" height="30" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg>
+      <span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:23px;color:#221F1A">mio</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg>Overview</div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;background:#E9F0EC;color:#115E59;font-size:13.5px;font-weight:600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#115E59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Patients</div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;justify-content:space-between;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><span style="display:flex;align-items:center;gap:11px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>Messages</span><span style="background:#B3372B;color:#fff;font-size:10.5px;font-weight:600;border-radius:99px;padding:2px 7px">7</span></div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5 11 13.5 15 9.5"></path><rect x="4" y="4" width="16" height="17" rx="3"></rect></svg>Check-ins</div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>Schedule</div>
+    </div>
+    <div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 10px;border-top:1px solid #EFEBE0">
+      <span style="width:36px;height:36px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">EK</span>
+      <div style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:600;color:#221F1A">Dr Elina Koskinen</span><span style="font-size:11.5px;color:#9C9585">Oncology</span></div>
+    </div>
+  </div>
+  <div style="flex:1;padding:26px 30px;display:flex;flex-direction:column;gap:18px;min-width:0;box-sizing:border-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
+      <span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:25px;color:#221F1A">Patients</span>
+      <div style="display:flex;align-items:center;gap:9px;border:1px solid #DDD8CB;border-radius:99px;background:#FFFEFB;padding:9px 16px;width:260px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg><span style="font-size:13px;color:#9C9585">Search by name or ID</span></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <span style="background:#115E59;color:#FDFBF5;border-radius:99px;padding:7px 16px;font-size:12.5px;font-weight:600">All 48</span>
+      <span style="border:1px solid #EBC5BC;color:#B3372B;border-radius:99px;padding:7px 16px;font-size:12.5px;font-weight:600;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#F8E7E2">High 2</span>
+      <span style="border:1px solid #E5D3A8;color:#A16207;border-radius:99px;padding:7px 16px;font-size:12.5px;font-weight:600;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#F7EEDA">Moderate 5</span>
+      <span style="border:1px solid #D6D0C2;color:#55503F;border-radius:99px;padding:7px 16px;font-size:12.5px;font-weight:500;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Check-in overdue 5</span>
+    </div>
+    <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+      <div style="padding:11px 20px;border-bottom:1px solid #EFEBE0;display:grid;grid-template-columns:2.2fr 1.8fr 1fr 1.2fr 1fr;gap:12px;font-size:11.5px;font-weight:600;color:#9C9585;letter-spacing:0.05em"><span>PATIENT</span><span>TREATMENT</span><span>LAST CHECK-IN</span><span>NEXT VISIT</span><span></span></div>
+      <div style="padding:13px 20px;display:grid;grid-template-columns:2.2fr 1.8fr 1fr 1.2fr 1fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+        <span style="display:flex;gap:11px;align-items:center"><span style="width:36px;height:36px;border-radius:99px;background:#F8E7E2;color:#B3372B;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;flex:none">AV</span><span style="display:flex;flex-direction:column"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Anna Virtanen</span><span style="font-size:11.5px;color:#9C9585">51</span></span></span>
+        <span style="font-size:12.5px;color:#55503F">Breast ca — FEC, cycle 3 of 6</span>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#B3372B;background:#F8E7E2;border:1px solid #EBC5BC;border-radius:99px;padding:4px 11px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#B3372B"></span>High</span>
+        <span style="font-size:12.5px;color:#55503F">Mon 24 Aug</span>
+        <span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;justify-self:end">Open</span>
+      </div>
+      <div style="padding:13px 20px;display:grid;grid-template-columns:2.2fr 1.8fr 1fr 1.2fr 1fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+        <span style="display:flex;gap:11px;align-items:center"><span style="width:36px;height:36px;border-radius:99px;background:#F8E7E2;color:#B3372B;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;flex:none">JM</span><span style="display:flex;flex-direction:column"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Juhani Mäkelä</span><span style="font-size:11.5px;color:#9C9585">64</span></span></span>
+        <span style="font-size:12.5px;color:#55503F">Colorectal ca — FOLFOX, cycle 5 of 8</span>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#B3372B;background:#F8E7E2;border:1px solid #EBC5BC;border-radius:99px;padding:4px 11px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#B3372B"></span>High</span>
+        <span style="font-size:12.5px;color:#55503F">Tue 25 Aug</span>
+        <span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;justify-self:end">Open</span>
+      </div>
+      <div style="padding:13px 20px;display:grid;grid-template-columns:2.2fr 1.8fr 1fr 1.2fr 1fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+        <span style="display:flex;gap:11px;align-items:center"><span style="width:36px;height:36px;border-radius:99px;background:#F7EEDA;color:#A16207;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;flex:none">SN</span><span style="display:flex;flex-direction:column"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Sofia Nieminen</span><span style="font-size:11.5px;color:#9C9585">58</span></span></span>
+        <span style="font-size:12.5px;color:#55503F">Lymphoma — R-CHOP, cycle 2 of 6</span>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#A16207;background:#F7EEDA;border:1px solid #E5D3A8;border-radius:99px;padding:4px 11px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#A16207"></span>Moderate</span>
+        <span style="font-size:12.5px;color:#55503F">Thu 27 Aug</span>
+        <span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;justify-self:end">Open</span>
+      </div>
+      <div style="padding:13px 20px;display:grid;grid-template-columns:2.2fr 1.8fr 1fr 1.2fr 1fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+        <span style="display:flex;gap:11px;align-items:center"><span style="width:36px;height:36px;border-radius:99px;background:#F7EEDA;color:#A16207;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;flex:none">PL</span><span style="display:flex;flex-direction:column"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Pekka Laine</span><span style="font-size:11.5px;color:#9C9585">69</span></span></span>
+        <span style="font-size:12.5px;color:#55503F">Prostate ca — docetaxel, cycle 4 of 6</span>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#A16207;background:#F7EEDA;border:1px solid #E5D3A8;border-radius:99px;padding:4px 11px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#A16207"></span>Moderate</span>
+        <span style="font-size:12.5px;color:#55503F">Fri 28 Aug</span>
+        <span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;justify-self:end">Open</span>
+      </div>
+      <div style="padding:13px 20px;display:grid;grid-template-columns:2.2fr 1.8fr 1fr 1.2fr 1fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+        <span style="display:flex;gap:11px;align-items:center"><span style="width:36px;height:36px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;flex:none">RS</span><span style="display:flex;flex-direction:column"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Ritva Salo</span><span style="font-size:11.5px;color:#9C9585">72</span></span></span>
+        <span style="font-size:12.5px;color:#55503F">Breast ca — letrozole, follow-up</span>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#115E59;background:#E9F0EC;border:1px solid #BFD6CE;border-radius:99px;padding:4px 11px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#115E59"></span>Low</span>
+        <span style="font-size:12.5px;color:#55503F">Today 11:00</span>
+        <span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;justify-self:end">Open</span>
+      </div>
+      <div style="padding:13px 20px;display:grid;grid-template-columns:2.2fr 1.8fr 1fr 1.2fr 1fr;gap:12px;align-items:center;transition:background .35s ease" style-hover="background:#FBF8F1">
+        <span style="display:flex;gap:11px;align-items:center"><span style="width:36px;height:36px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;flex:none">TH</span><span style="display:flex;flex-direction:column"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Timo Heikkinen</span><span style="font-size:11.5px;color:#9C9585">55</span></span></span>
+        <span style="font-size:12.5px;color:#55503F">Melanoma — pembrolizumab, dose 6</span>
+        <span style="font-size:12.5px;color:#A16207;font-weight:500">Overdue 3 d</span>
+        <span style="font-size:12.5px;color:#55503F">Wed 2 Sep</span>
+        <span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;justify-self:end">Open</span>
+      </div>
+    </div>
+    <div style="font-size:12.5px;color:#9C9585">Showing 6 of 48 — sorted by severity, then next visit</div>
+  </div>
+</div>
+</div>
+
+<div id="C4" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px;max-width:100%" data-screen-label="C4 Messages inbox">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#C4" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">C4</a>Messages — inbox and open thread</div>
+<div style="width:1360px;background:#F6F4EF;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:flex;min-height:820px">
+  <div style="width:224px;flex:none;background:#FFFEFB;border-right:1px solid #E8E4DA;display:flex;flex-direction:column;padding:22px 14px 18px;box-sizing:border-box">
+    <div style="display:flex;align-items:center;gap:9px;padding:0 10px 22px">
+      <svg width="30" height="30" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg>
+      <span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:23px;color:#221F1A">mio</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg>Overview</div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Patients</div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;background:#E9F0EC;color:#115E59;font-size:13.5px;font-weight:600;justify-content:space-between"><span style="display:flex;align-items:center;gap:11px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#115E59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>Messages</span><span style="background:#B3372B;color:#fff;font-size:10.5px;font-weight:600;border-radius:99px;padding:2px 7px">7</span></div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5 11 13.5 15 9.5"></path><rect x="4" y="4" width="16" height="17" rx="3"></rect></svg>Check-ins</div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>Schedule</div>
+    </div>
+    <div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 10px;border-top:1px solid #EFEBE0">
+      <span style="width:36px;height:36px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">EK</span>
+      <div style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:600;color:#221F1A">Dr Elina Koskinen</span><span style="font-size:11.5px;color:#9C9585">Oncology</span></div>
+    </div>
+  </div>
+  <div style="width:340px;flex:none;background:#FFFEFB;border-right:1px solid #E8E4DA;display:flex;flex-direction:column;box-sizing:border-box">
+    <div style="padding:20px 18px 14px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid #EFEBE0">
+      <span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:21px;color:#221F1A">Messages</span>
+      <div style="display:flex;align-items:center;gap:9px;border:1px solid #DDD8CB;border-radius:99px;background:#FFFEFB;padding:8px 14px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg><span style="font-size:12.5px;color:#9C9585">Search messages</span></div>
+    </div>
+    <div style="padding:12px 14px;display:flex;gap:12px;align-items:flex-start;background:#F1EFE7;border-left:3px solid #115E59;transition:background .3s ease">
+      <span style="width:38px;height:38px;border-radius:99px;background:#F8E7E2;color:#B3372B;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex:none">AV</span>
+      <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Anna Virtanen</span><span style="font-size:11px;color:#9C9585">14:02</span></div>
+        <span style="font-size:12.5px;color:#55503F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">I've had more nausea than usual after…</span>
+      </div>
+      <span style="width:8px;height:8px;border-radius:99px;background:#115E59;margin-top:6px;flex:none"></span>
+    </div>
+    <div style="padding:12px 14px;display:flex;gap:12px;align-items:flex-start;border-top:1px solid #EFEBE0;transition:background .3s ease;cursor:pointer" style-hover="background:#FBF8F1">
+      <span style="width:38px;height:38px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex:none">TH</span>
+      <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Timo Heikkinen</span><span style="font-size:11px;color:#9C9585">11:37</span></div>
+        <span style="font-size:12.5px;color:#55503F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Can I move next week's appointment to…</span>
+      </div>
+      <span style="width:8px;height:8px;border-radius:99px;background:#115E59;margin-top:6px;flex:none"></span>
+    </div>
+    <div style="padding:12px 14px;display:flex;gap:12px;align-items:flex-start;border-top:1px solid #EFEBE0;transition:background .3s ease;cursor:pointer" style-hover="background:#FBF8F1">
+      <span style="width:38px;height:38px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex:none">SN</span>
+      <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13.5px;font-weight:500;color:#221F1A">Sofia Nieminen</span><span style="font-size:11px;color:#9C9585">Yest.</span></div>
+        <span style="font-size:12.5px;color:#9C9585;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Thank you, that helps a lot.</span>
+      </div>
+    </div>
+    <div style="padding:12px 14px;display:flex;gap:12px;align-items:flex-start;border-top:1px solid #EFEBE0;transition:background .3s ease;cursor:pointer" style-hover="background:#FBF8F1">
+      <span style="width:38px;height:38px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex:none">PL</span>
+      <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13.5px;font-weight:500;color:#221F1A">Pekka Laine</span><span style="font-size:11px;color:#9C9585">Tue</span></div>
+        <span style="font-size:12.5px;color:#9C9585;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">The tingling is mostly in the mornings…</span>
+      </div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0;box-sizing:border-box">
+    <div style="padding:16px 24px;border-bottom:1px solid #E8E4DA;display:flex;align-items:center;gap:12px;background:#F6F4EF">
+      <span style="width:38px;height:38px;border-radius:99px;background:#F8E7E2;color:#B3372B;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">AV</span>
+      <div style="flex:1;display:flex;flex-direction:column">
+        <span style="font-size:14.5px;font-weight:600;color:#221F1A">Anna Virtanen</span>
+        <span style="font-size:12px;color:#9C9585">51 — breast ca, FEC cycle 3 of 6</span>
+      </div>
+      <span style="border:1px solid #D6D0C2;color:#55503F;border-radius:99px;padding:8px 16px;font-size:12.5px;font-weight:600;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#E9F0EC;border-color:#BFD6CE;color:#115E59;transform:translateY(-1px)">View record</span>
+    </div>
+    <div style="flex:1;padding:22px 24px;display:flex;flex-direction:column;gap:12px;overflow:hidden">
+      <div style="align-self:center;font-size:11.5px;color:#9C9585;background:#EFECE4;border-radius:99px;padding:4px 12px">Wednesday 19 August</div>
+      <div style="align-self:flex-start;max-width:420px;background:#FFFEFB;border-radius:16px 16px 16px 4px;padding:12px 16px;font-size:13.5px;line-height:1.5;color:#221F1A;box-shadow:0 1px 6px rgba(60,52,36,0.08)">Hi, I've had more nausea than usual after this cycle. Is that expected?</div>
+      <div style="align-self:flex-start;font-size:11px;color:#9C9585;padding-left:4px">Anna — 14:02</div>
+      <div style="align-self:flex-end;max-width:420px;background:#115E59;color:#FDFBF5;border-radius:16px 16px 4px 16px;padding:12px 16px;font-size:13.5px;line-height:1.5">Hi Anna, some increase can happen in cycle 3. Take the ondansetron as prescribed, and log it in your check-in so we can follow it.</div>
+      <div style="align-self:flex-end;font-size:11px;color:#9C9585;padding-right:4px">Mikael Aho, nurse — 15:20</div>
+      <div style="align-self:center;font-size:11.5px;color:#B3372B;background:#F8E7E2;border:1px solid #EBC5BC;border-radius:99px;padding:4px 12px">High alert from check-in — today 08:12</div>
+    </div>
+    <div style="padding:14px 24px 18px;display:flex;flex-direction:column;gap:10px;border-top:1px solid #E8E4DA;background:#F6F4EF">
+      <div style="display:flex;gap:8px">
+        <span style="border:1px solid #D6D0C2;color:#55503F;border-radius:99px;padding:6px 13px;font-size:12px;font-weight:500;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#E9F0EC;border-color:#BFD6CE;color:#115E59">Ask about antiemetic use</span>
+        <span style="border:1px solid #D6D0C2;color:#55503F;border-radius:99px;padding:6px 13px;font-size:12px;font-weight:500;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#E9F0EC;border-color:#BFD6CE;color:#115E59">Suggest a call</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <div style="flex:1;border:1px solid #DDD8CB;border-radius:99px;background:#FFFEFB;padding:12px 18px;font-size:13.5px;color:#9C9585">Reply to Anna…</div>
+        <span style="width:44px;height:44px;border-radius:99px;background:#115E59;display:flex;align-items:center;justify-content:center;flex:none;transition:all .3s ease;cursor:pointer" style-hover="background:#0D4A46;transform:translateY(-1px);box-shadow:0 8px 20px rgba(17,94,89,0.22)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FDFBF5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"></path></svg></span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="C5" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px;max-width:100%" data-screen-label="C5 Schedule">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#C5" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">C5</a>Schedule — today plus the week ahead</div>
+<div style="width:1360px;background:#F6F4EF;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:flex;min-height:820px">
+  <div style="width:224px;flex:none;background:#FFFEFB;border-right:1px solid #E8E4DA;display:flex;flex-direction:column;padding:22px 14px 18px;box-sizing:border-box">
+    <div style="display:flex;align-items:center;gap:9px;padding:0 10px 22px">
+      <svg width="30" height="30" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg>
+      <span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:23px;color:#221F1A">mio</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg>Overview</div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Patients</div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;justify-content:space-between;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><span style="display:flex;align-items:center;gap:11px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>Messages</span><span style="background:#B3372B;color:#fff;font-size:10.5px;font-weight:600;border-radius:99px;padding:2px 7px">7</span></div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:#55503F;font-size:13.5px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C766A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5 11 13.5 15 9.5"></path><rect x="4" y="4" width="16" height="17" rx="3"></rect></svg>Check-ins</div>
+      <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;background:#E9F0EC;color:#115E59;font-size:13.5px;font-weight:600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#115E59" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>Schedule</div>
+    </div>
+    <div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 10px;border-top:1px solid #EFEBE0">
+      <span style="width:36px;height:36px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">EK</span>
+      <div style="display:flex;flex-direction:column"><span style="font-size:13px;font-weight:600;color:#221F1A">Dr Elina Koskinen</span><span style="font-size:11.5px;color:#9C9585">Oncology</span></div>
+    </div>
+  </div>
+  <div style="flex:1;padding:26px 30px;display:flex;flex-direction:column;gap:18px;min-width:0;box-sizing:border-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:25px;color:#221F1A">Schedule</span>
+        <span style="font-size:13px;color:#9C9585">Friday 21 August</span>
+      </div>
+      <div style="display:flex;gap:6px;background:#EDE9DF;border-radius:99px;padding:4px">
+        <span style="border-radius:99px;padding:7px 16px;font-size:12.5px;font-weight:600;background:#FFFEFB;color:#221F1A;box-shadow:0 1px 3px rgba(60,52,36,0.10)">Day</span>
+        <span style="border-radius:99px;padding:7px 16px;font-size:12.5px;font-weight:500;color:#7C766A;transition:color .3s ease;cursor:pointer" style-hover="color:#221F1A">Week</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;min-width:0">
+      <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:6px 0">
+        <div style="display:flex;gap:14px;padding:10px 20px;align-items:flex-start"><span style="font-size:12px;color:#9C9585;width:42px;flex:none;padding-top:10px">08:00</span><span style="flex:1;border-top:1px solid #EFEBE0;height:38px"></span></div>
+        <div style="display:flex;gap:14px;padding:0 20px;align-items:flex-start"><span style="font-size:12px;color:#9C9585;width:42px;flex:none;padding-top:10px">09:00</span>
+          <div style="flex:1;border-top:1px solid #EFEBE0;padding-top:8px">
+            <div style="background:#E9F0EC;border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;transition:all .3s ease;cursor:pointer" style-hover="transform:translateY(-1px);box-shadow:0 6px 16px rgba(17,94,89,0.14)">
+              <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:600;color:#115E59">Ward round — day hospital</span><span style="font-size:12px;color:#55503F">09:30–10:30, floor 4</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;padding:0 20px;align-items:flex-start"><span style="font-size:12px;color:#9C9585;width:42px;flex:none;padding-top:10px">11:00</span>
+          <div style="flex:1;border-top:1px solid #EFEBE0;padding-top:8px">
+            <div style="background:#F1EEE6;border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;transition:all .3s ease;cursor:pointer" style-hover="transform:translateY(-1px);box-shadow:0 6px 16px rgba(60,52,36,0.12)">
+              <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Ritva Salo — follow-up</span><span style="font-size:12px;color:#55503F">11:00–11:30, room 12</span></div>
+              <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#115E59;background:#FFFEFB;border:1px solid #BFD6CE;border-radius:99px;padding:4px 11px"><span style="width:6px;height:6px;border-radius:99px;background:#115E59"></span>Low</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;padding:0 20px;align-items:flex-start"><span style="font-size:12px;color:#9C9585;width:42px;flex:none;padding-top:10px">12:00</span><span style="flex:1;border-top:1px solid #EFEBE0;height:38px"></span></div>
+        <div style="display:flex;gap:14px;padding:0 20px;align-items:flex-start"><span style="font-size:12px;color:#9C9585;width:42px;flex:none;padding-top:10px">13:00</span>
+          <div style="flex:1;border-top:1px solid #EFEBE0;padding-top:8px">
+            <div style="background:#F1EEE6;border-radius:12px;padding:12px 16px;transition:all .3s ease;cursor:pointer" style-hover="transform:translateY(-1px);box-shadow:0 6px 16px rgba(60,52,36,0.12)">
+              <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Tumor board</span><span style="font-size:12px;color:#55503F">13:15–14:30, meeting room B</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;padding:0 20px;align-items:flex-start"><span style="font-size:12px;color:#9C9585;width:42px;flex:none;padding-top:10px">15:00</span>
+          <div style="flex:1;border-top:1px solid #EFEBE0;padding-top:8px">
+            <div style="background:#F1EEE6;border-radius:12px;padding:12px 16px;transition:all .3s ease;cursor:pointer" style-hover="transform:translateY(-1px);box-shadow:0 6px 16px rgba(60,52,36,0.12)">
+              <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Check-in reviews &amp; callbacks</span><span style="font-size:12px;color:#55503F">15:00–16:00, reserved time</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;padding:0 20px 10px;align-items:flex-start"><span style="font-size:12px;color:#9C9585;width:42px;flex:none;padding-top:10px">16:00</span><span style="flex:1;border-top:1px solid #EFEBE0;height:24px"></span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+        <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+          <div style="padding:15px 20px;border-bottom:1px solid #EFEBE0;font-family:'Newsreader',serif;font-style:italic;font-size:17px;font-weight:500;color:#221F1A">Week ahead</div>
+          <div style="padding:13px 20px;display:flex;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+            <div style="width:46px;border-radius:10px;background:#EFECE4;display:flex;flex-direction:column;align-items:center;padding:6px 0;flex:none"><span style="font-size:10px;font-weight:600;color:#7C766A;letter-spacing:0.06em">MON</span><span style="font-size:17px;font-weight:600;color:#221F1A">24</span></div>
+            <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Anna Virtanen, 10:30</span><span style="font-size:12px;color:#9C9585">Outpatient clinic — review high alert first</span></div>
+          </div>
+          <div style="padding:13px 20px;display:flex;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+            <div style="width:46px;border-radius:10px;background:#EFECE4;display:flex;flex-direction:column;align-items:center;padding:6px 0;flex:none"><span style="font-size:10px;font-weight:600;color:#7C766A;letter-spacing:0.06em">TUE</span><span style="font-size:17px;font-weight:600;color:#221F1A">25</span></div>
+            <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Juhani Mäkelä, 9:00</span><span style="font-size:12px;color:#9C9585">Pre-cycle assessment</span></div>
+          </div>
+          <div style="padding:13px 20px;display:flex;gap:12px;align-items:center;transition:background .35s ease" style-hover="background:#FBF8F1">
+            <div style="width:46px;border-radius:10px;background:#EFECE4;display:flex;flex-direction:column;align-items:center;padding:6px 0;flex:none"><span style="font-size:10px;font-weight:600;color:#7C766A;letter-spacing:0.06em">THU</span><span style="font-size:17px;font-weight:600;color:#221F1A">27</span></div>
+            <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Sofia Nieminen, 13:00</span><span style="font-size:12px;color:#9C9585">Follow-up on fatigue trend</span></div>
+          </div>
+        </div>
+        <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:13.5px;font-weight:600;color:#221F1A">Reserved for reviews</span>
+          <span style="font-size:12.5px;color:#7C766A;line-height:1.5">One hour daily at 15:00 is held for check-in reviews and patient callbacks.</span>
+          <span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Adjust reserved time</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</section>
+</x-dc>
+</body>
+</html>

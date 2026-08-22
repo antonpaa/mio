@@ -13,7 +13,7 @@
 #
 # Changing this file is a reviewed, audited change. It is a compliance artifact.
 
-version: 1
+version: 2
 
 # ---------------------------------------------------------------------------
 # Scope vocabulary
@@ -206,6 +206,18 @@ resources:
         notes: >-
           Records provenance on the entity itself, rendered in the UI as
           "entered by X on behalf of patient".
+      - id: configure_program_rules
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: team_lead
+          administrator: deny
+        notes: >-
+          REGULATED-ADJACENT, same tier as survey_template.configure_alert_rules:
+          program-specific overrides of a survey's thresholds, expected ranges
+          and critical body-map areas (ADR-0011). The effective rule set a
+          response is evaluated against is template rules + these overrides.
 
   - id: treatment_template
     schema: clinical
@@ -594,6 +606,107 @@ resources:
           treatment_lead: care_relationship
           administrator: deny
 
+  # -- Observations ---------------------------------------------------------
+  - id: value_entry
+    schema: clinical
+    patient_scoped: true
+    description: >-
+      Numeric measurement in a patient's value series (e.g. PSA), with
+      provenance. See docs/architecture/observations.md.
+    actions:
+      - id: view
+        audit: always
+        grants:
+          patient: self
+          treatment_member: care_relationship
+          treatment_lead: care_relationship
+          administrator: deny
+      - id: create
+        audit: always
+        grants:
+          patient: self
+          treatment_member: care_relationship
+          treatment_lead: care_relationship
+          administrator: deny
+        notes: >-
+          Clinician creation is on-behalf entry and records provenance
+          ("entered by X on behalf of patient").
+
+  - id: symptom_observation
+    schema: clinical
+    patient_scoped: true
+    description: >-
+      Taxonomy-coded symptom report with severity and detail; sources are
+      survey answers, patient self-report, or clinician on-behalf entry.
+    actions:
+      - id: view
+        audit: always
+        grants:
+          patient: self
+          treatment_member: care_relationship
+          treatment_lead: care_relationship
+          administrator: deny
+      - id: create
+        audit: always
+        grants:
+          patient: self
+          treatment_member: care_relationship
+          treatment_lead: care_relationship
+          administrator: deny
+        notes: >-
+          Patient create is self-report ("Report a symptom"); clinician create
+          is on-behalf with provenance. Interpretation (expected vs alarming)
+          is the rule engine's job, per program — never stored on the
+          observation.
+
+  - id: symptom_taxonomy
+    schema: clinical
+    patient_scoped: false
+    description: >-
+      The system-level symptom list (Finnish-canonical, growing). Reference
+      data, not patient data; patients encounter entries through surveys, not
+      the taxonomy itself.
+    actions:
+      - id: view
+        audit: never
+        grants:
+          patient: deny
+          treatment_member: any
+          treatment_lead: any
+          administrator: deny
+      - id: manage
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: any
+          administrator: deny
+
+  - id: patient_data_export
+    schema: clinical
+    patient_scoped: true
+    description: >-
+      Clinician-prepared export of one patient's data (PP5) — distinct from
+      own_data_export, which is the subject's own GDPR download.
+    actions:
+      - id: request
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: care_relationship
+          treatment_lead: care_relationship
+          administrator: deny
+        notes: >-
+          A reason is required and written to the audit record with the
+          requester ("who requested it and why").
+      - id: download
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: care_relationship
+          treatment_lead: care_relationship
+          administrator: deny
+
   # -- Administration ------------------------------------------------------
   - id: staff_account
     schema: identity
@@ -854,8 +967,24 @@ open_questions:
     tension: >
       Transparency is a genuine GDPR and trust consideration, and Mio's audit
       posture is otherwise strongly pro-transparency. But a machine-graded risk
-      score shown without clinical context could cause real distress. Current
-      draft denies it. Needs a clinical opinion, not an engineering one.
+      score shown without clinical context could cause real distress. The
+      design package takes a position (B3, P12): patients never see severities,
+      triggers or critical areas; they get a calm plain-language note on
+      submission and any patient-addressed custom notification a rule author
+      wrote. Matrix keeps alert.view denied to patients accordingly. Still
+      needs clinical sign-off, not an engineering one.
+
+  - id: reporting_shell_placement
+    question: >
+      The reporting screen (A4) sits in the administration shell in the design,
+      but report.view is denied to administrators because its metrics are
+      clinical aggregates.
+    tension: >
+      Either reporting moves to the clinician shell (Treatment Lead), or its
+      metrics must be de-identified counts computable without clinical.*
+      access. The matrix currently denies administrators; the design adjusts
+      or the metric set is redefined. Tracked as P8 in the compliance
+      register.
 
   - id: break_glass
     question: Is emergency access outside a care relationship required?

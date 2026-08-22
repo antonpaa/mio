@@ -93,7 +93,17 @@ clinical.message_thread            per treatment programme
 clinical.message                   structured document, not HTML
 clinical.internal_note             never visible to patients
 clinical.attachment                metadata; bytes live in object storage
+
+clinical.value_series              named, unit-bearing measurement track
+clinical.value_entry               provenance-carrying entries over time
+clinical.symptom                   taxonomy (FI-canonical, growing, coded)
+clinical.symptom_observation       severity + detail + source + provenance
 ```
+
+Values and symptoms are the `observations` module
+([`observations.md`](observations.md), ADR-0011). Observations store facts;
+whether a fact is alarming is decided per treatment program by the rule
+engine, never stored on the observation.
 
 ### Audit
 
@@ -137,7 +147,10 @@ is why audit is bound to the Cedar decision point rather than to a controller.
 
 Audit records reference resource identifiers and never embed clinical content.
 This keeps the audit log useful to a patient asking who accessed their records
-without turning the log itself into a second copy of the record.
+without turning the log itself into a second copy of the record. The
+administrator-facing audit view (A3) renders subjects minimised to initials
+and event text generic — event type plus resource reference, no clinical
+fragments (reconciliation X4 in [`../design/README.md`](../design/README.md)).
 
 Records are exported periodically to immutable object storage — blob
 immutability policy or bucket lock — so retention survives database compromise.
@@ -169,10 +182,15 @@ the periods themselves are a legal input, not a technical one.
 
 ## GDPR access and portability
 
-"Download my data" is available in settings for patients and staff. It runs as a
-worker job, assembles identity and clinical data for the subject, and is itself
-audited. The export is machine-readable and includes the subject's access
-history.
+"Download my data" is available in settings for patients and staff. It runs as
+a worker job, assembles identity and clinical data for the subject, and is
+itself audited. The export is machine-readable and includes the subject's
+access history.
+
+Clinicians can also prepare an export of a patient's data from the profile
+(PP5) — scope selection, PDF or machine-readable — **with a recorded reason**;
+the audit entry carries who requested it and why. This is the
+`patient_data_export` capability, care-relationship scoped.
 
 ## Non-production data
 

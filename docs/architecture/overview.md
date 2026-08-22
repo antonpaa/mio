@@ -62,8 +62,9 @@ Two deployables, one codebase, one database ([ADR-0002](../adr/0002-modular-mono
 | `identity` | Accounts, credentials, sessions, MFA, account lifecycle |
 | `authz` | Cedar policy evaluation, care relationships, capability matrix |
 | `patients` | Patient records, roster, profile aggregation |
+| `observations` | Value series and symptom observations ([ADR-0011](../adr/0011-absorb-design-package-scope.md)) |
 | `treatments` | Treatments, templates, teams, activities, lifecycle |
-| `surveys` | Builder, versioning, assignment, responses, rule evaluation |
+| `surveys` | Builder, versioning, assignment, responses; the rule engine (conditions → alert / notification / task outcomes) |
 | `messaging` | Threads, messages, internal notes, attachments |
 | `alerts` | Alert raising, triage workflow, assignment, resolution |
 | `tasks` | Clinician tasks — claim, assign, complete |
@@ -115,7 +116,9 @@ cannot forget to call it, because there is no path around it
 **3. Email never contains clinical content.** The notification API's payload
 type is `{ recipient, notificationType, deepLink }` and nothing more. The email
 templating layer has no type-level access to clinical fields, so a violation is
-a compile error rather than a review catch.
+a compile error rather than a review catch. (In-app notifications are the
+content-bearing layer and are access-controlled as clinical reads — see
+[`messaging-and-attachments.md`](messaging-and-attachments.md).)
 
 **4. Alerts are never lost.** The alert record, its audit entry and its queued
 notification commit in one transaction, because the queue lives in the same
@@ -132,6 +135,18 @@ database ([ADR-0008](../adr/0008-job-queue-in-postgresql.md)).
 | [`scheduling.md`](scheduling.md) | Phased recurrence, materialisation, time zones |
 | [`messaging-and-attachments.md`](messaging-and-attachments.md) | Rich text, upload pipeline, serving |
 | [`platform.md`](platform.md) | Environments, CI/CD, observability, backups, testing |
+| [`observations.md`](observations.md) | Values, the symptom taxonomy, program-specific interpretation |
+
+## Design
+
+The approved design package (warm-editorial design language, all ~56 screens)
+lives in `design/handoff-2026-08-21/` and is analyzed in
+[`../design/README.md`](../design/README.md); tokens and component rules in
+[`../design/design-system.md`](../design/design-system.md), and the
+screen-to-module map in
+[`../design/screen-inventory.md`](../design/screen-inventory.md). The
+application ships as three shells — patient, clinician, administration — the
+administration shell being served by the no-clinical-grant path (ADR-0007).
 
 ## Deliberate non-goals for v1
 

@@ -56,7 +56,7 @@ which is also the change-control evidence
 |---|---|
 | Unit | Domain logic, rule evaluation, recurrence expansion |
 | Integration | Against real PostgreSQL via Testcontainers — RLS and grants are the thing under test, and neither exists in a mock |
-| Authorization | Generated from the capability matrix: 288 role × action grants asserted |
+| Authorization | Generated from the capability matrix: 324 role × action grants asserted |
 | E2E | Playwright over the core patient and clinician journeys |
 | Accessibility | axe-core in CI, plus manual keyboard and screen-reader passes |
 

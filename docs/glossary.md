@@ -50,6 +50,9 @@ interface and in translation.
 | Treatment template | Hoitomalli | Behandlingsmall | ⚠️ |
 | Activity | Tapahtuma | Aktivitet | ⚠️ Not *toimenpide*, which means a clinical procedure |
 | Task | Tehtävä | Uppgift | Clinician-side work item |
+| Claim (a task) | Ota tehtävä | Ta uppgift | ⚠️ |
+| Unclaimed | Ottamatta | Ej tagen | Team-queue state ⚠️ |
+| Team queue | Tiimin jono | Teamets kö | ⚠️ |
 
 ## Treatment lifecycle
 
@@ -65,7 +68,7 @@ interface and in translation.
 
 | English | Finnish | Swedish | Note |
 |---|---|---|---|
-| Survey | Kysely | Enkät | |
+| Survey | Kysely ⚠️ | Enkät | ⚠️ The user-supplied Finnish mixes *kysely* (instrument names: "…oirekysely") and *lomake* (nav labels: "Täytetyt lomakkeet", "Täytä lomake"). Owner decision pending — reconciliation X5 in [`design/README.md`](design/README.md). Working rule: *kysely* for the concept, *lomake* only inside the fixed nav labels below |
 | Question | Kysymys | Fråga | |
 | Response | Vastaus | Svar | |
 | Draft (saved response) | Keskeneräinen vastaus | Påbörjat svar | Distinct from template draft |
@@ -73,6 +76,9 @@ interface and in translation.
 | Overdue | Myöhässä | Försenad | |
 | Body map | Kehokartta | Kroppskarta | |
 | Recurrence | Toistuvuus | Upprepning | |
+| Answer window | Vastausaika | Svarsfönster | Per-occurrence response period ⚠️ |
+| Conditional logic | Ehdollinen logiikka | Villkorslogik | Follow-up branching ⚠️ |
+| Follow-up question | Jatkokysymys | Följdfråga | ⚠️ |
 
 ## Content lifecycle
 
@@ -85,15 +91,24 @@ Used for both survey and treatment templates.
 | Archived | Arkistoitu | Arkiverad |
 | Version | Versio | Version |
 
-## Alerts
+## Alerts and rules
 
 | English | Finnish | Swedish | Note |
 |---|---|---|---|
 | Alert | Hälytys | Larm | ⚠️ Clinically loaded — confirm with clinicians |
+| Trigger | Liipaisin | Utlösare | A single fired rule; an alert cites its triggers ("No triggers", "Raising triggers") ⚠️ |
 | Severity | Vakavuusaste | Allvarlighetsgrad | |
+| High | Korkea | Hög | Severity level ⚠️ |
+| Moderate | Kohtalainen | Måttlig | Severity level ⚠️ |
+| Low | Matala | Låg | Severity level ⚠️ |
 | New | Uusi | Ny | |
 | Acknowledged | Kuitattu | Kvitterad | ⚠️ |
 | Resolved | Ratkaistu | Åtgärdad | ⚠️ |
+| Trend rule | Trendisääntö | Trendregel | Condition across consecutive responses ⚠️ |
+| Custom notification | Mukautettu ilmoitus | Anpassad avisering | Rule outcome with authored text ⚠️ |
+| Expected in this program | Odotettu tässä ohjelmassa | Förväntat i detta program | Response-detail standing ⚠️ |
+| Above expected | Odotettua voimakkaampi | Över förväntat | ⚠️ |
+| Critical area | Kriittinen alue | Kritiskt område | Body-map region flagged per program ⚠️ |
 
 ## Messaging
 
@@ -120,6 +135,68 @@ Terms fixed by the brief's naming conventions.
 | Patient roster | Potilaslista | Patientlista | |
 | Notification | Ilmoitus | Avisering | |
 | Settings | Asetukset | Inställningar | |
+
+## Patient profile sub-navigation (clinician side)
+
+Finnish supplied by the product owner — canonical, unlike the drafts above.
+Swedish remains draft ⚠️.
+
+| English | Finnish | Swedish |
+|---|---|---|
+| Patient profile | Potilaan profiili | Patientprofil |
+| Patient summary | Potilaan yhteenveto | Patientöversikt |
+| Programs, surveys & care team | Ohjelmat, lomakkeet ja hoitotiimi | Program, enkäter och vårdteam |
+| Patient details | Potilaan tiedot | Patientuppgifter |
+| Health data | Terveystiedot | Hälsodata |
+| Values | Arvot | Värden |
+| Symptoms | Oireet | Symtom |
+| Completed surveys | Täytetyt lomakkeet | Ifyllda enkäter |
+| Data export | Potilaan tietojen vienti | Dataexport |
+| Report | Raportti | Rapport |
+| Report a symptom | Raportoi oire | Rapportera symtom |
+| Fill a survey | Täytä lomake | Fyll i enkät |
+| New value | Uusi arvo | Nytt värde |
+
+## Symptom taxonomy
+
+System reference data ([`architecture/observations.md`](architecture/observations.md)).
+**Finnish is canonical** (supplied by the product owner); English is the
+working translation from the brief; Swedish is draft ⚠️ pending native
+clinical review. The list grows over time. QLQ-30 from the source list is an
+instrument, not a symptom — it lives in the survey catalog (register R11).
+
+| Finnish (canonical) | English | Swedish ⚠️ |
+|---|---|---|
+| Hengenahdistus | Shortness of breath | Andnöd |
+| Ihottuma / ihomuutos | Rash / skin change — reported on the body map | Hudutslag / hudförändring |
+| Nivelkipu | Joint pain | Ledvärk |
+| Ripuli | Diarrhea | Diarré |
+| Turvotus | Swelling | Svullnad |
+| Yskä | Cough | Hosta |
+| Erektiohäiriö | Erectile dysfunction | Erektil dysfunktion |
+| Eturauhasen kipu | Prostate pain | Prostatasmärta |
+| Kipu | Pain | Smärta |
+| Kivulias virtsaaminen | Painful urination | Smärtsam urinering |
+| Kuume | Fever | Feber |
+| Muut oireet | Other symptoms | Övriga symtom |
+| Neuropatia | Neuropathy | Neuropati |
+| Oksentelu | Vomiting | Kräkningar |
+| Pahoinvointi | Nausea | Illamående |
+| Paleltumat | Cold sensitivity | Köldkänslighet |
+| Peräaukon kipu | Anal pain | Analsmärta |
+| Ruokahalun väheneminen | Decreased appetite | Nedsatt aptit |
+| Suun kuivuminen | Dry mouth | Muntorrhet |
+| Suun limakalvovauriot | Oral mucosal damage | Skador på munslemhinnan |
+| Tihentynyt virtsaamisen tarve | Urinary frequency | Täta urinträngningar |
+| Ummetus | Constipation | Förstoppning |
+| Verivirtsaisuus | Hematuria | Blod i urinen |
+| Virtsan karkailu | Urinary incontinence | Urininkontinens |
+| Virtsapakko | Urinary urgency | Urinträngningar |
+| Virtsaumpi | Urinary retention | Urinstämma |
+
+Symptom-observation trend labels: New — Uusi — Ny ⚠️ · Worsening — Pahenee —
+Förvärras ⚠️ · Stable — Vakaa — Stabil ⚠️ · Easing — Helpottaa — Lindras ⚠️ ·
+Resolved — Poistunut — Avklingat ⚠️.
 
 ## Account and access
 

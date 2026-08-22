@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#f0eee9;font-family:'Schibsted Grotesk',system-ui,sans-serif}a{color:#115E59}a:hover{color:#0D4A46}</style>
+</helmet>
+<section style="padding:40px 44px 32px" data-screen-label="Patient profile sub-pages">
+<div style="display:flex;align-items:baseline;gap:10px;margin:0 0 20px"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px">PATIENT PROFILE</span><span style="font:600 13px/1.2 system-ui,sans-serif;color:#1a1a1a">Sub-pages: programs &amp; care team, values, symptoms, completed surveys, details &amp; export, alert detail</span></div>
+<div style="display:flex;flex-direction:column;gap:32px;align-items:flex-start">
+
+<div id="PP1" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="PP1 Programs surveys care team">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#PP1" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">PP1</a>Programs, surveys &amp; care team</div>
+<div style="width:1360px;background:#F6F4EF;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:flex;flex-direction:column;min-height:800px">
+  <div style="background:#FFFEFB;border-bottom:1px solid #E8E4DA;display:flex;align-items:center;padding:0 22px;height:58px;gap:16px;flex:none">
+    <div style="display:flex;align-items:center;gap:8px;width:180px;flex:none"><svg width="26" height="26" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg><span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:20px;color:#221F1A">mio</span></div>
+    <div style="flex:1;display:flex;justify-content:center;align-items:center;gap:2px">
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Dashboard</span>
+      <span style="background:#E9F0EC;color:#115E59;font-weight:600;border-radius:99px;padding:8px 15px;font-size:13px">Patients</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer;display:inline-flex;align-items:center;gap:7px" style-hover="background:#F6F4EF">Messages<span style="background:#B3372B;color:#fff;font-size:10.5px;font-weight:600;border-radius:99px;padding:1px 7px">7</span></span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Surveys</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Treatments</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Tasks</span>
+    </div>
+    <div style="width:180px;flex:none;display:flex;justify-content:flex-end;align-items:center;gap:8px">
+      <span style="width:36px;height:36px;border-radius:99px;border:1px solid #E8E4DA;background:#FFFEFB;display:flex;align-items:center;justify-content:center;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#55503F" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg></span>
+      <span style="width:34px;height:34px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer">EK</span>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;min-height:0">
+    <div style="width:232px;flex:none;background:#FFFEFB;border-right:1px solid #E8E4DA;padding:18px 12px;display:flex;flex-direction:column;gap:1px;box-sizing:border-box">
+      <div style="font-size:10.5px;font-weight:600;color:#9C9585;letter-spacing:0.07em;padding:4px 12px 5px">PATIENT PROFILE</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Patient summary</div>
+      <div style="padding:8px 12px;border-radius:9px;background:#E9F0EC;color:#115E59;font-size:13px;font-weight:600">Programs, surveys &amp; care team</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Patient details</div>
+      <div style="font-size:10.5px;font-weight:600;color:#9C9585;letter-spacing:0.07em;padding:16px 12px 5px">HEALTH DATA</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Values</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Symptoms</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Completed surveys</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Data export</div>
+      <div style="font-size:10.5px;font-weight:600;color:#9C9585;letter-spacing:0.07em;padding:16px 12px 5px">REPORT</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#115E59;font-size:13px;font-weight:600;transition:background .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ Report a symptom</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#115E59;font-size:13px;font-weight:600;transition:background .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ Fill a survey</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#115E59;font-size:13px;font-weight:600;transition:background .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ New value</div>
+    </div>
+    <div style="flex:1;padding:20px 26px;display:flex;flex-direction:column;gap:14px;min-width:0;box-sizing:border-box">
+      <div style="font-size:12.5px;color:#9C9585"><span style="color:#115E59;font-weight:500;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Patients</span>&nbsp;&nbsp;/&nbsp;&nbsp;<span style="color:#115E59;font-weight:500;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Pekka Laine</span>&nbsp;&nbsp;/&nbsp;&nbsp;Programs, surveys &amp; care team</div>
+      <span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:23px;color:#221F1A">Programs, surveys &amp; care team</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;min-width:0">
+        <div style="display:flex;flex-direction:column;gap:18px;min-width:0">
+          <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+            <div style="padding:15px 20px;border-bottom:1px solid #EFEBE0;display:flex;justify-content:space-between;align-items:center">
+              <span style="font-family:'Newsreader',serif;font-style:italic;font-size:17px;font-weight:500;color:#221F1A">Programs</span>
+              <span style="border:1px solid #BFD6CE;color:#115E59;border-radius:99px;padding:5px 13px;font-size:12px;font-weight:600;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ Start from template</span>
+            </div>
+            <div style="padding:14px 20px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #EFEBE0">
+              <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Prostate cancer — docetaxel</span><span style="font-size:11px;font-weight:600;color:#115E59;background:#E9F0EC;border-radius:99px;padding:3px 10px">Active</span></div>
+              <span style="font-size:12.5px;color:#7C766A">Cycle 4 of 6 — from template "Prostate docetaxel" v1 — started 2 June</span>
+              <span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Open treatment</span>
+            </div>
+            <div style="padding:14px 20px;display:flex;justify-content:space-between;align-items:center">
+              <div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:500;color:#7C766A">Prostate radiotherapy</span><span style="font-size:12px;color:#9C9585">Completed 12 May</span></div>
+              <span style="font-size:11px;font-weight:600;color:#7C766A;background:#EFECE4;border-radius:99px;padding:3px 10px">Completed</span>
+            </div>
+          </div>
+          <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+            <div style="padding:15px 20px;border-bottom:1px solid #EFEBE0;display:flex;justify-content:space-between;align-items:center">
+              <span style="font-family:'Newsreader',serif;font-style:italic;font-size:17px;font-weight:500;color:#221F1A">Assigned surveys</span>
+              <span style="border:1px solid #BFD6CE;color:#115E59;border-radius:99px;padding:5px 13px;font-size:12px;font-weight:600;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ Assign</span>
+            </div>
+            <div style="padding:13px 20px;display:flex;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+              <div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Kemoterapian oirekysely <span style="font-weight:400;color:#9C9585;font-size:11.5px">v2, FI</span></span><span style="font-size:12px;color:#7C766A">Weekly during treatment</span></div>
+              <span style="font-size:11px;font-weight:600;color:#115E59;background:#E9F0EC;border-radius:99px;padding:3px 10px;flex:none">Active</span>
+              <span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;flex:none;cursor:pointer">Schedule</span>
+            </div>
+            <div style="padding:13px 20px;display:flex;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+              <div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:600;color:#221F1A">PSA-raportointi <span style="font-weight:400;color:#9C9585;font-size:11.5px">v1, FI</span></span><span style="font-size:12px;color:#7C766A">Monthly ×6, then every 3 months</span></div>
+              <span style="font-size:11px;font-weight:600;color:#115E59;background:#E9F0EC;border-radius:99px;padding:3px 10px;flex:none">Active</span>
+              <span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;flex:none;cursor:pointer">Schedule</span>
+            </div>
+            <div style="padding:13px 20px;display:flex;gap:12px;align-items:center;transition:background .35s ease" style-hover="background:#FBF8F1">
+              <div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:500;color:#7C766A">Prostatan sädehoito <span style="font-weight:400;color:#9C9585;font-size:11.5px">v4, FI</span></span><span style="font-size:12px;color:#9C9585">Ended with program, 12 May</span></div>
+              <span style="font-size:11px;font-weight:600;color:#7C766A;background:#EFECE4;border-radius:99px;padding:3px 10px;flex:none">Ended</span>
+            </div>
+          </div>
+        </div>
+        <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);align-self:start">
+          <div style="padding:15px 20px;border-bottom:1px solid #EFEBE0;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-family:'Newsreader',serif;font-style:italic;font-size:17px;font-weight:500;color:#221F1A">Care team</span>
+            <span style="border:1px solid #BFD6CE;color:#115E59;border-radius:99px;padding:5px 13px;font-size:12px;font-weight:600;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ Add member</span>
+          </div>
+          <div style="padding:12px 20px;display:flex;gap:10px;align-items:center;border-bottom:1px solid #EFEBE0"><span style="width:36px;height:36px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;flex:none">EK</span><div style="flex:1;display:flex;flex-direction:column"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Dr Elina Koskinen</span><span style="font-size:12px;color:#9C9585">Treatment lead — prostate ca, docetaxel</span></div><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Change</span></div>
+          <div style="padding:12px 20px;display:flex;gap:10px;align-items:center;border-bottom:1px solid #EFEBE0"><span style="width:36px;height:36px;border-radius:99px;background:#E9F0EC;color:#115E59;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;flex:none">MA</span><div style="flex:1;display:flex;flex-direction:column"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Mikael Aho</span><span style="font-size:12px;color:#9C9585">Care coordinator, nurse</span></div><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Change</span></div>
+          <div style="padding:12px 20px;display:flex;gap:10px;align-items:center;border-bottom:1px solid #EFEBE0"><span style="width:36px;height:36px;border-radius:99px;background:#F7EEDA;color:#A16207;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;flex:none">UO</span><div style="flex:1;display:flex;flex-direction:column"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Team: Urology outpatient</span><span style="font-size:12px;color:#9C9585">8 members — shared inbox access</span></div><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Manage</span></div>
+          <div style="padding:13px 20px;font-size:12px;color:#9C9585;line-height:1.5">Membership changes take effect immediately and are written to the audit log.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="PP2" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="PP2 Values  full page all records">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#PP2" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">PP2</a>Values — full page, all records</div>
+<div style="width:1360px;background:#F6F4EF;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:flex;flex-direction:column;min-height:780px">
+  <div style="background:#FFFEFB;border-bottom:1px solid #E8E4DA;display:flex;align-items:center;padding:0 22px;height:58px;gap:16px;flex:none">
+    <div style="display:flex;align-items:center;gap:8px;width:180px;flex:none"><svg width="26" height="26" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg><span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:20px;color:#221F1A">mio</span></div>
+    <div style="flex:1;display:flex;justify-content:center;align-items:center;gap:2px">
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Dashboard</span>
+      <span style="background:#E9F0EC;color:#115E59;font-weight:600;border-radius:99px;padding:8px 15px;font-size:13px">Patients</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer;display:inline-flex;align-items:center;gap:7px" style-hover="background:#F6F4EF">Messages<span style="background:#B3372B;color:#fff;font-size:10.5px;font-weight:600;border-radius:99px;padding:1px 7px">7</span></span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Surveys</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Treatments</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Tasks</span>
+    </div>
+    <div style="width:180px;flex:none;display:flex;justify-content:flex-end;align-items:center;gap:8px">
+      <span style="width:36px;height:36px;border-radius:99px;border:1px solid #E8E4DA;background:#FFFEFB;display:flex;align-items:center;justify-content:center;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#55503F" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg></span>
+      <span style="width:34px;height:34px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer">EK</span>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;min-height:0">
+    <div style="width:232px;flex:none;background:#FFFEFB;border-right:1px solid #E8E4DA;padding:18px 12px;display:flex;flex-direction:column;gap:1px;box-sizing:border-box">
+      <div style="font-size:10.5px;font-weight:600;color:#9C9585;letter-spacing:0.07em;padding:4px 12px 5px">PATIENT PROFILE</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Patient summary</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Programs, surveys &amp; care team</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Patient details</div>
+      <div style="font-size:10.5px;font-weight:600;color:#9C9585;letter-spacing:0.07em;padding:16px 12px 5px">HEALTH DATA</div>
+      <div style="padding:8px 12px;border-radius:9px;background:#E9F0EC;color:#115E59;font-size:13px;font-weight:600">Values</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Symptoms</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Completed surveys</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Data export</div>
+      <div style="font-size:10.5px;font-weight:600;color:#9C9585;letter-spacing:0.07em;padding:16px 12px 5px">REPORT</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#115E59;font-size:13px;font-weight:600;transition:background .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ Report a symptom</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#115E59;font-size:13px;font-weight:600;transition:background .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ Fill a survey</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#115E59;font-size:13px;font-weight:600;transition:background .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ New value</div>
+    </div>
+    <div style="flex:1;padding:20px 26px;display:flex;flex-direction:column;gap:14px;min-width:0;box-sizing:border-box">
+      <div style="font-size:12.5px;color:#9C9585"><span style="color:#115E59;font-weight:500;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Patients</span>&nbsp;&nbsp;/&nbsp;&nbsp;<span style="color:#115E59;font-weight:500;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Pekka Laine</span>&nbsp;&nbsp;/&nbsp;&nbsp;Values</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px"><span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:23px;color:#221F1A">Values</span><span style="background:#115E59;color:#FDFBF5;border-radius:99px;padding:9px 17px;font-size:13px;font-weight:600;white-space:nowrap;transition:all .3s ease;cursor:pointer" style-hover="background:#0D4A46;transform:translateY(-1px);box-shadow:0 8px 20px rgba(17,94,89,0.22)">+ New value</span></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="display:flex;gap:6px;background:#EDE9DF;border-radius:99px;padding:4px"><span style="border-radius:99px;padding:7px 16px;font-size:12.5px;font-weight:600;background:#FFFEFB;color:#221F1A;box-shadow:0 1px 3px rgba(60,52,36,0.10);white-space:nowrap">PSA value</span><span style="border-radius:99px;padding:7px 16px;font-size:12.5px;font-weight:500;color:#7C766A;white-space:nowrap;transition:color .3s ease;cursor:pointer" style-hover="color:#221F1A">Testosterone</span><span style="border-radius:99px;padding:7px 16px;font-size:12.5px;font-weight:500;color:#7C766A;white-space:nowrap;transition:color .3s ease;cursor:pointer" style-hover="color:#221F1A">PSA reporting</span></div>
+        <span style="font-size:11px;font-weight:600;color:#A16207;background:#F7EEDA;border-radius:99px;padding:3px 10px">rising</span>
+      </div>
+      <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:'Newsreader',serif;font-style:italic;font-size:17px;font-weight:500;color:#221F1A">PSA value — 12 months</span><span style="font-size:12px;color:#9C9585">µg/l</span></div>
+        <svg width="100%" height="150" viewBox="0 0 900 150" preserveAspectRatio="none" style="display:block">
+          <line x1="0" y1="16" x2="900" y2="16" stroke="#EFEBE0" stroke-width="1"></line><line x1="0" y1="56" x2="900" y2="56" stroke="#EFEBE0" stroke-width="1"></line><line x1="0" y1="96" x2="900" y2="96" stroke="#EFEBE0" stroke-width="1"></line><line x1="0" y1="136" x2="900" y2="136" stroke="#EFEBE0" stroke-width="1"></line>
+          <path d="M30 118 L110 122 L190 125 L270 120 L350 118 L430 112 L510 108 L590 104 L670 96 L750 78 L860 52" fill="none" stroke="#115E59" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+          <circle cx="860" cy="52" r="5" fill="#A16207"></circle><circle cx="860" cy="52" r="10" fill="#A16207" opacity="0.2"></circle>
+        </svg>
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#9C9585;padding:0 10px"><span>Sep 25</span><span>Nov</span><span>Jan 26</span><span>Mar</span><span>May</span><span>Jul</span><span style="color:#A16207;font-weight:600">18 Aug</span></div>
+      </div>
+      <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+        <div style="padding:11px 20px;border-bottom:1px solid #EFEBE0;display:grid;grid-template-columns:1fr 1fr 1.6fr 1.4fr;gap:12px;font-size:11.5px;font-weight:600;color:#9C9585;letter-spacing:0.05em"><span>DATE</span><span>VALUE</span><span>ENTERED BY</span><span>NOTE</span></div>
+        <div style="padding:12px 20px;display:grid;grid-template-columns:1fr 1fr 1.6fr 1.4fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;font-size:12.5px;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="color:#7C766A">18 Aug 2026</span><span style="color:#221F1A;font-weight:600">4.2 µg/l</span><span style="color:#55503F">Dr Koskinen, on behalf of patient</span><span style="color:#9C9585">provenance recorded</span></div>
+        <div style="padding:12px 20px;display:grid;grid-template-columns:1fr 1fr 1.6fr 1.4fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;font-size:12.5px;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="color:#7C766A">20 Jul 2026</span><span style="color:#221F1A;font-weight:600">3.6 µg/l</span><span style="color:#55503F">Pekka Laine</span><span style="color:#9C9585"></span></div>
+        <div style="padding:12px 20px;display:grid;grid-template-columns:1fr 1fr 1.6fr 1.4fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;font-size:12.5px;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="color:#7C766A">22 Jun 2026</span><span style="color:#221F1A;font-weight:600">3.1 µg/l</span><span style="color:#55503F">Pekka Laine</span><span style="color:#9C9585"></span></div>
+        <div style="padding:12px 20px;display:grid;grid-template-columns:1fr 1fr 1.6fr 1.4fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;font-size:12.5px;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="color:#7C766A">19 May 2026</span><span style="color:#221F1A;font-weight:600">3.0 µg/l</span><span style="color:#55503F">Pekka Laine</span><span style="color:#9C9585"></span></div>
+        <div style="padding:12px 20px;display:grid;grid-template-columns:1fr 1fr 1.6fr 1.4fr;gap:12px;align-items:center;font-size:12.5px;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="color:#7C766A">21 Apr 2026</span><span style="color:#221F1A;font-weight:600">2.9 µg/l</span><span style="color:#55503F">Mikael Aho, on behalf of patient</span><span style="color:#9C9585">phone report</span></div>
+      </div>
+      <div style="font-size:12.5px;color:#9C9585">Showing 5 of 12 records</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="PP3" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="PP3 Symptoms  latest trend program rules">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#PP3" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">PP3</a>Symptoms — latest, trend, program rules</div>
+<div style="width:1360px;background:#F6F4EF;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:flex;flex-direction:column;min-height:720px">
+  <div style="background:#FFFEFB;border-bottom:1px solid #E8E4DA;display:flex;align-items:center;padding:0 22px;height:58px;gap:16px;flex:none">
+    <div style="display:flex;align-items:center;gap:8px;width:180px;flex:none"><svg width="26" height="26" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg><span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:20px;color:#221F1A">mio</span></div>
+    <div style="flex:1;display:flex;justify-content:center;align-items:center;gap:2px">
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Dashboard</span>
+      <span style="background:#E9F0EC;color:#115E59;font-weight:600;border-radius:99px;padding:8px 15px;font-size:13px">Patients</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer;display:inline-flex;align-items:center;gap:7px" style-hover="background:#F6F4EF">Messages<span style="background:#B3372B;color:#fff;font-size:10.5px;font-weight:600;border-radius:99px;padding:1px 7px">7</span></span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Surveys</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Treatments</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Tasks</span>
+    </div>
+    <div style="width:180px;flex:none;display:flex;justify-content:flex-end;align-items:center;gap:8px">
+      <span style="width:36px;height:36px;border-radius:99px;border:1px solid #E8E4DA;background:#FFFEFB;display:flex;align-items:center;justify-content:center;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#55503F" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg></span>
+      <span style="width:34px;height:34px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer">EK</span>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;min-height:0">
+    <div style="width:232px;flex:none;background:#FFFEFB;border-right:1px solid #E8E4DA;padding:18px 12px;display:flex;flex-direction:column;gap:1px;box-sizing:border-box">
+      <div style="font-size:10.5px;font-weight:600;color:#9C9585;letter-spacing:0.07em;padding:4px 12px 5px">PATIENT PROFILE</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Patient summary</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Programs, surveys &amp; care team</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Patient details</div>
+      <div style="font-size:10.5px;font-weight:600;color:#9C9585;letter-spacing:0.07em;padding:16px 12px 5px">HEALTH DATA</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Values</div>
+      <div style="padding:8px 12px;border-radius:9px;background:#E9F0EC;color:#115E59;font-size:13px;font-weight:600">Symptoms</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Completed surveys</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Data export</div>
+      <div style="font-size:10.5px;font-weight:600;color:#9C9585;letter-spacing:0.07em;padding:16px 12px 5px">REPORT</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#115E59;font-size:13px;font-weight:600;transition:background .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ Report a symptom</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#115E59;font-size:13px;font-weight:600;transition:background .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ Fill a survey</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#115E59;font-size:13px;font-weight:600;transition:background .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ New value</div>
+    </div>
+    <div style="flex:1;padding:20px 26px;display:flex;flex-direction:column;gap:14px;min-width:0;box-sizing:border-box">
+      <div style="font-size:12.5px;color:#9C9585"><span style="color:#115E59;font-weight:500;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Patients</span>&nbsp;&nbsp;/&nbsp;&nbsp;<span style="color:#115E59;font-weight:500;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Pekka Laine</span>&nbsp;&nbsp;/&nbsp;&nbsp;Symptoms</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px"><span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:23px;color:#221F1A">Symptoms</span><span style="background:#115E59;color:#FDFBF5;border-radius:99px;padding:9px 17px;font-size:13px;font-weight:600;white-space:nowrap;transition:all .3s ease;cursor:pointer" style-hover="background:#0D4A46;transform:translateY(-1px);box-shadow:0 8px 20px rgba(17,94,89,0.22)">+ Report a symptom</span></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="display:flex;gap:6px;background:#EDE9DF;border-radius:99px;padding:4px"><span style="border-radius:99px;padding:7px 16px;font-size:12.5px;font-weight:600;background:#FFFEFB;color:#221F1A;box-shadow:0 1px 3px rgba(60,52,36,0.10);white-space:nowrap">Reported&nbsp;7</span><span style="border-radius:99px;padding:7px 16px;font-size:12.5px;font-weight:500;color:#7C766A;white-space:nowrap;transition:color .3s ease;cursor:pointer" style-hover="color:#221F1A">Raising triggers&nbsp;2</span><span style="border-radius:99px;padding:7px 16px;font-size:12.5px;font-weight:500;color:#7C766A;white-space:nowrap;transition:color .3s ease;cursor:pointer" style-hover="color:#221F1A">All in taxonomy</span></div>
+        <span style="font-size:12.5px;color:#9C9585">Expected vs alarming follows the active program's rules</span>
+      </div>
+      <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+        <div style="padding:11px 20px;border-bottom:1px solid #EFEBE0;display:grid;grid-template-columns:1.6fr 1.2fr 1fr 1fr 1.6fr 0.7fr;gap:12px;font-size:11.5px;font-weight:600;color:#9C9585;letter-spacing:0.05em"><span>SYMPTOM</span><span>LATEST</span><span>TREND</span><span>LAST REPORTED</span><span>SOURCE</span><span></span></div>
+        <div style="padding:13px 20px;display:grid;grid-template-columns:1.6fr 1.2fr 1fr 1fr 1.6fr 0.7fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Neuropathy</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#A16207;background:#F7EEDA;border:1px solid #E5D3A8;border-radius:99px;padding:4px 11px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#A16207"></span>Moderate — trigger</span><span style="font-size:12.5px;font-weight:600;color:#A16207">↑ worsening</span><span style="font-size:12.5px;color:#7C766A">Yesterday</span><span style="font-size:12.5px;color:#55503F">Kemoterapian oirekysely v2</span><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;justify-self:end;cursor:pointer">Trend</span></div>
+        <div style="padding:13px 20px;display:grid;grid-template-columns:1.6fr 1.2fr 1fr 1fr 1.6fr 0.7fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Nausea</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#115E59;background:#E9F0EC;border:1px solid #BFD6CE;border-radius:99px;padding:4px 11px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#115E59"></span>Mild</span><span style="font-size:12.5px;font-weight:600;color:#7C766A">→ stable</span><span style="font-size:12.5px;color:#7C766A">Yesterday</span><span style="font-size:12.5px;color:#55503F">Kemoterapian oirekysely v2</span><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;justify-self:end;cursor:pointer">Trend</span></div>
+        <div style="padding:13px 20px;display:grid;grid-template-columns:1.6fr 1.2fr 1fr 1fr 1.6fr 0.7fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Fatigue</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#A16207;background:#F7EEDA;border:1px solid #E5D3A8;border-radius:99px;padding:4px 11px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#A16207"></span>Moderate</span><span style="font-size:12.5px;font-weight:600;color:#7C766A">→ stable</span><span style="font-size:12.5px;color:#7C766A">Yesterday</span><span style="font-size:12.5px;color:#55503F">Kemoterapian oirekysely v2</span><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;justify-self:end;cursor:pointer">Trend</span></div>
+        <div style="padding:13px 20px;display:grid;grid-template-columns:1.6fr 1.2fr 1fr 1fr 1.6fr 0.7fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Painful urination</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#B3372B;background:#F8E7E2;border:1px solid #EBC5BC;border-radius:99px;padding:4px 11px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#B3372B"></span>Severe — trigger</span><span style="font-size:12.5px;font-weight:600;color:#B3372B">↑ new</span><span style="font-size:12.5px;color:#7C766A">13 Aug</span><span style="font-size:12.5px;color:#55503F">Report a symptom, self-report</span><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;justify-self:end;cursor:pointer">Trend</span></div>
+        <div style="padding:13px 20px;display:grid;grid-template-columns:1.6fr 1.2fr 1fr 1fr 1.6fr 0.7fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Cold sensitivity</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#115E59;background:#E9F0EC;border:1px solid #BFD6CE;border-radius:99px;padding:4px 11px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#115E59"></span>Mild</span><span style="font-size:12.5px;font-weight:600;color:#115E59">↓ easing</span><span style="font-size:12.5px;color:#7C766A">6 Aug</span><span style="font-size:12.5px;color:#55503F">Kemoterapian oirekysely v2</span><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;justify-self:end;cursor:pointer">Trend</span></div>
+        <div style="padding:13px 20px;display:grid;grid-template-columns:1.6fr 1.2fr 1fr 1fr 1.6fr 0.7fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Decreased appetite</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#115E59;background:#E9F0EC;border:1px solid #BFD6CE;border-radius:99px;padding:4px 11px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#115E59"></span>Mild — expected</span><span style="font-size:12.5px;font-weight:600;color:#7C766A">→ stable</span><span style="font-size:12.5px;color:#7C766A">6 Aug</span><span style="font-size:12.5px;color:#55503F">Kemoterapian oirekysely v2</span><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;justify-self:end;cursor:pointer">Trend</span></div>
+        <div style="padding:13px 20px;display:grid;grid-template-columns:1.6fr 1.2fr 1fr 1fr 1.6fr 0.7fr;gap:12px;align-items:center;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Constipation</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#115E59;background:#E9F0EC;border:1px solid #BFD6CE;border-radius:99px;padding:4px 11px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#115E59"></span>None</span><span style="font-size:12.5px;font-weight:600;color:#115E59">↓ resolved</span><span style="font-size:12.5px;color:#7C766A">30 Jul</span><span style="font-size:12.5px;color:#55503F">Kemoterapian oirekysely v2</span><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;justify-self:end;cursor:pointer">Trend</span></div>
+      </div>
+      <div style="font-size:12.5px;color:#9C9585;line-height:1.5">In the docetaxel program mild neuropathy is expected — moderate or worse raises a trigger. The same answers in another program may behave differently.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="PP4" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="PP4 Completed surveys  colorcoded criticality">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#PP4" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">PP4</a>Completed surveys — color-coded criticality</div>
+<div style="width:1360px;background:#F6F4EF;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:flex;flex-direction:column;min-height:700px">
+  <div style="background:#FFFEFB;border-bottom:1px solid #E8E4DA;display:flex;align-items:center;padding:0 22px;height:58px;gap:16px;flex:none">
+    <div style="display:flex;align-items:center;gap:8px;width:180px;flex:none"><svg width="26" height="26" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg><span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:20px;color:#221F1A">mio</span></div>
+    <div style="flex:1;display:flex;justify-content:center;align-items:center;gap:2px">
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Dashboard</span>
+      <span style="background:#E9F0EC;color:#115E59;font-weight:600;border-radius:99px;padding:8px 15px;font-size:13px">Patients</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer;display:inline-flex;align-items:center;gap:7px" style-hover="background:#F6F4EF">Messages<span style="background:#B3372B;color:#fff;font-size:10.5px;font-weight:600;border-radius:99px;padding:1px 7px">7</span></span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Surveys</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Treatments</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Tasks</span>
+    </div>
+    <div style="width:180px;flex:none;display:flex;justify-content:flex-end;align-items:center;gap:8px">
+      <span style="width:36px;height:36px;border-radius:99px;border:1px solid #E8E4DA;background:#FFFEFB;display:flex;align-items:center;justify-content:center;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#55503F" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg></span>
+      <span style="width:34px;height:34px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer">EK</span>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;min-height:0">
+    <div style="width:232px;flex:none;background:#FFFEFB;border-right:1px solid #E8E4DA;padding:18px 12px;display:flex;flex-direction:column;gap:1px;box-sizing:border-box">
+      <div style="font-size:10.5px;font-weight:600;color:#9C9585;letter-spacing:0.07em;padding:4px 12px 5px">PATIENT PROFILE</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Patient summary</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Programs, surveys &amp; care team</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Patient details</div>
+      <div style="font-size:10.5px;font-weight:600;color:#9C9585;letter-spacing:0.07em;padding:16px 12px 5px">HEALTH DATA</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Values</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Symptoms</div>
+      <div style="padding:8px 12px;border-radius:9px;background:#E9F0EC;color:#115E59;font-size:13px;font-weight:600">Completed surveys</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Data export</div>
+      <div style="font-size:10.5px;font-weight:600;color:#9C9585;letter-spacing:0.07em;padding:16px 12px 5px">REPORT</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#115E59;font-size:13px;font-weight:600;transition:background .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ Report a symptom</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#115E59;font-size:13px;font-weight:600;transition:background .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ Fill a survey</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#115E59;font-size:13px;font-weight:600;transition:background .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ New value</div>
+    </div>
+    <div style="flex:1;padding:20px 26px;display:flex;flex-direction:column;gap:14px;min-width:0;box-sizing:border-box">
+      <div style="font-size:12.5px;color:#9C9585"><span style="color:#115E59;font-weight:500;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Patients</span>&nbsp;&nbsp;/&nbsp;&nbsp;<span style="color:#115E59;font-weight:500;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Pekka Laine</span>&nbsp;&nbsp;/&nbsp;&nbsp;Completed surveys</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px"><span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:23px;color:#221F1A">Completed surveys</span></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="display:flex;gap:6px;background:#EDE9DF;border-radius:99px;padding:4px"><span style="border-radius:99px;padding:7px 16px;font-size:12.5px;font-weight:600;background:#FFFEFB;color:#221F1A;box-shadow:0 1px 3px rgba(60,52,36,0.10);white-space:nowrap">All&nbsp;24</span><span style="border-radius:99px;padding:7px 16px;font-size:12.5px;font-weight:500;color:#7C766A;white-space:nowrap;transition:color .3s ease;cursor:pointer" style-hover="color:#221F1A">Raised alerts&nbsp;5</span><span style="border-radius:99px;padding:7px 16px;font-size:12.5px;font-weight:500;color:#7C766A;white-space:nowrap;transition:color .3s ease;cursor:pointer" style-hover="color:#221F1A">This program&nbsp;11</span></div>
+        <span style="border:1px solid #DDD8CB;border-radius:99px;padding:6px 13px;font-size:12px;color:#221F1A;background:#FFFEFB;display:inline-flex;align-items:center;gap:7px">Last 6 months<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></span>
+      </div>
+      <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+        <div style="padding:11px 20px;border-bottom:1px solid #EFEBE0;display:grid;grid-template-columns:0.3fr 2.2fr 1fr 1.4fr 1.3fr 0.9fr;gap:12px;font-size:11.5px;font-weight:600;color:#9C9585;letter-spacing:0.05em"><span></span><span>SURVEY</span><span>ANSWERED</span><span>BY</span><span>OUTCOME</span><span></span></div>
+        <div style="padding:13px 20px;display:grid;grid-template-columns:0.3fr 2.2fr 1fr 1.4fr 1.3fr 0.9fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="width:10px;height:10px;border-radius:99px;background:#A16207"></span><span style="font-size:13.5px;font-weight:600;color:#221F1A">Kemoterapian oirekysely <span style="font-weight:400;color:#9C9585;font-size:11.5px">v2</span></span><span style="font-size:12.5px;color:#7C766A">Yesterday</span><span style="font-size:12.5px;color:#55503F">Pekka Laine</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#A16207;background:#F7EEDA;border:1px solid #E5D3A8;border-radius:99px;padding:4px 11px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#A16207"></span>Moderate alert</span><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;justify-self:end;cursor:pointer">View whole</span></div>
+        <div style="padding:13px 20px;display:grid;grid-template-columns:0.3fr 2.2fr 1fr 1.4fr 1.3fr 0.9fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="width:10px;height:10px;border-radius:99px;background:#115E59"></span><span style="font-size:13.5px;font-weight:600;color:#221F1A">PSA-raportointi <span style="font-weight:400;color:#9C9585;font-size:11.5px">v1</span></span><span style="font-size:12.5px;color:#7C766A">18 Aug</span><span style="font-size:12.5px;color:#55503F">Dr Koskinen, on behalf</span><span style="font-size:12px;color:#115E59;font-weight:500">No triggers</span><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;justify-self:end;cursor:pointer">View whole</span></div>
+        <div style="padding:13px 20px;display:grid;grid-template-columns:0.3fr 2.2fr 1fr 1.4fr 1.3fr 0.9fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="width:10px;height:10px;border-radius:99px;background:#115E59"></span><span style="font-size:13.5px;font-weight:600;color:#221F1A">Kemoterapian oirekysely <span style="font-weight:400;color:#9C9585;font-size:11.5px">v2</span></span><span style="font-size:12.5px;color:#7C766A">13 Aug</span><span style="font-size:12.5px;color:#55503F">Pekka Laine</span><span style="font-size:12px;color:#115E59;font-weight:500">No triggers</span><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;justify-self:end;cursor:pointer">View whole</span></div>
+        <div style="padding:13px 20px;display:grid;grid-template-columns:0.3fr 2.2fr 1fr 1.4fr 1.3fr 0.9fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="width:10px;height:10px;border-radius:99px;background:#B3372B"></span><span style="font-size:13.5px;font-weight:600;color:#221F1A">Kemoterapian oirekysely <span style="font-weight:400;color:#9C9585;font-size:11.5px">v2</span></span><span style="font-size:12.5px;color:#7C766A">6 Aug</span><span style="font-size:12.5px;color:#55503F">Pekka Laine</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#B3372B;background:#F8E7E2;border:1px solid #EBC5BC;border-radius:99px;padding:4px 11px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#B3372B"></span>High alert</span><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;justify-self:end;cursor:pointer">View whole</span></div>
+        <div style="padding:13px 20px;display:grid;grid-template-columns:0.3fr 2.2fr 1fr 1.4fr 1.3fr 0.9fr;gap:12px;align-items:center;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="width:10px;height:10px;border-radius:99px;background:#115E59"></span><span style="font-size:13.5px;font-weight:600;color:#221F1A">Prostatan sädehoito <span style="font-weight:400;color:#9C9585;font-size:11.5px">v4</span></span><span style="font-size:12.5px;color:#7C766A">12 May</span><span style="font-size:12.5px;color:#55503F">Pekka Laine</span><span style="font-size:12px;color:#115E59;font-weight:500">No triggers</span><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;justify-self:end;cursor:pointer">View whole</span></div>
+      </div>
+      <div style="font-size:12.5px;color:#9C9585;line-height:1.5">"View whole" opens the full response with every answer against the program's rules — the same view the alert links to. Responses stay bound to the exact survey version they answered.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="PP5" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="PP5 Patient details and data export">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#PP5" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">PP5</a>Patient details &amp; data export</div>
+<div style="width:1360px;background:#F6F4EF;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:flex;flex-direction:column;min-height:720px">
+  <div style="background:#FFFEFB;border-bottom:1px solid #E8E4DA;display:flex;align-items:center;padding:0 22px;height:58px;gap:16px;flex:none">
+    <div style="display:flex;align-items:center;gap:8px;width:180px;flex:none"><svg width="26" height="26" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg><span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:20px;color:#221F1A">mio</span></div>
+    <div style="flex:1;display:flex;justify-content:center;align-items:center;gap:2px">
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Dashboard</span>
+      <span style="background:#E9F0EC;color:#115E59;font-weight:600;border-radius:99px;padding:8px 15px;font-size:13px">Patients</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer;display:inline-flex;align-items:center;gap:7px" style-hover="background:#F6F4EF">Messages<span style="background:#B3372B;color:#fff;font-size:10.5px;font-weight:600;border-radius:99px;padding:1px 7px">7</span></span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Surveys</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Treatments</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Tasks</span>
+    </div>
+    <div style="width:180px;flex:none;display:flex;justify-content:flex-end;align-items:center;gap:8px">
+      <span style="width:36px;height:36px;border-radius:99px;border:1px solid #E8E4DA;background:#FFFEFB;display:flex;align-items:center;justify-content:center;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#55503F" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg></span>
+      <span style="width:34px;height:34px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer">EK</span>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;min-height:0">
+    <div style="width:232px;flex:none;background:#FFFEFB;border-right:1px solid #E8E4DA;padding:18px 12px;display:flex;flex-direction:column;gap:1px;box-sizing:border-box">
+      <div style="font-size:10.5px;font-weight:600;color:#9C9585;letter-spacing:0.07em;padding:4px 12px 5px">PATIENT PROFILE</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Patient summary</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Programs, surveys &amp; care team</div>
+      <div style="padding:8px 12px;border-radius:9px;background:#E9F0EC;color:#115E59;font-size:13px;font-weight:600">Patient details</div>
+      <div style="font-size:10.5px;font-weight:600;color:#9C9585;letter-spacing:0.07em;padding:16px 12px 5px">HEALTH DATA</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Values</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Symptoms</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Completed surveys</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#55503F;font-size:13px;font-weight:500;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Data export</div>
+      <div style="font-size:10.5px;font-weight:600;color:#9C9585;letter-spacing:0.07em;padding:16px 12px 5px">REPORT</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#115E59;font-size:13px;font-weight:600;transition:background .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ Report a symptom</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#115E59;font-size:13px;font-weight:600;transition:background .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ Fill a survey</div>
+      <div style="padding:8px 12px;border-radius:9px;color:#115E59;font-size:13px;font-weight:600;transition:background .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ New value</div>
+    </div>
+    <div style="flex:1;padding:20px 26px;display:flex;flex-direction:column;gap:14px;min-width:0;box-sizing:border-box">
+      <div style="font-size:12.5px;color:#9C9585"><span style="color:#115E59;font-weight:500;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Patients</span>&nbsp;&nbsp;/&nbsp;&nbsp;<span style="color:#115E59;font-weight:500;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Pekka Laine</span>&nbsp;&nbsp;/&nbsp;&nbsp;Patient details</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px"><span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:23px;color:#221F1A">Patient details</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;min-width:0">
+        <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+          <div style="padding:15px 20px;border-bottom:1px solid #EFEBE0;font-family:'Newsreader',serif;font-style:italic;font-size:17px;font-weight:500;color:#221F1A">Patient details</div>
+          <div style="padding:13px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EFEBE0;"><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:12px;color:#9C9585">Name</span><span style="font-size:13.5px;color:#221F1A">Pekka Laine</span></div><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Edit</span></div>
+          <div style="padding:13px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EFEBE0;"><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:12px;color:#9C9585">Date of birth</span><span style="font-size:13.5px;color:#221F1A">4 March 1957 (69)</span></div><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Edit</span></div>
+          <div style="padding:13px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EFEBE0;"><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:12px;color:#9C9585">Email — account</span><span style="font-size:13.5px;color:#221F1A">pekka.laine@email.fi</span></div><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Edit</span></div>
+          <div style="padding:13px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EFEBE0;"><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:12px;color:#9C9585">Phone</span><span style="font-size:13.5px;color:#221F1A">+358 40 998 1213</span></div><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Edit</span></div>
+          <div style="padding:13px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #EFEBE0;"><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:12px;color:#9C9585">Address</span><span style="font-size:13.5px;color:#221F1A">Kirkkokatu 8 B 12, 00170 Helsinki</span></div><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Edit</span></div>
+          <div style="padding:13px 20px;display:flex;justify-content:space-between;align-items:center;"><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:12px;color:#9C9585">Language</span><span style="font-size:13.5px;color:#221F1A">Finnish</span></div><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Edit</span></div>
+          <div style="padding:12px 20px;border-top:1px solid #EFEBE0;font-size:12px;color:#9C9585;line-height:1.5">The patient manages these in their own settings — edits here are for assisted changes and are audited.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+            <span style="font-family:'Newsreader',serif;font-style:italic;font-size:17px;font-weight:500;color:#221F1A">Data export</span>
+            <span style="font-size:12.5px;color:#7C766A;line-height:1.55">A complete, portable copy of Pekka's data in Mio — surveys and responses, values, messages, treatments and the activity log.</span>
+            <div style="display:flex;flex-direction:column;gap:6px"><label style="font-size:12px;font-weight:500;color:#9C9585">Scope</label><div style="border:1px solid #DDD8CB;border-radius:12px;padding:11px 14px;font-size:13px;color:#221F1A;background:#FFFEFB;display:flex;justify-content:space-between;align-items:center">Everything<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></div></div>
+            <div style="display:flex;flex-direction:column;gap:6px"><label style="font-size:12px;font-weight:500;color:#9C9585">Format</label><div style="display:flex;gap:6px;background:#EDE9DF;border-radius:99px;padding:4px;align-self:flex-start"><span style="border-radius:99px;padding:6px 14px;font-size:12px;font-weight:600;background:#FFFEFB;color:#221F1A;box-shadow:0 1px 3px rgba(60,52,36,0.10)">PDF</span><span style="border-radius:99px;padding:6px 14px;font-size:12px;font-weight:500;color:#7C766A;transition:color .3s ease;cursor:pointer" style-hover="color:#221F1A">Machine-readable</span></div></div>
+            <span style="background:#115E59;color:#FDFBF5;border-radius:99px;padding:9px 17px;font-size:13px;font-weight:600;white-space:nowrap;transition:all .3s ease;cursor:pointer;align-self:flex-start" style-hover="background:#0D4A46;transform:translateY(-1px);box-shadow:0 8px 20px rgba(17,94,89,0.22)">Prepare export</span>
+          </div>
+          <div style="border:1px solid #E5D3A8;background:#F7EEDA;border-radius:14px;padding:13px 18px;display:flex;gap:12px;align-items:flex-start">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A16207" stroke-width="2" stroke-linecap="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4M12 16h.01"></path></svg>
+            <span style="font-size:12.5px;color:#6B4A06;line-height:1.55">Every export is written to the audit log with who requested it and why. Patients can also download their own data from their settings.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="PP6" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="PP6 Alert detail">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#PP6" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">PP6</a>Alert detail — assign, comment, full audited history</div>
+<div style="width:760px;background:rgba(34,31,26,0.35);border-radius:8px;padding:44px;box-sizing:border-box;display:flex;justify-content:center">
+  <div style="width:600px;background:#FFFEFB;border-radius:18px;box-shadow:0 24px 70px rgba(34,31,26,0.35);overflow:hidden">
+    <div style="padding:18px 24px;border-bottom:1px solid #EFEBE0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;gap:8px;align-items:center"><span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#B3372B;background:#F8E7E2;border:1px solid #EBC5BC;border-radius:99px;padding:4px 11px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#B3372B"></span>High</span><span style="font-size:11px;font-weight:600;color:#115E59;background:#E9F0EC;border-radius:99px;padding:3px 10px">Acknowledged</span></div>
+        <span style="font-family:'Newsreader',serif;font-style:italic;font-size:19px;font-weight:500;color:#221F1A">Painful urination — severe</span>
+        <span style="font-size:12.5px;color:#9C9585">Pekka Laine — Report a symptom, 13 Aug 9:41 — prostate ca, docetaxel</span>
+      </div>
+      <span style="width:32px;height:32px;border-radius:99px;display:flex;align-items:center;justify-content:center;flex:none;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#55503F" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg></span>
+    </div>
+    <div style="padding:20px 24px;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;gap:12px">
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px"><label style="font-size:12px;font-weight:500;color:#9C9585">Assigned to</label><div style="border:1px solid #DDD8CB;border-radius:12px;padding:11px 14px;font-size:13px;color:#221F1A;background:#FFFEFB;display:flex;justify-content:space-between;align-items:center">Dr Elina Koskinen<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></div></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px"><label style="font-size:12px;font-weight:500;color:#9C9585">Linked response</label><div style="border:1px solid #DDD8CB;border-radius:12px;padding:11px 14px;font-size:13px;background:#FFFEFB;display:flex;justify-content:space-between;align-items:center"><span style="color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Open response</span><span style="font-size:11.5px;color:#9C9585">self-report</span></div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <label style="font-size:12px;font-weight:500;color:#9C9585">History — audited</label>
+        <div style="display:flex;flex-direction:column;gap:11px">
+          <div style="display:flex;gap:10px"><span style="width:8px;height:8px;border-radius:99px;background:#B3372B;margin-top:5px;flex:none"></span><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13px;color:#221F1A;line-height:1.45">Alert raised — rule "painful urination: severe → High"</span><span style="font-size:11.5px;color:#9C9585">13 Aug 9:41 — system</span></div></div>
+          <div style="display:flex;gap:10px"><span style="width:8px;height:8px;border-radius:99px;background:#115E59;margin-top:5px;flex:none"></span><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13px;color:#221F1A;line-height:1.45">Acknowledged and assigned to Dr Koskinen</span><span style="font-size:11.5px;color:#9C9585">13 Aug 10:02 — Mikael Aho</span></div></div>
+          <div style="display:flex;gap:10px"><span style="width:8px;height:8px;border-radius:99px;background:#9C9585;margin-top:5px;flex:none"></span><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:13px;color:#221F1A;line-height:1.45">Comment: "Urine sample ordered for Friday's lab visit. Re-check then." </span><span style="font-size:11.5px;color:#9C9585">13 Aug 10:04 — Dr Koskinen</span></div></div>
+        </div>
+      </div>
+      <div style="border:1px solid #DDD8CB;border-radius:12px;background:#FFFEFB;padding:11px 14px;font-size:13px;color:#9C9585">Add a comment for the team…</div>
+    </div>
+    <div style="padding:16px 24px;border-top:1px solid #EFEBE0;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:#9C9585">Resolving records who, when and the comment trail.</span>
+      <div style="display:flex;gap:10px">
+        <span style="border:1px solid #D6D0C2;color:#55503F;border-radius:99px;padding:9px 18px;font-size:13px;font-weight:600;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Reassign</span>
+        <span style="background:#115E59;color:#FDFBF5;border-radius:99px;padding:9px 17px;font-size:13px;font-weight:600;white-space:nowrap;transition:all .3s ease;cursor:pointer" style-hover="background:#0D4A46;transform:translateY(-1px);box-shadow:0 8px 20px rgba(17,94,89,0.22)">Resolve alert</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+</div>
+</section>

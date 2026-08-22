@@ -10,10 +10,11 @@ Swedish.
 
 ## Status
 
-**Documentation phase.** No implementation yet.
+**Documentation and design phase.** No implementation yet.
 
-The architecture is decided and recorded; the design package and delivery
-phasing are in progress.
+The architecture is decided and recorded, and the approved design package is
+in the repo (`design/handoff-2026-08-21/`, analyzed in
+[`docs/design/`](docs/design/README.md)). Delivery phasing is next.
 
 ## Documentation
 

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#f0eee9;font-family:'Schibsted Grotesk',system-ui,sans-serif}a{color:#115E59}a:hover{color:#0D4A46}@keyframes breathe{0%,100%{transform:scale(1);opacity:0.85}50%{transform:scale(1.08);opacity:1}}</style>
+</helmet>
+<section style="padding:40px 44px 32px" data-screen-label="Cross-cutting states">
+<div style="display:flex;align-items:baseline;gap:10px;margin:0 0 20px"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px">STATES</span><span style="font:600 13px/1.2 system-ui,sans-serif;color:#1a1a1a">Patient empty &amp; error states, session timeout, terms acceptance, notification email, logo usage</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+
+<div id="S1" style="flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="S1 Patient empty states">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#S1" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">S1</a>Patient — all caught up &amp; error</div>
+<div style="display:flex;gap:20px;flex-wrap:wrap">
+  <div style="width:340px;border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);border:1px solid rgba(0,0,0,.05);padding:34px 26px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">
+    <svg width="44" height="44" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.14"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.30"></circle></svg>
+    <span style="font-family:'Newsreader',serif;font-style:italic;font-size:18px;color:#221F1A">All caught up</span>
+    <span style="font-size:13px;color:#7C766A;line-height:1.55;max-width:250px">Nothing needs your attention. Your next appointment is Monday 24 August at 10:30.</span>
+  </div>
+  <div style="width:340px;border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);border:1px solid rgba(0,0,0,.05);padding:34px 26px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">
+    <svg width="44" height="44" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.14"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.30"></circle></svg>
+    <span style="font-family:'Newsreader',serif;font-style:italic;font-size:18px;color:#221F1A">No messages yet</span>
+    <span style="font-size:13px;color:#7C766A;line-height:1.55;max-width:250px">When you write to your care team, the conversation lives here.</span>
+    <span style="border:1.5px solid #115E59;color:#115E59;border-radius:99px;padding:9px 20px;font-size:13px;font-weight:600;background:#FFFEFB;margin-top:4px;transition:all .3s ease;cursor:pointer" style-hover="background:#E9F0EC;transform:translateY(-1px)">Write a message</span>
+  </div>
+  <div style="width:340px;border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);border:1px solid rgba(0,0,0,.05);padding:34px 26px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">
+    <span style="width:48px;height:48px;border-radius:99px;background:#F8E7E2;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3372B" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4M12 16h.01"></path></svg></span>
+    <span style="font-family:'Newsreader',serif;font-style:italic;font-size:18px;color:#221F1A">Couldn't load this right now</span>
+    <span style="font-size:13px;color:#7C766A;line-height:1.55;max-width:260px">Your connection or our service hiccupped. Nothing you've done was lost.</span>
+    <span style="background:#115E59;color:#FDFBF5;border-radius:99px;padding:9px 22px;font-size:13px;font-weight:600;margin-top:4px;transition:all .3s ease;cursor:pointer" style-hover="background:#0D4A46;transform:translateY(-1px)">Try again</span>
+  </div>
+</div>
+</div>
+
+<div id="S2" style="flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="S2 Session timeout">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#S2" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">S2</a>Session — timeout warning &amp; signed out</div>
+<div style="display:flex;gap:20px;flex-wrap:wrap">
+  <div style="width:480px;background:rgba(34,31,26,0.35);border-radius:8px;padding:36px;box-sizing:border-box;display:flex;justify-content:center">
+    <div style="width:380px;background:#FFFEFB;border-radius:18px;box-shadow:0 24px 70px rgba(34,31,26,0.35);padding:24px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box">
+      <div style="display:flex;gap:12px;align-items:center">
+        <span style="width:42px;height:42px;border-radius:99px;background:#F7EEDA;display:flex;align-items:center;justify-content:center;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#A16207" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg></span>
+        <span style="font-family:'Newsreader',serif;font-style:italic;font-size:19px;font-weight:500;color:#221F1A">Still there?</span>
+      </div>
+      <span style="font-size:13.5px;color:#55503F;line-height:1.55">You've been inactive for a while. To protect your information, you'll be signed out in <span style="font-weight:600;color:#221F1A">1:54</span>. Anything you're writing is saved as a draft.</span>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <span style="border:1px solid #D6D0C2;color:#55503F;border-radius:99px;padding:9px 17px;font-size:13px;font-weight:600;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Sign out now</span>
+        <span style="background:#115E59;color:#FDFBF5;border-radius:99px;padding:9px 19px;font-size:13px;font-weight:600;transition:all .3s ease;cursor:pointer" style-hover="background:#0D4A46;transform:translateY(-1px);box-shadow:0 8px 20px rgba(17,94,89,0.22)">Stay signed in</span>
+      </div>
+    </div>
+  </div>
+  <div style="width:480px;background:#FFFEFB;border:1px solid rgba(0,0,0,.08);border-radius:8px;padding:48px 36px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center">
+    <div style="display:flex;align-items:center;gap:9px"><svg width="30" height="30" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg><span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:22px;color:#221F1A">mio</span></div>
+    <span style="font-family:'Newsreader',serif;font-style:italic;font-size:21px;color:#221F1A">You were signed out</span>
+    <span style="font-size:13.5px;color:#7C766A;line-height:1.55;max-width:300px">For your privacy, Mio signs you out after 30 minutes of inactivity. Your drafts are safe.</span>
+    <span style="background:#115E59;color:#FDFBF5;border-radius:99px;padding:12px 28px;font-size:14px;font-weight:600;transition:all .3s ease;cursor:pointer" style-hover="background:#0D4A46;transform:translateY(-1px);box-shadow:0 8px 20px rgba(17,94,89,0.22)">Sign in again</span>
+    <div style="display:flex;gap:20px;font-size:12.5px;color:#9C9585;letter-spacing:0.04em;padding-top:6px"><span style="color:#221F1A;font-weight:600;border-bottom:1.5px solid #221F1A;padding-bottom:2px;cursor:pointer">EN</span><span style="cursor:pointer">FI</span><span style="cursor:pointer">SV</span></div>
+  </div>
+</div>
+</div>
+
+<div id="S3" style="flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="S3 Terms acceptance">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#S3" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">S3</a>First login — terms &amp; privacy acceptance</div>
+<div style="width:980px;background:#FFFEFB;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;padding:44px 0 40px;gap:20px">
+  <div style="display:flex;align-items:center;gap:9px"><svg width="30" height="30" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg><span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:22px;color:#221F1A">mio</span></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center">
+    <span style="font-family:'Newsreader',serif;font-style:italic;font-size:23px;color:#221F1A">Before you start</span>
+    <span style="font-size:13.5px;color:#7C766A">One-time acceptance on your first sign-in.</span>
+  </div>
+  <div style="width:560px;border:1px solid #EFEBE0;border-radius:14px;background:#F6F4EF;padding:18px 20px;display:flex;flex-direction:column;gap:10px;max-height:190px;overflow:hidden;position:relative">
+    <span style="font-size:13px;font-weight:600;color:#221F1A">Terms of use &amp; privacy notice</span>
+    <span style="font-size:12.5px;color:#55503F;line-height:1.6">Mio is a service your care team uses with you to follow how you're doing between visits. Your health information is used only for your care, stored within the EU, and every access to it is logged. You can download a copy of your data or review who has viewed your records at any time in Settings.</span>
+    <span style="font-size:12.5px;color:#55503F;line-height:1.6">Email notifications never contain health details — they only tell you something is waiting in Mio…</span>
+    <div style="position:absolute;left:0;right:0;bottom:0;height:44px;background:linear-gradient(rgba(246,244,239,0),#F6F4EF)"></div>
+  </div>
+  <span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Read in full — opens the complete document</span>
+  <div style="width:560px;display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;gap:11px;align-items:flex-start;border:1px solid #DDD8CB;border-radius:12px;background:#FFFEFB;padding:13px 16px"><span style="width:19px;height:19px;border-radius:6px;background:#115E59;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px"><svg width="11" height="11" viewBox="0 0 16 16"><path d="M3 8.5 6.5 12 13 4.5" fill="none" stroke="#FDFBF5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span style="font-size:13.5px;color:#221F1A;line-height:1.5">I accept the terms of use</span></div>
+    <div style="display:flex;gap:11px;align-items:flex-start;border:1px solid #DDD8CB;border-radius:12px;background:#FFFEFB;padding:13px 16px"><span style="width:19px;height:19px;border-radius:6px;border:1.5px solid #C9C3B4;background:#FFFEFB;flex:none;margin-top:1px"></span><span style="font-size:13.5px;color:#221F1A;line-height:1.5">I have read the privacy notice</span></div>
+  </div>
+  <span style="background:#115E59;color:#FDFBF5;border-radius:99px;padding:13px 40px;font-size:14.5px;font-weight:600;opacity:0.45">Continue to Mio</span>
+  <div style="display:flex;gap:20px;font-size:12.5px;color:#9C9585;letter-spacing:0.04em"><span style="color:#221F1A;font-weight:600;border-bottom:1.5px solid #221F1A;padding-bottom:2px;cursor:pointer">EN</span><span style="cursor:pointer">FI</span><span style="cursor:pointer">SV</span></div>
+</div>
+</div>
+
+<div id="S4" style="flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="S4 Notification email">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#S4" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">S4</a>Notification email — never any clinical content</div>
+<div style="width:560px;background:#EDEBE4;border:1px solid rgba(0,0,0,.08);border-radius:8px;padding:28px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px">
+  <div style="font-size:12px;color:#7C766A;padding:0 4px">From: Mio &lt;noreply@mio.health&gt; — Subject: <span style="font-weight:600;color:#221F1A">Something is waiting for you in Mio</span></div>
+  <div style="background:#FFFEFB;border-radius:14px;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:34px 34px 28px;display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;align-items:center;gap:8px"><svg width="26" height="26" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg><span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:19px;color:#221F1A">mio</span></div>
+    <span style="font-family:'Newsreader',serif;font-size:21px;font-weight:500;color:#221F1A;line-height:1.35">Hello Anna, you have a new message waiting.</span>
+    <span style="font-size:14px;color:#55503F;line-height:1.6">Sign in to Mio to read it. For your privacy, this email never includes the message itself or any health information.</span>
+    <span style="background:#115E59;color:#FDFBF5;border-radius:99px;padding:13px 30px;font-size:14px;font-weight:600;align-self:flex-start">Open Mio</span>
+    <div style="height:1px;background:#EFEBE0"></div>
+    <span style="font-size:12px;color:#9C9585;line-height:1.6">You get this email because notifications for new messages are on. Manage notifications in Mio Settings. Care, together — Mio.</span>
+  </div>
+</div>
+</div>
+
+<div id="S5" style="flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="S5 Logo usage">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#S5" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">S5</a>Logo usage — lockup, mark, favicon sizes</div>
+<div style="width:560px;border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);border:1px solid rgba(0,0,0,.05);padding:26px;display:flex;flex-direction:column;gap:22px;box-sizing:border-box">
+  <div style="display:flex;gap:16px;align-items:stretch">
+    <div style="flex:1;border:1px solid #EFEBE0;border-radius:12px;padding:22px;display:flex;flex-direction:column;align-items:center;gap:12px;background:#F6F4EF">
+      <div style="display:flex;align-items:center;gap:10px"><svg width="38" height="38" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg><span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:28px;color:#221F1A">mio</span></div>
+      <span style="font-size:11.5px;color:#9C9585">Full lockup — sign-in, emails</span>
+    </div>
+    <div style="flex:1;border:1px solid #EFEBE0;border-radius:12px;padding:22px;display:flex;flex-direction:column;align-items:center;gap:12px;background:#221F1A">
+      <div style="display:flex;align-items:center;gap:10px"><svg width="38" height="38" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#7FB5AE" opacity="0.45"></circle><circle cx="25" cy="20" r="11" fill="#7FB5AE"></circle></svg><span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:28px;color:#FDFBF5">mio</span></div>
+      <span style="font-size:11.5px;color:#9C9585">On dark — tint #7FB5AE</span>
+    </div>
+  </div>
+  <div style="display:flex;gap:20px;align-items:flex-end;justify-content:center;padding:4px 0">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:7px"><svg width="44" height="44" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg><span style="font-size:10.5px;color:#9C9585">44 — app bar</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:7px"><svg width="32" height="32" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg><span style="font-size:10.5px;color:#9C9585">32</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:7px"><span style="width:24px;height:24px;border-radius:6px;background:#115E59;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#FDFBF5" opacity="0.45"></circle><circle cx="25" cy="20" r="11" fill="#FDFBF5"></circle></svg></span><span style="font-size:10.5px;color:#9C9585">24 — favicon tile</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:7px"><svg width="16" height="16" viewBox="0 0 44 44"><circle cx="16" cy="25" r="12" fill="#115E59" opacity="0.35"></circle><circle cx="25" cy="20" r="12" fill="#115E59"></circle></svg><span style="font-size:10.5px;color:#9C9585">16 — radii up</span></div>
+  </div>
+  <div style="font-size:12px;color:#9C9585;line-height:1.55">The two circles stay tilted (light circle low-left, dark high-right) at every size. Below 24 px, drop the wordmark and enlarge circle radii for legibility. Never rotate to horizontal, never use "·" as a separator anywhere in the UI.</div>
+</div>
+</div>
+
+<div id="S6" style="flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="S6 Loading">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#S6" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">S6</a>Loading — breathing splash (live)</div>
+<div style="width:340px;height:420px;background:#F6F4EF;border:1px solid rgba(0,0,0,.08);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <svg width="54" height="54" viewBox="0 0 44 44" style="animation:breathe 2.4s ease-in-out infinite"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg>
+  <span style="font-family:'Newsreader',serif;font-style:italic;font-size:15px;color:#9C9585">Care, together</span>
+</div>
+</div>
+
+</div>
+</section>
+</x-dc>
+</body>
+</html>

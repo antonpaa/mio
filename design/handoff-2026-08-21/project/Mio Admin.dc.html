@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#f0eee9;font-family:'Schibsted Grotesk',system-ui,sans-serif}a{color:#115E59}a:hover{color:#0D4A46}</style>
+</helmet>
+<section style="padding:40px 44px 32px" data-screen-label="Admin and governance">
+<div style="display:flex;align-items:baseline;gap:10px;margin:0 0 20px"><span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px">ADMIN</span><span style="font:600 13px/1.2 system-ui,sans-serif;color:#1a1a1a">User &amp; team management, role matrix, login reset, audit log, light reporting</span></div>
+<div style="display:flex;flex-direction:column;gap:32px;align-items:flex-start">
+
+<div id="A1" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="A1 User management">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#A1" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">A1</a>User management — admin sees accounts, never clinical data</div>
+<div style="width:1360px;background:#F6F4EF;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:flex;flex-direction:column;min-height:760px">
+  <div style="background:#FFFEFB;border-bottom:1px solid #E8E4DA;display:flex;align-items:center;padding:0 22px;height:58px;gap:16px;flex:none">
+    <div style="display:flex;align-items:center;gap:8px;width:220px;flex:none"><svg width="26" height="26" viewBox="0 0 44 44"><circle cx="16" cy="25" r="11" fill="#115E59" opacity="0.30"></circle><circle cx="25" cy="20" r="11" fill="#115E59" opacity="0.85"></circle></svg><span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:20px;color:#221F1A">mio</span><span style="font-size:11px;font-weight:600;color:#7C766A;background:#EFECE4;border-radius:99px;padding:3px 10px">Administration</span></div>
+    <div style="flex:1;display:flex;justify-content:center;align-items:center;gap:2px">
+      <span style="background:#E9F0EC;color:#115E59;font-weight:600;border-radius:99px;padding:8px 15px;font-size:13px">Users</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Teams</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Roles</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Audit log</span>
+      <span style="color:#55503F;font-weight:500;border-radius:99px;padding:8px 15px;font-size:13px;transition:background .3s ease;cursor:pointer" style-hover="background:#F6F4EF">Reporting</span>
+    </div>
+    <div style="width:220px;flex:none;display:flex;justify-content:flex-end;align-items:center;gap:8px">
+      <span style="width:34px;height:34px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer">HK</span>
+    </div>
+  </div>
+  <div style="flex:1;padding:24px 30px;display:flex;flex-direction:column;gap:16px;min-width:0;box-sizing:border-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-family:'Newsreader',serif;font-style:italic;font-weight:500;font-size:25px;color:#221F1A">Users</span>
+        <span style="font-size:13px;color:#9C9585">Administrators manage accounts and access — never clinical content.</span>
+      </div>
+      <span style="background:#115E59;color:#FDFBF5;border-radius:99px;padding:10px 18px;font-size:13px;font-weight:600;white-space:nowrap;transition:all .3s ease;cursor:pointer" style-hover="background:#0D4A46;transform:translateY(-1px);box-shadow:0 8px 20px rgba(17,94,89,0.22)">+ New user</span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div style="display:flex;gap:6px;background:#EDE9DF;border-radius:99px;padding:4px">
+        <span style="border-radius:99px;padding:7px 16px;font-size:12.5px;font-weight:600;background:#FFFEFB;color:#221F1A;box-shadow:0 1px 3px rgba(60,52,36,0.10);white-space:nowrap">Staff&nbsp;64</span>
+        <span style="border-radius:99px;padding:7px 16px;font-size:12.5px;font-weight:500;color:#7C766A;white-space:nowrap;transition:color .3s ease;cursor:pointer" style-hover="color:#221F1A">Patients&nbsp;418</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px;border:1px solid #DDD8CB;border-radius:99px;background:#FFFEFB;padding:8px 15px;width:240px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg><span style="font-size:12.5px;color:#9C9585">Search name or email</span></div>
+    </div>
+    <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08)">
+      <div style="padding:11px 20px;border-bottom:1px solid #EFEBE0;display:grid;grid-template-columns:2fr 1.6fr 1.2fr 1fr 1.3fr;gap:12px;font-size:11.5px;font-weight:600;color:#9C9585;letter-spacing:0.05em"><span>NAME</span><span>EMAIL</span><span>ROLE</span><span>STATUS</span><span></span></div>
+      <div style="padding:13px 20px;display:grid;grid-template-columns:2fr 1.6fr 1.2fr 1fr 1.3fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+        <span style="display:flex;gap:11px;align-items:center"><span style="width:34px;height:34px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;flex:none">EK</span><span style="font-size:13.5px;font-weight:600;color:#221F1A">Elina Koskinen</span></span>
+        <span style="font-size:12.5px;color:#55503F">elina.koskinen@clinic.fi</span>
+        <span style="font-size:11px;font-weight:600;color:#115E59;background:#E9F0EC;border-radius:99px;padding:3px 10px;justify-self:start">Treatment lead</span>
+        <span style="font-size:12.5px;color:#115E59;font-weight:500">Active</span>
+        <div style="display:flex;gap:12px;justify-self:end"><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Reset login</span><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Edit</span></div>
+      </div>
+      <div style="padding:13px 20px;display:grid;grid-template-columns:2fr 1.6fr 1.2fr 1fr 1.3fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+        <span style="display:flex;gap:11px;align-items:center"><span style="width:34px;height:34px;border-radius:99px;background:#E9F0EC;color:#115E59;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;flex:none">MA</span><span style="font-size:13.5px;font-weight:600;color:#221F1A">Mikael Aho</span></span>
+        <span style="font-size:12.5px;color:#55503F">mikael.aho@clinic.fi</span>
+        <span style="font-size:11px;font-weight:600;color:#55503F;background:#EFECE4;border-radius:99px;padding:3px 10px;justify-self:start">Treatment member</span>
+        <span style="font-size:12.5px;color:#115E59;font-weight:500">Active</span>
+        <div style="display:flex;gap:12px;justify-self:end"><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Reset login</span><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Edit</span></div>
+      </div>
+      <div style="padding:13px 20px;display:grid;grid-template-columns:2fr 1.6fr 1.2fr 1fr 1.3fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+        <span style="display:flex;gap:11px;align-items:center"><span style="width:34px;height:34px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;flex:none">HK</span><span style="font-size:13.5px;font-weight:600;color:#221F1A">Hanna Korpela</span></span>
+        <span style="font-size:12.5px;color:#55503F">hanna.korpela@clinic.fi</span>
+        <span style="font-size:11px;font-weight:600;color:#A16207;background:#F7EEDA;border-radius:99px;padding:3px 10px;justify-self:start">Administrator</span>
+        <span style="font-size:12.5px;color:#115E59;font-weight:500">Active</span>
+        <div style="display:flex;gap:12px;justify-self:end"><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Reset login</span><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Edit</span></div>
+      </div>
+      <div style="padding:13px 20px;display:grid;grid-template-columns:2fr 1.6fr 1.2fr 1fr 1.3fr;gap:12px;align-items:center;opacity:0.65;transition:background .35s ease" style-hover="background:#FBF8F1">
+        <span style="display:flex;gap:11px;align-items:center"><span style="width:34px;height:34px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600;flex:none">JV</span><span style="font-size:13.5px;font-weight:500;color:#55503F">Jari Vuori</span></span>
+        <span style="font-size:12.5px;color:#9C9585">jari.vuori@clinic.fi</span>
+        <span style="font-size:11px;font-weight:600;color:#55503F;background:#EFECE4;border-radius:99px;padding:3px 10px;justify-self:start">Treatment member</span>
+        <span style="font-size:12.5px;color:#9C9585">Deactivated 12 Jun</span>
+        <div style="display:flex;gap:12px;justify-self:end"><span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Reactivate</span></div>
+      </div>
+    </div>
+    <div style="border:1px solid #E5D3A8;background:#F7EEDA;border-radius:14px;padding:13px 18px;display:flex;gap:12px;align-items:flex-start;max-width:820px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A16207" stroke-width="2" stroke-linecap="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4M12 16h.01"></path></svg>
+      <span style="font-size:12.5px;color:#6B4A06;line-height:1.55"><span style="font-weight:600">Reset login</span> sends a new password-setup link and clears sessions. It never touches the person's data — and every reset is written to the audit log.</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="A2" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="A2 Roles matrix">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#A2" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">A2</a>Role capability matrix</div>
+<div style="width:1100px;border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);border:1px solid rgba(0,0,0,.05);overflow:hidden">
+  <div style="padding:16px 22px;border-bottom:1px solid #EFEBE0;display:flex;justify-content:space-between;align-items:center">
+    <span style="font-family:'Newsreader',serif;font-style:italic;font-size:18px;font-weight:500;color:#221F1A">Roles</span>
+    <span style="font-size:12px;color:#9C9585">✓ allowed — · not allowed</span>
+  </div>
+  <div style="padding:11px 22px;display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr 1fr;gap:10px;font-size:11.5px;font-weight:600;color:#9C9585;letter-spacing:0.05em;border-bottom:1px solid #EFEBE0"><span>CAPABILITY</span><span style="text-align:center">PATIENT</span><span style="text-align:center">TREATMENT MEMBER</span><span style="text-align:center">TREATMENT LEAD</span><span style="text-align:center">ADMINISTRATOR</span></div>
+  <div style="padding:12px 22px;display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr 1fr;gap:10px;align-items:center;border-bottom:1px solid #EFEBE0;font-size:13px;color:#221F1A"><span>Answer surveys, message own team</span><span style="text-align:center;color:#115E59;font-weight:700">✓</span><span style="text-align:center;color:#C9C3B4">·</span><span style="text-align:center;color:#C9C3B4">·</span><span style="text-align:center;color:#C9C3B4">·</span></div>
+  <div style="padding:12px 22px;display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr 1fr;gap:10px;align-items:center;border-bottom:1px solid #EFEBE0;font-size:13px;color:#221F1A"><span>View patients, triage alerts, handle tasks</span><span style="text-align:center;color:#C9C3B4">·</span><span style="text-align:center;color:#115E59;font-weight:700">✓</span><span style="text-align:center;color:#115E59;font-weight:700">✓</span><span style="text-align:center;color:#C9C3B4">·</span></div>
+  <div style="padding:12px 22px;display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr 1fr;gap:10px;align-items:center;border-bottom:1px solid #EFEBE0;font-size:13px;color:#221F1A"><span>Enter data on behalf of a patient</span><span style="text-align:center;color:#C9C3B4">·</span><span style="text-align:center;color:#115E59;font-weight:700">✓</span><span style="text-align:center;color:#115E59;font-weight:700">✓</span><span style="text-align:center;color:#C9C3B4">·</span></div>
+  <div style="padding:12px 22px;display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr 1fr;gap:10px;align-items:center;border-bottom:1px solid #EFEBE0;font-size:13px;color:#221F1A"><span>Manage treatments, templates, surveys &amp; rules</span><span style="text-align:center;color:#C9C3B4">·</span><span style="text-align:center;color:#C9C3B4">·</span><span style="text-align:center;color:#115E59;font-weight:700">✓</span><span style="text-align:center;color:#C9C3B4">·</span></div>
+  <div style="padding:12px 22px;display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr 1fr;gap:10px;align-items:center;border-bottom:1px solid #EFEBE0;font-size:13px;color:#221F1A"><span>Manage users, teams, reset logins</span><span style="text-align:center;color:#C9C3B4">·</span><span style="text-align:center;color:#C9C3B4">·</span><span style="text-align:center;color:#C9C3B4">·</span><span style="text-align:center;color:#115E59;font-weight:700">✓</span></div>
+  <div style="padding:12px 22px;display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr 1fr;gap:10px;align-items:center;font-size:13px;color:#221F1A"><span style="font-weight:600">See clinical data</span><span style="text-align:center;color:#115E59;font-weight:700">own</span><span style="text-align:center;color:#115E59;font-weight:700">✓</span><span style="text-align:center;color:#115E59;font-weight:700">✓</span><span style="text-align:center;color:#B3372B;font-weight:700">never</span></div>
+</div>
+</div>
+
+<div id="A3" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="A3 Audit log">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#A3" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">A3</a>Audit log — who viewed or changed what, when</div>
+<div style="width:1100px;border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);border:1px solid rgba(0,0,0,.05);overflow:hidden">
+  <div style="padding:16px 22px;border-bottom:1px solid #EFEBE0;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+    <span style="font-family:'Newsreader',serif;font-style:italic;font-size:18px;font-weight:500;color:#221F1A">Audit log</span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <span style="border:1px solid #DDD8CB;border-radius:99px;padding:6px 13px;font-size:12px;color:#221F1A;background:#FFFEFB;display:inline-flex;align-items:center;gap:7px">Last 7 days<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></span>
+      <span style="border:1px solid #DDD8CB;border-radius:99px;padding:6px 13px;font-size:12px;color:#221F1A;background:#FFFEFB;display:inline-flex;align-items:center;gap:7px">All events<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></span>
+      <span style="border:1px solid #DDD8CB;border-radius:99px;padding:6px 13px;font-size:12px;color:#221F1A;background:#FFFEFB;display:inline-flex;align-items:center;gap:7px">All users<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9C9585" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></span>
+      <span style="border:1px solid #BFD6CE;color:#115E59;border-radius:99px;padding:6px 14px;font-size:12px;font-weight:600;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#E9F0EC">Export</span>
+    </div>
+  </div>
+  <div style="padding:11px 22px;display:grid;grid-template-columns:1.2fr 1.4fr 2.6fr 1fr;gap:12px;font-size:11.5px;font-weight:600;color:#9C9585;letter-spacing:0.05em;border-bottom:1px solid #EFEBE0"><span>WHEN</span><span>WHO</span><span>EVENT</span><span>SUBJECT</span></div>
+  <div style="padding:12px 22px;display:grid;grid-template-columns:1.2fr 1.4fr 2.6fr 1fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;font-size:12.5px;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="color:#7C766A">Today 10:31</span><span style="color:#221F1A;font-weight:500">Elina Koskinen</span><span style="color:#55503F">Viewed survey response — Weekly symptom survey</span><span style="color:#7C766A">Patient A. V.</span></div>
+  <div style="padding:12px 22px;display:grid;grid-template-columns:1.2fr 1.4fr 2.6fr 1fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;font-size:12.5px;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="color:#7C766A">Today 10:29</span><span style="color:#221F1A;font-weight:500">Elina Koskinen</span><span style="color:#55503F">Acknowledged alert — High, nausea/vomiting</span><span style="color:#7C766A">Patient A. V.</span></div>
+  <div style="padding:12px 22px;display:grid;grid-template-columns:1.2fr 1.4fr 2.6fr 1fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;font-size:12.5px;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="color:#7C766A">Today 9:02</span><span style="color:#221F1A;font-weight:500">Mikael Aho</span><span style="color:#55503F">Entered value on behalf of patient — PSA</span><span style="color:#7C766A">Patient P. L.</span></div>
+  <div style="padding:12px 22px;display:grid;grid-template-columns:1.2fr 1.4fr 2.6fr 1fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;font-size:12.5px;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="color:#7C766A">Yesterday 15:44</span><span style="color:#221F1A;font-weight:500">Hanna Korpela</span><span style="color:#55503F">Reset login — new setup link sent</span><span style="color:#7C766A">User J. Vuori</span></div>
+  <div style="padding:12px 22px;display:grid;grid-template-columns:1.2fr 1.4fr 2.6fr 1fr;gap:12px;align-items:center;font-size:12.5px;transition:background .35s ease" style-hover="background:#FBF8F1"><span style="color:#7C766A">Yesterday 14:10</span><span style="color:#221F1A;font-weight:500">Elina Koskinen</span><span style="color:#55503F">Published survey version — Chemo symptom survey v4</span><span style="color:#7C766A">—</span></div>
+</div>
+</div>
+
+<div id="A4" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="A4 Reporting">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#A4" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">A4</a>Reporting — response rates &amp; open alerts per program, one screen</div>
+<div style="width:1100px;display:flex;flex-direction:column;gap:16px">
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+    <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:18px 20px;display:flex;flex-direction:column;gap:4px">
+      <span style="font-size:12px;color:#9C9585;font-weight:500">Survey response rate, 30 days</span>
+      <span style="font-family:'Newsreader',serif;font-weight:500;font-size:32px;color:#221F1A">87%</span>
+      <span style="font-size:12px;color:#115E59;font-weight:500">+3 points vs previous 30 days</span>
+    </div>
+    <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:18px 20px;display:flex;flex-direction:column;gap:4px">
+      <span style="font-size:12px;color:#9C9585;font-weight:500">Open alerts now</span>
+      <span style="font-family:'Newsreader',serif;font-weight:500;font-size:32px;color:#221F1A">11</span>
+      <span style="font-size:12px;color:#B3372B;font-weight:500">3 high — oldest 2 days</span>
+    </div>
+    <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);padding:18px 20px;display:flex;flex-direction:column;gap:4px">
+      <span style="font-size:12px;color:#9C9585;font-weight:500">Median time to acknowledge</span>
+      <span style="font-family:'Newsreader',serif;font-weight:500;font-size:32px;color:#221F1A">2.4 h</span>
+      <span style="font-size:12px;color:#7C766A">high-severity alerts, 30 days</span>
+    </div>
+  </div>
+  <div style="border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);overflow:hidden">
+    <div style="padding:14px 22px;border-bottom:1px solid #EFEBE0;font-family:'Newsreader',serif;font-style:italic;font-size:17px;font-weight:500;color:#221F1A">Per program</div>
+    <div style="padding:11px 22px;display:grid;grid-template-columns:2fr 1fr 2fr 1fr;gap:12px;font-size:11.5px;font-weight:600;color:#9C9585;letter-spacing:0.05em;border-bottom:1px solid #EFEBE0"><span>PROGRAM</span><span>PATIENTS</span><span>RESPONSE RATE</span><span>OPEN ALERTS</span></div>
+    <div style="padding:13px 22px;display:grid;grid-template-columns:2fr 1fr 2fr 1fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+      <span style="font-size:13px;font-weight:600;color:#221F1A">Breast ca adjuvant FEC</span><span style="font-size:12.5px;color:#55503F">12</span>
+      <span style="display:flex;align-items:center;gap:10px"><span style="flex:1;height:7px;border-radius:99px;background:#EFEBE0;overflow:hidden;display:block"><span style="display:block;width:92%;height:100%;border-radius:99px;background:#115E59"></span></span><span style="font-size:12.5px;color:#221F1A;font-weight:600;width:36px">92%</span></span>
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#B3372B;background:#F8E7E2;border:1px solid #EBC5BC;border-radius:99px;padding:3px 10px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#B3372B"></span>2 high</span>
+    </div>
+    <div style="padding:13px 22px;display:grid;grid-template-columns:2fr 1fr 2fr 1fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+      <span style="font-size:13px;font-weight:600;color:#221F1A">Colorectal FOLFOX</span><span style="font-size:12.5px;color:#55503F">9</span>
+      <span style="display:flex;align-items:center;gap:10px"><span style="flex:1;height:7px;border-radius:99px;background:#EFEBE0;overflow:hidden;display:block"><span style="display:block;width:84%;height:100%;border-radius:99px;background:#115E59"></span></span><span style="font-size:12.5px;color:#221F1A;font-weight:600;width:36px">84%</span></span>
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#B3372B;background:#F8E7E2;border:1px solid #EBC5BC;border-radius:99px;padding:3px 10px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#B3372B"></span>1 high</span>
+    </div>
+    <div style="padding:13px 22px;display:grid;grid-template-columns:2fr 1fr 2fr 1fr;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+      <span style="font-size:13px;font-weight:600;color:#221F1A">Prostate radiotherapy</span><span style="font-size:12.5px;color:#55503F">7</span>
+      <span style="display:flex;align-items:center;gap:10px"><span style="flex:1;height:7px;border-radius:99px;background:#EFEBE0;overflow:hidden;display:block"><span style="display:block;width:88%;height:100%;border-radius:99px;background:#115E59"></span></span><span style="font-size:12.5px;color:#221F1A;font-weight:600;width:36px">88%</span></span>
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#A16207;background:#F7EEDA;border:1px solid #E5D3A8;border-radius:99px;padding:3px 10px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#A16207"></span>4 moderate</span>
+    </div>
+    <div style="padding:13px 22px;display:grid;grid-template-columns:2fr 1fr 2fr 1fr;gap:12px;align-items:center;transition:background .35s ease" style-hover="background:#FBF8F1">
+      <span style="font-size:13px;font-weight:600;color:#221F1A">Immunotherapy follow-up</span><span style="font-size:12.5px;color:#55503F">5</span>
+      <span style="display:flex;align-items:center;gap:10px"><span style="flex:1;height:7px;border-radius:99px;background:#EFEBE0;overflow:hidden;display:block"><span style="display:block;width:71%;height:100%;border-radius:99px;background:#A16207"></span></span><span style="font-size:12.5px;color:#221F1A;font-weight:600;width:36px">71%</span></span>
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#A16207;background:#F7EEDA;border:1px solid #E5D3A8;border-radius:99px;padding:3px 10px;justify-self:start"><span style="width:6px;height:6px;border-radius:99px;background:#A16207"></span>4 moderate</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="A5" style="display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px" data-screen-label="A5 Teams">
+<div style="display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)"><a href="#A5" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none">A5</a>Teams — groups of users, attachable to treatments</div>
+<div style="width:1100px;border-radius:16px;background:#FFFEFB;box-shadow:0 1px 6px rgba(60,52,36,0.08);border:1px solid rgba(0,0,0,.05);overflow:hidden">
+  <div style="padding:16px 22px;border-bottom:1px solid #EFEBE0;display:flex;justify-content:space-between;align-items:center">
+    <span style="font-family:'Newsreader',serif;font-style:italic;font-size:18px;font-weight:500;color:#221F1A">Teams</span>
+    <span style="border:1px solid #BFD6CE;color:#115E59;border-radius:99px;padding:7px 15px;font-size:12px;font-weight:600;background:#FFFEFB;transition:all .3s ease;cursor:pointer" style-hover="background:#E9F0EC">+ New team</span>
+  </div>
+  <div style="padding:14px 22px;display:flex;gap:12px;align-items:center;border-bottom:1px solid #EFEBE0;transition:background .35s ease" style-hover="background:#FBF8F1">
+    <div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Oncology ward 4</span><span style="font-size:12px;color:#7C766A">12 members — used in 18 treatments</span></div>
+    <div style="display:flex">
+      <span style="width:30px;height:30px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:600;border:2px solid #FFFEFB">EK</span>
+      <span style="width:30px;height:30px;border-radius:99px;background:#E9F0EC;color:#115E59;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:600;border:2px solid #FFFEFB;margin-left:-8px">MA</span>
+      <span style="width:30px;height:30px;border-radius:99px;background:#F7EEDA;color:#A16207;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:600;border:2px solid #FFFEFB;margin-left:-8px">SL</span>
+      <span style="width:30px;height:30px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:600;border:2px solid #FFFEFB;margin-left:-8px">+9</span>
+    </div>
+    <span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Manage</span>
+  </div>
+  <div style="padding:14px 22px;display:flex;gap:12px;align-items:center;transition:background .35s ease" style-hover="background:#FBF8F1">
+    <div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font-size:13.5px;font-weight:600;color:#221F1A">Urology outpatient</span><span style="font-size:12px;color:#7C766A">8 members — used in 9 treatments</span></div>
+    <div style="display:flex">
+      <span style="width:30px;height:30px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:600;border:2px solid #FFFEFB">TR</span>
+      <span style="width:30px;height:30px;border-radius:99px;background:#E9F0EC;color:#115E59;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:600;border:2px solid #FFFEFB;margin-left:-8px">KM</span>
+      <span style="width:30px;height:30px;border-radius:99px;background:#EFECE4;color:#55503F;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:600;border:2px solid #FFFEFB;margin-left:-8px">+6</span>
+    </div>
+    <span style="font-size:12.5px;color:#115E59;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Manage</span>
+  </div>
+</div>
+</div>
+
+</div>
+</section>
+</x-dc>
+</body>
+</html>

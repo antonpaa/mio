@@ -192,6 +192,28 @@ are cheap insurance of this kind.
 
 ---
 
+## R11 🟠 Licensed survey instruments — EORTC QLQ-C30
+
+**Question.** The designed survey catalog includes *Quality of life (QLQ-30)*
+— the EORTC QLQ-C30. Under what agreement may Mio use it, and what does that
+agreement require?
+
+**Engineering reading.** EORTC instruments require a usage agreement (royalty
+terms differ for academic vs. commercial use), and their translations are
+EORTC-validated — the Finnish and Swedish forms must be the official ones,
+never re-translated or restructured in the builder. This generalizes: any
+validated instrument (PROM) in the catalog carries licensing provenance, and
+the builder must be able to mark an instrument read-only.
+
+**Consequence if unresolved.** QLQ-C30 cannot ship in the catalog; house-built
+surveys are unaffected.
+
+| Owner | Needed by | Status |
+|---|---|---|
+| TBD | Before QLQ-C30 is used with real patients | 🟠 Open |
+
+---
+
 ## Product decisions pending
 
 These are open in [`../authz/capability-matrix.yaml`](../authz/capability-matrix.yaml)
@@ -201,10 +223,13 @@ engineering guess.
 | # | Question | Needs |
 |---|---|---|
 | P1 | Should Treatment Leads create patient accounts, or administrators only? | Operational decision — separation of duties versus an enrolment bottleneck |
-| P2 | Who may read the full audit log? A dedicated auditor/DPO role? | DPO input — audit metadata reveals which patients have treatments |
-| P3 | Should survey authoring and alert-rule configuration be a separate capability? | Product decision — this is the regulated-adjacent capability (R1) |
-| P4 | Should patients see that an alert was raised from their responses? | **Clinical opinion.** Transparency versus distress from an ungrounded risk score |
+| P2 | Who may read the full audit log? A dedicated auditor/DPO role? | DPO input — audit metadata reveals which patients have treatments. Design position: admin view shows initials-only subjects and generic event text (reconciliation X4) |
+| P3 | Should survey authoring and alert-rule configuration be a separate capability? | Product decision — this is the regulated-adjacent capability (R1). Design's role matrix (A2) confirms the Treatment Lead default |
+| P4 | Should patients see that an alert was raised from their responses? | **Clinical opinion.** Design position now on record: never severities or critical areas; a plain-language "closer look" note on submission, plus rule-authored patient notifications ([`../design/README.md`](../design/README.md)) — needs clinical sign-off |
 | P5 | Is break-glass access outside a care relationship required? | Clinical and legal input |
+| P6 | Patient-initiated symptom self-report: the data model and designs imply it (source "self-report", PP3/PP6), but no patient-side flow is designed | Product decision — design the flow or descope self-report to v1.1 (reconciliation X7) |
+| P7 | How does a numeric survey question feed a value series (PSA reporting → PSA value)? | Product + engineering decision — recommended: explicit per-question binding in the builder (reconciliation X8) |
+| P8 | Reporting screen placement: designed in the admin shell (A4), but its metrics are clinical aggregates that administrators cannot read | Move to clinician shell (Treatment Lead) or redefine metrics as de-identified counts (reconciliation X4/`reporting_shell_placement` in the matrix) |
 
 ---
 
@@ -224,3 +249,5 @@ Not open questions — commitments that follow from decisions already taken.
 | E8 | No production data in non-production environments | [`../architecture/data-model.md`](../architecture/data-model.md) |
 | E9 | No patient data in logs, traces or metrics | [`../architecture/platform.md`](../architecture/platform.md) |
 | E10 | RPO and RTO targets defined | [`../architecture/platform.md`](../architecture/platform.md) |
+| E11 | Fonts and all assets self-hosted — no third-party CDN requests from production pages | [`../design/design-system.md`](../design/design-system.md) |
+| E12 | Authored survey regex constrained to a linear-time-safe subset and engine | [`../architecture/surveys-and-alerts.md`](../architecture/surveys-and-alerts.md) |
