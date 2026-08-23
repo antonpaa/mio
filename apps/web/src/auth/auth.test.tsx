@@ -103,7 +103,8 @@ describe('L2 verify', () => {
     render(element);
     await userEvent.type(await screen.findByLabelText('Verification code'), '123456');
     await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
-    await screen.findByText('All caught up');
+    // the patient lands on the P1/P7 home (WP-26)
+    await screen.findByText('Hello, Anna');
     expect(api.verifyOtp).toHaveBeenCalledWith('patient', 'chal-1', '123456');
   });
 });
@@ -192,6 +193,6 @@ describe('signed-in shells', () => {
     const { element } = appAt('/');
     render(element);
     await screen.findByRole('link', { name: 'Viestit' });
-    await screen.findByText('Kaikki hoidettu');
+    await screen.findByText('Hei, Anna');
   });
 });

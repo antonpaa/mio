@@ -132,6 +132,8 @@ Terms fixed by the brief's naming conventions.
 |---|---|---|---|
 | Updates | Päivitykset | Uppdateringar | Landing feed. **Not** "Recent activities" |
 | Action needed | Vaatii toimia | Kräver åtgärd | Patient's pending items |
+| Download my data | Lataa omat tietoni | Ladda ner mina uppgifter | GDPR self-export (WP-26) |
+| Who has viewed my records | Kuka on katsonut tietojani | Vem har tittat på mina uppgifter | P8 access log (WP-26) |
 | Upcoming | Tulevat | Kommande | |
 | Messages | Viestit | Meddelanden | |
 | Treatments | Hoidot | Behandlingar | |

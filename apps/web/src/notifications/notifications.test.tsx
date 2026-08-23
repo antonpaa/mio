@@ -58,6 +58,29 @@ const SETTINGS = {
   emailPrefs: { survey_reminder: false },
 };
 
+const PROFILE = {
+  email: 'anna.virtanen.0@patient.example',
+  given_name: 'Anna',
+  family_name: 'Virtanen',
+  locale: 'en',
+  phone: '+358 40 1234567',
+  address: { street: 'Testikatu 1', postalCode: '00100', city: 'Helsinki', country: 'FI' },
+  date_of_birth: '1971-02-03',
+};
+
+const ACCESS_HISTORY = {
+  events: [
+    {
+      action: 'patient_clinical_profile.view',
+      resource_type: 'patient_clinical_profile',
+      occurred_at: '2026-08-22T09:00:00Z',
+      actor_given: 'Elina',
+      actor_family: 'Koskinen',
+      actor_title: 'Oncologist',
+    },
+  ],
+};
+
 function appAt(path: string): ReactElement {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const router = createRouter({
@@ -92,6 +115,18 @@ beforeEach(() => {
     }
     if (url === '/api/patient/settings/notifications' && init?.method === 'PUT') {
       return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } });
+    }
+    if (url === '/api/patient/settings/profile' && (init?.method ?? 'GET') === 'GET') {
+      return new Response(JSON.stringify(PROFILE), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    }
+    if (url === '/api/patient/privacy/access-history') {
+      return new Response(JSON.stringify(ACCESS_HISTORY), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
     }
     if (url === '/api/patient/notifications/read') {
       return new Response('{"marked":1}', {
@@ -129,6 +164,11 @@ describe('P8 email toggles', () => {
   it('shows the per-type switches from stored prefs and saves a flip', async () => {
     const { container } = render(appAt('/settings'));
     await screen.findByText('Email notifications');
+    // WP-26: the completed P8 renders contact and privacy beside them
+    await screen.findByText('Contact details');
+    await screen.findByText(/Elina Koskinen/);
+    expect(screen.getByText('viewed your records')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Download my data' })).toBeTruthy();
     const switches = screen.getAllByRole('switch');
     expect(switches).toHaveLength(3);
     // survey_reminder was stored off

@@ -25,6 +25,7 @@ import { MessagesPage } from '../messages/messages-page.js';
 import { MessageThreadPage } from '../messages/thread-page.js';
 import { NotificationsPage } from '../notifications/notifications-page.js';
 import { SettingsPage } from '../notifications/settings-page.js';
+import { PatientHomePage } from '../home/patient-home.js';
 import { PatientSurveysPage } from '../surveys/patient-surveys.js';
 import { SurveyFillPage } from '../surveys/fill.js';
 import { SurveySubmittedPage } from '../surveys/submitted.js';
@@ -94,6 +95,9 @@ function AuthedIndex(): ReactElement {
           <TriageCard />
           <MyTasksCard />
         </div>
+      ) : session.realm === 'patient' ? (
+        // P1/P7 (WP-26): the patient landing widgets
+        <PatientHomePage />
       ) : (
         <PlaceholderHome />
       )}
