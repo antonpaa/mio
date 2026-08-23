@@ -2,7 +2,15 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Card, CardHeader, ErrorState, SeverityChip, Skeleton, StatusChip } from '@mio/ui';
+import {
+  Card,
+  CardHeader,
+  ErrorState,
+  IconSurveys,
+  SeverityChip,
+  Skeleton,
+  StatusChip,
+} from '@mio/ui';
 
 /**
  * PP4: the completed surveys list - each response color-coded by what
@@ -42,7 +50,7 @@ export function ResponsesCard({ patientId }: { patientId: string }): ReactElemen
 
   return (
     <Card>
-      <CardHeader title={<FormattedMessage id="pp4.title" />} />
+      <CardHeader icon={<IconSurveys size={17} />} title={<FormattedMessage id="pp4.title" />} />
       {responses.data.length === 0 ? (
         <p className="text-sm text-secondary">
           <FormattedMessage id="pp4.empty" />
@@ -64,7 +72,7 @@ export function ResponsesCard({ patientId }: { patientId: string }): ReactElemen
                   <span className="block text-xs text-secondary">
                     {intl.formatDate(row.submitted_at, { dateStyle: 'medium', timeStyle: 'short' })}
                     {row.behalf_given !== null
-                      ? ` · ${intl.formatMessage(
+                      ? ` — ${intl.formatMessage(
                           { id: 'c7.onBehalf' },
                           { name: `${row.behalf_given} ${row.behalf_family ?? ''}`.trim() },
                         )}`

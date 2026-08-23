@@ -2,7 +2,16 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
 import type { ReactElement, ReactNode } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Avatar, Card, CardHeader, ErrorState, ListRow, Skeleton, StatusChip } from '@mio/ui';
+import {
+  Avatar,
+  Card,
+  CardHeader,
+  ErrorState,
+  IconTreatments,
+  ListRow,
+  Skeleton,
+  StatusChip,
+} from '@mio/ui';
 import { ValuesCard } from '../observations/values-card.js';
 import { SymptomsCard } from '../observations/symptoms-card.js';
 import { ResponsesCard } from '../surveys/responses-card.js';
@@ -51,7 +60,10 @@ function ProgramsCard({ patientId }: { patientId: string }): ReactElement {
   if (programs.isError) return <ErrorState onRetry={() => void programs.refetch()} />;
   return (
     <Card>
-      <CardHeader title={<FormattedMessage id="pp.programsCard" />} />
+      <CardHeader
+        icon={<IconTreatments size={17} />}
+        title={<FormattedMessage id="pp.programsCard" />}
+      />
       {programs.data.length === 0 ? (
         <p className="text-sm text-secondary">
           <FormattedMessage id="pp.noPrograms" />

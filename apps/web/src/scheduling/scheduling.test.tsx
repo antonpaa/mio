@@ -179,7 +179,7 @@ describe('P9 patient calendar', () => {
     await screen.findByRole('heading', { name: 'Calendar' });
     await screen.findByText('Today');
     await screen.findByText('Oncologist visit');
-    await screen.findByText(/Breast cancer — adjuvant chemotherapy · Clinic 2B/);
+    await screen.findByText(/Breast cancer — adjuvant chemotherapy — Clinic 2B/);
     await screen.findByText('PSA reporting');
     const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });
     expect(results.violations.map((violation) => violation.id)).toEqual([]);

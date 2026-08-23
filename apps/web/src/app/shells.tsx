@@ -2,7 +2,27 @@ import type { ReactElement, ReactNode } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import { ROLE_CAPABILITIES, type Role } from '@mio/authz';
-import { AppShell, Avatar, Button, EmptyState, type NavItem } from '@mio/ui';
+import {
+  AppShell,
+  Avatar,
+  Button,
+  EmptyState,
+  IconAudit,
+  IconCalendar,
+  IconDashboard,
+  IconHome,
+  IconMessages,
+  IconPatients,
+  IconReporting,
+  IconRoles,
+  IconSurveys,
+  IconTasks,
+  IconTeams,
+  IconTreatments,
+  IconUsers,
+  type IconProps,
+  type NavItem,
+} from '@mio/ui';
 import { AlertBell } from '../alerts/bell.js';
 import { useSession } from '../session/session.js';
 
@@ -18,6 +38,24 @@ interface ShellItem {
   /** capability that makes this area meaningful for the role */
   capability?: string;
 }
+
+/** The print-registration glyph for each nav area (X10); decorative -
+ * the localized label carries the name. */
+const NAV_ICONS: Record<string, (props: IconProps) => ReactElement> = {
+  'nav.home': IconHome,
+  'nav.dashboard': IconDashboard,
+  'nav.patients': IconPatients,
+  'nav.messages': IconMessages,
+  'nav.treatments': IconTreatments,
+  'nav.surveys': IconSurveys,
+  'nav.calendar': IconCalendar,
+  'nav.tasks': IconTasks,
+  'nav.users': IconUsers,
+  'nav.teams': IconTeams,
+  'nav.roles': IconRoles,
+  'nav.audit': IconAudit,
+  'nav.reporting': IconReporting,
+};
 
 const PATIENT_ITEMS: ShellItem[] = [
   { labelId: 'nav.home', href: '/' },
@@ -65,11 +103,15 @@ export function SignedInShell({ children }: { children: ReactNode }): ReactEleme
 
   const navItems: NavItem[] = items
     .filter((item) => item.capability === undefined || capabilities.has(item.capability))
-    .map((item) => ({
-      label: intl.formatMessage({ id: item.labelId }),
-      href: item.href,
-      active: pathname === item.href,
-    }));
+    .map((item) => {
+      const Icon = NAV_ICONS[item.labelId];
+      return {
+        label: intl.formatMessage({ id: item.labelId }),
+        href: item.href,
+        active: pathname === item.href,
+        ...(Icon !== undefined ? { icon: <Icon size={17} /> } : {}),
+      };
+    });
 
   const initials = `${session.account?.givenName?.[0] ?? ''}${session.account?.familyName?.[0] ?? ''}`;
 
@@ -81,6 +123,7 @@ export function SignedInShell({ children }: { children: ReactNode }): ReactEleme
       items={navItems}
       renderLink={(item, className) => (
         <Link to={item.href} className={className} aria-current={item.active ? 'page' : undefined}>
+          {item.icon}
           {item.label}
         </Link>
       )}

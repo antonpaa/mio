@@ -97,23 +97,36 @@ opacity), dark circle high-right (30%) — with Newsreader italic "mio".
   the direction approval. Use an en dash with spaces (" — "), as every canvas
   does.
 
+## Icons — print registration (X10, owner-requested addition)
+
+Not from the canvases; recorded as delta X10 in [README.md](README.md).
+Hand-drawn stroke glyphs (24-grid, 1.6 stroke, round caps) in
+`packages/ui/src/components/icons.tsx` — no icon library. Every glyph
+carries the logo's light circle as a `teal` tint layer (18 % — the
+lockup's 14 % adjusted for glyph scale) that rests misregistered
+low-left, exactly like the lockup, and slides into register when the
+enclosing control is hovered or focused; on the current nav page it
+stays registered at the dark circle's 30 %. Icons are decorative by
+contract (`aria-hidden`, the text label names the item) and the motion
+obeys `prefers-reduced-motion` via the global rule.
+
 ## Component inventory (from the canvases)
 
-Severity chip (outlined, tinted, leading dot) · status chip
-(Active/Draft/Published/Archived/Ended/Done) · pill button (primary teal /
-quiet outline) · card with header action link ("All alerts") · list row with
-leading avatar/initials · date block (weekday + day, calendar rows) · top
-centered primary nav with unread-count badges · patient-scoped left
-sub-navigation with group headers (clinician profile pages) · segmented filter
-(My patients / Whole team) · search input · data table (roster, catalogs,
-values, audit) · message bubble pair + internal-note block (visibly distinct,
-labelled "not visible to patient") · composer with B/I, attachment, and
-Reply-vs-Internal-note toggle · body map (front/back SVG, selectable regions)
-· stepper survey frame (progress "2 of 8", Save & exit) · OTP six-digit input
-· toggle switch · phased-recurrence editor · dialog (assign, recurrence) ·
-notification popover from the bell · empty-state card (logo mark + Newsreader
-line + one action) · error card ("Nothing was lost" + Try again) · timeout
-warning modal · trend arrows (↑ worsening, → stable, ↓ easing/resolved).
+Severity chip (outlined, tinted, leading dot); status chip
+(Active/Draft/Published/Archived/Ended/Done); pill button (primary teal /
+quiet outline); card with header action link ("All alerts"); list row with
+leading avatar/initials; date block (weekday + day, calendar rows); top
+centered primary nav with unread-count badges; patient-scoped left
+sub-navigation with group headers (clinician profile pages); segmented filter
+(My patients / Whole team); search input; data table (roster, catalogs,
+values, audit); message bubble pair + internal-note block (visibly distinct,
+labelled "not visible to patient"); composer with B/I, attachment, and
+Reply-vs-Internal-note toggle; body map (front/back SVG, selectable regions);
+stepper survey frame (progress "2 of 8", Save & exit); OTP six-digit input;
+toggle switch; phased-recurrence editor; dialog (assign, recurrence);
+notification popover from the bell; empty-state card (logo mark + Newsreader
+line + one action); error card ("Nothing was lost" + Try again); timeout
+warning modal; trend arrows (↑ worsening, → stable, ↓ easing/resolved).
 
 ## Voice
 

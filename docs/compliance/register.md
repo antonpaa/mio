@@ -8,8 +8,8 @@ date. Engineering can frame these; it cannot answer them.
 > raised each item. Where a classification is stated, it is a reading of the
 > regulation, not an opinion from a qualified party.
 
-**Status key:** 🔴 blocking · 🟠 needed before go-live · 🟡 needed before the
-relevant subsystem ships · ⚪ track only
+**Status key:** 🔴 blocking; 🟠 needed before go-live; 🟡 needed before the
+relevant subsystem ships; ⚪ track only
 
 ---
 

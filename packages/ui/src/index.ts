@@ -9,6 +9,25 @@ export { BodyMap, type BodyMapProps } from './components/body-map.js';
 export { Card, CardHeader } from './components/card.js';
 export { ConfirmDialog, type ConfirmDialogProps } from './components/confirm-dialog.js';
 export { SeverityChip, StatusChip, type ChipTone, type Severity } from './components/chips.js';
+export {
+  IconAudit,
+  IconBell,
+  IconCalendar,
+  IconDashboard,
+  IconHome,
+  IconMessages,
+  IconPatients,
+  IconReporting,
+  IconRoles,
+  IconSurveys,
+  IconSymptoms,
+  IconTasks,
+  IconTeams,
+  IconTreatments,
+  IconUsers,
+  IconValues,
+  type IconProps,
+} from './components/icons.js';
 export { LanguageSwitcher, type LanguageSwitcherProps } from './components/language-switcher.js';
 export { Avatar, ListRow } from './components/list-row.js';
 export { MioLockup, MioMark } from './components/logo.js';

@@ -119,7 +119,7 @@ export function PatientCalendarPage(): ReactElement {
                       <p className="truncate text-sm font-medium text-ink">{row.title}</p>
                       <p className="truncate text-xs text-secondary">
                         {row.treatment_name}
-                        {row.location ? ` · ${row.location}` : ''}
+                        {row.location ? ` — ${row.location}` : ''}
                       </p>
                     </div>
                     {row.status === 'confirmed' ? (

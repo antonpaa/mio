@@ -27,7 +27,7 @@ apps/api      NestJS on Fastify — modular monolith; modules under src/modules/
               imported ONLY via their index.ts (dependency-cruiser enforces this)
 apps/web      Vite + React 19 + TanStack Router/Query; same-origin API
 apps/worker   async jobs — pg-boss consumer over @mio/db
-packages/     contracts · survey-schema · authz · i18n · ui · db · synthetic —
+packages/     contracts, survey-schema, authz, i18n, ui, db, synthetic —
               shared,
               source-first; never import from apps. @mio/db owns migrations
               (packages/db/migrations/*.sql, forward-only), role-carrying

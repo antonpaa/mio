@@ -11,6 +11,22 @@ import {
   CountBadge,
   EmptyState,
   ErrorState,
+  IconAudit,
+  IconBell,
+  IconCalendar,
+  IconDashboard,
+  IconHome,
+  IconMessages,
+  IconPatients,
+  IconReporting,
+  IconRoles,
+  IconSurveys,
+  IconSymptoms,
+  IconTasks,
+  IconTeams,
+  IconTreatments,
+  IconUsers,
+  IconValues,
   LanguageSwitcher,
   ListRow,
   MioLockup,
@@ -72,6 +88,40 @@ function Gallery(): ReactElement {
           <Button variant="quiet" onPress={() => setShowSplash(true)}>
             Show splash
           </Button>
+        </Section>
+
+        <Section title="Icons — print registration (hover to register)">
+          <div className="flex flex-wrap gap-3">
+            {(
+              [
+                ['Home', IconHome],
+                ['Dashboard', IconDashboard],
+                ['Patients', IconPatients],
+                ['Messages', IconMessages],
+                ['Surveys', IconSurveys],
+                ['Treatments', IconTreatments],
+                ['Tasks', IconTasks],
+                ['Calendar', IconCalendar],
+                ['Values', IconValues],
+                ['Symptoms', IconSymptoms],
+                ['Bell', IconBell],
+                ['Users', IconUsers],
+                ['Teams', IconTeams],
+                ['Roles', IconRoles],
+                ['Audit', IconAudit],
+                ['Reporting', IconReporting],
+              ] as const
+            ).map(([name, Icon]) => (
+              <button
+                key={name}
+                type="button"
+                className="flex flex-col items-center gap-1 rounded-inner border border-border bg-surface px-3 py-2 text-xs text-secondary"
+              >
+                <Icon size={22} />
+                {name}
+              </button>
+            ))}
+          </div>
         </Section>
 
         <Section title="Buttons">

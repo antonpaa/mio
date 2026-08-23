@@ -200,8 +200,8 @@ instrument, not a symptom — it lives in the survey catalog (register R11).
 | Virtsapakko | Urinary urgency | Urinträngningar |
 | Virtsaumpi | Urinary retention | Urinstämma |
 
-Symptom-observation trend labels: New — Uusi — Ny ⚠️ · Worsening — Pahenee —
-Förvärras ⚠️ · Stable — Vakaa — Stabil ⚠️ · Easing — Helpottaa — Lindras ⚠️ ·
+Symptom-observation trend labels: New — Uusi — Ny ⚠️; Worsening — Pahenee —
+Förvärras ⚠️; Stable — Vakaa — Stabil ⚠️; Easing — Helpottaa — Lindras ⚠️;
 Resolved — Poistunut — Avklingat ⚠️.
 
 ## Account and access

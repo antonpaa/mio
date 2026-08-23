@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { ErrorState, SeverityChip, Skeleton, StatusChip } from '@mio/ui';
+import { ErrorState, IconBell, SeverityChip, Skeleton, StatusChip } from '@mio/ui';
 import { ALERT_STATUS_TONE, TRIAGE_QUERY } from './alert-model.js';
 
 /**
@@ -20,7 +20,13 @@ export function TriageCard(): ReactElement {
       className="rounded-card border border-black/5 bg-surface shadow-resting"
     >
       <header className="flex items-baseline justify-between border-b border-hairline px-5 py-3.5">
-        <h2 id="triage-title" className="font-display text-lg italic text-ink">
+        <h2
+          id="triage-title"
+          className="flex items-center gap-2 font-display text-lg italic text-ink"
+        >
+          <span className="text-teal">
+            <IconBell size={18} />
+          </span>
           <FormattedMessage id="alerts.queueTitle" />
         </h2>
         {triage.data ? (
@@ -64,7 +70,7 @@ export function TriageCard(): ReactElement {
                     {row.patient_given} {row.patient_family}
                   </span>
                   <span className="block truncate text-xs text-secondary">
-                    {row.survey_name ?? row.treatment_name} ·{' '}
+                    {row.survey_name ?? row.treatment_name} —{' '}
                     {intl.formatDate(row.created_at, { dateStyle: 'medium', timeStyle: 'short' })}
                   </span>
                 </span>

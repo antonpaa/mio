@@ -76,6 +76,31 @@
   }
 }
 
+@layer components {
+  /*
+   * Print-registration icons (X10): the tinted circle - the logo's light
+   * circle carried into every glyph - rests misregistered low-left and
+   * slides into register behind the ink when the enclosing control is
+   * hovered, focused or marks the current page. The overshoot ease makes
+   * it settle like a plate dropping into place. The global
+   * prefers-reduced-motion rule below collapses the transition.
+   */
+  .mio-icon .mio-icon-tint {
+    transform: translate(-2.2px, 2.2px);
+    transition: transform 0.35s cubic-bezier(0.3, 1.4, 0.5, 1);
+  }
+  a:hover .mio-icon .mio-icon-tint,
+  a:focus-visible .mio-icon .mio-icon-tint,
+  button:hover .mio-icon .mio-icon-tint,
+  button:focus-visible .mio-icon .mio-icon-tint,
+  [aria-current='page'] .mio-icon .mio-icon-tint {
+    transform: translate(0, 0);
+  }
+  [aria-current='page'] .mio-icon .mio-icon-tint {
+    opacity: 0.3;
+  }
+}
+
 @layer base {
   body {
     background-color: var(--color-paper);

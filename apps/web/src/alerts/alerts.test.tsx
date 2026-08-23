@@ -195,7 +195,7 @@ describe('PP6 alert detail', () => {
     expect(screen.getByText('How much did it affect your day?: 9 (threshold ≥ 7)')).toBeTruthy();
     // the timeline: raised entry plus the appended comment
     expect(screen.getByText('Alert raised by rule — 2 triggers')).toBeTruthy();
-    expect(screen.getByText('Comment · Elina Koskinen')).toBeTruthy();
+    expect(screen.getByText('Comment — Elina Koskinen')).toBeTruthy();
     expect(screen.getByText('Called the patient, arranging an extra visit.')).toBeTruthy();
 
     await userEvent.click(screen.getByRole('button', { name: 'Acknowledge' }));

@@ -159,8 +159,8 @@ describe('B1 catalog', () => {
     const { container } = render(appAt('/surveys'));
     await screen.findByRole('heading', { name: 'Survey catalog' });
     await screen.findByText('Appetite check');
-    expect(screen.getByText('v2 · Draft')).toBeTruthy();
-    expect(screen.getAllByText('v1 · Published')).toHaveLength(2);
+    expect(screen.getByText('v2 — Draft')).toBeTruthy();
+    expect(screen.getAllByText('v1 — Published')).toHaveLength(2);
     expect(screen.getByText('Licensed instrument')).toBeTruthy();
     expect(screen.getByText('3 programs')).toBeTruthy();
     // srv1 has an open draft, srv2 is licensed - neither offers a new draft
@@ -175,7 +175,7 @@ describe('B2/B4/B5 builder', () => {
     vi.mocked(api.whoami).mockResolvedValue(LEAD);
     const { container } = render(appAt('/surveys/builder/v1'));
     await screen.findByRole('heading', { name: 'Appetite check' });
-    expect(screen.getByText('v1 · Draft')).toBeTruthy();
+    expect(screen.getByText('v1 — Draft')).toBeTruthy();
     // both questions render; the follow-up shows its condition editor
     expect(screen.getAllByDisplayValue('Appetite this week').length).toBeGreaterThan(0);
     expect(screen.getByDisplayValue('For how many days?')).toBeTruthy();

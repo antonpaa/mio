@@ -90,7 +90,7 @@ export function TasksPage(): ReactElement {
                 : 'border-border bg-surface text-secondary hover:bg-surface-sunken hover:text-ink'
             }`}
           >
-            {intl.formatMessage({ id: `tasks.tab.${option}` })} · {counts[option]}
+            {intl.formatMessage({ id: `tasks.tab.${option}` })} ({counts[option]})
           </button>
         ))}
       </div>
@@ -118,9 +118,9 @@ export function TasksPage(): ReactElement {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-ink">{task.title}</p>
                     <p className="truncate text-xs text-secondary">
-                      {task.patient_given} {task.patient_family} · {task.treatment_name}
+                      {task.patient_given} {task.patient_family} — {task.treatment_name}
                       {task.due_date !== null
-                        ? ` · ${intl.formatDate(`${task.due_date}T12:00:00`, { day: 'numeric', month: 'short' })}`
+                        ? ` — ${intl.formatDate(`${task.due_date}T12:00:00`, { day: 'numeric', month: 'short' })}`
                         : ''}
                     </p>
                   </div>

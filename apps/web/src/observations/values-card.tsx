@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button, Card, CardHeader, ErrorState, Skeleton, StatusChip } from '@mio/ui';
+import { Button, Card, CardHeader, ErrorState, IconValues, Skeleton, StatusChip } from '@mio/ui';
 
 /**
  * PP2: the patient's value series - latest three entries per series with
@@ -186,7 +186,7 @@ function SeriesDialog({
       <div className="flex max-h-full w-full max-w-2xl flex-col rounded-card bg-surface shadow-raised">
         <header className="flex items-baseline justify-between border-b border-hairline px-6 py-4">
           <h2 id="series-title" className="font-display text-lg italic text-ink">
-            {series.name} · {series.unit}
+            {series.name} ({series.unit})
           </h2>
           <Button variant="quiet" size="sm" onPress={onClose}>
             <FormattedMessage id="common.close" />
@@ -306,7 +306,7 @@ export function ValuesCard({ patientId }: { patientId: string }): ReactElement {
 
   return (
     <Card>
-      <CardHeader title={<FormattedMessage id="values.title" />} />
+      <CardHeader icon={<IconValues size={17} />} title={<FormattedMessage id="values.title" />} />
       {summary.data.length === 0 ? (
         <p className="text-sm text-secondary">
           <FormattedMessage id="values.empty" />
@@ -333,9 +333,9 @@ export function ValuesCard({ patientId }: { patientId: string }): ReactElement {
                     series.latest
                       .map(
                         (entry) =>
-                          `${entry.value ?? '—'} ${series.unit} · ${intl.formatDate(entry.measured_at, { dateStyle: 'medium' })}`,
+                          `${entry.value ?? '—'} ${series.unit} (${intl.formatDate(entry.measured_at, { dateStyle: 'medium' })})`,
                       )
-                      .join('   ')
+                      .join(' — ')
                   )}
                 </span>
               </span>

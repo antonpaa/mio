@@ -7,6 +7,8 @@ export interface NavItem {
   active?: boolean;
   /** Unread count badge; rendered with an accessible name by the caller's label. */
   badge?: number;
+  /** Decorative leading icon (aria-hidden by construction); the label names the item. */
+  icon?: ReactNode;
 }
 
 export interface AppShellProps {

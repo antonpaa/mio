@@ -6,7 +6,7 @@ Mio provides two-way interaction between patients and hospital care teams, and
 management of treatments, surveys and alerts. It ships in English, Finnish and
 Swedish.
 
-*Care, together · Hoitoa yhdessä · Vård, tillsammans*
+*Care, together — Hoitoa yhdessä — Vård, tillsammans*
 
 ## Status
 
@@ -30,7 +30,7 @@ Start at [`docs/README.md`](docs/README.md).
 
 ## Stack
 
-React · TypeScript · Node · NestJS · PostgreSQL · Cedar · Terraform
+React, TypeScript, Node, NestJS, PostgreSQL, Cedar, Terraform
 
 A modular monolith with one worker, on a cloud-agnostic container platform.
 Target scale is 5,000–20,000 patients and fewer than 1,000 staff — Mio is not a

@@ -40,9 +40,9 @@ design problem to solve before merge, not during a deploy.
 On every pull request:
 
 ```
-lint · typecheck · unit tests · integration tests (Testcontainers)
-capability matrix validation · architecture boundary test
-e2e (Playwright) · axe-core accessibility · dependency + secret scanning
+lint, typecheck, unit tests, integration tests (Testcontainers)
+capability matrix validation, architecture boundary test
+e2e (Playwright), axe-core accessibility, dependency + secret scanning
 ```
 
 `main` is protected. No direct pushes. Every change arrives by reviewed pull

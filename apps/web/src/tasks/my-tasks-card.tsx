@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Link } from '@tanstack/react-router';
-import { Skeleton, StatusChip } from '@mio/ui';
+import { IconTasks, Skeleton, StatusChip } from '@mio/ui';
 import { useSession } from '../session/session.js';
 import { bucketOf, localToday, type TaskRow } from './task-model.js';
 
@@ -29,7 +29,10 @@ export function MyTasksCard(): ReactElement {
   return (
     <section className="rounded-card border border-black/5 bg-surface px-5 py-4 shadow-resting">
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-ink">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
+          <span className="text-teal">
+            <IconTasks size={16} />
+          </span>
           <FormattedMessage id="tasks.myCard" />
         </h2>
         <Link to="/tasks" className="text-sm text-teal hover:text-teal-hover">
@@ -55,7 +58,7 @@ export function MyTasksCard(): ReactElement {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm text-ink">{task.title}</p>
                     <p className="truncate text-xs text-secondary">
-                      {task.patient_given} {task.patient_family} · {task.treatment_name}
+                      {task.patient_given} {task.patient_family} — {task.treatment_name}
                     </p>
                   </div>
                   {task.due_date !== null ? (

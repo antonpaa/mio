@@ -140,9 +140,9 @@ export function ResponseDetailPage(): ReactElement {
           >
             {response.patient_given} {response.patient_family}
           </Link>
-          {' · '}
+          {' — '}
           {response.treatment_name}
-          {' · '}
+          {' — '}
           {response.submitted_at !== null
             ? intl.formatDate(response.submitted_at, { dateStyle: 'medium', timeStyle: 'short' })
             : intl.formatMessage({ id: 'c7.draft' })}

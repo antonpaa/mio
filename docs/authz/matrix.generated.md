@@ -10,81 +10,81 @@ the action is permitted; `deny` means no path exists.
 |---|---|---|---|---|---|
 | `patient_identity.view` | always | **self** | **care relationship** | **care relationship** | **any** |
 | `patient_identity.update_contact_details` | always | **self** | **care relationship** | **care relationship** | **any** |
-| `patient_clinical_profile.view` | always | **self** | **care relationship** | **care relationship** | · |
-| `care_relationship.view` | always | **self** | **team member** | **team member** | · |
-| `care_relationship.create` | always | · | **team member** | **team member** | · |
-| `care_relationship.end` | always | · | **team member** | **team member** | · |
-| `treatment.view` | always | **self** | **team member** | **team member** | · |
-| `treatment.create` | always | · | · | **any** | · |
-| `treatment.update` | always | · | **team member** | **team member** | · |
-| `treatment.change_lifecycle_state` | always | · | · | **team lead** | · |
-| `treatment.manage_team` | always | · | · | **team lead** | · |
-| `treatment.enrol_patient` | always | · | **team member** | **team member** | · |
-| `treatment.enter_on_behalf_of_patient` | always | · | **team member** | **team member** | · |
-| `treatment.configure_program_rules` | always | · | · | **team lead** | · |
-| `treatment_template.view` | never | · | **any** | **any** | · |
-| `treatment_template.create` | always | · | · | **any** | · |
-| `treatment_template.update_draft` | always | · | · | **any** | · |
-| `treatment_template.publish` | always | · | · | **any** | · |
-| `treatment_template.archive` | always | · | · | **any** | · |
-| `activity.view` | always | **self** | **team member** | **team member** | · |
-| `activity.create` | always | · | **team member** | **team member** | · |
-| `activity.update` | always | · | **team member** | **team member** | · |
-| `activity.cancel` | always | · | **team member** | **team member** | · |
-| `task.view` | always | · | **team member** | **team member** | · |
-| `task.create` | never | · | **team member** | **team member** | · |
-| `task.claim` | never | · | **team member** | **team member** | · |
-| `task.assign_to_other` | never | · | **team member** | **team member** | · |
-| `task.complete` | never | · | **own** | **team member** | · |
-| `survey_template.view` | never | · | **any** | **any** | · |
-| `survey_template.create` | always | · | · | **any** | · |
-| `survey_template.update_draft` | always | · | · | **any** | · |
-| `survey_template.publish` | always | · | · | **any** | · |
-| `survey_template.archive` | always | · | · | **any** | · |
-| `survey_template.configure_alert_rules` | always | · | · | **any** | · |
-| `survey_assignment.view` | always | **self** | **team member** | **team member** | · |
-| `survey_assignment.create` | always | · | **team member** | **team member** | · |
-| `survey_assignment.schedule_recurring` | always | · | **team member** | **team member** | · |
-| `survey_assignment.cancel` | always | · | **team member** | **team member** | · |
-| `survey_assignment.send_reminder` | never | · | **team member** | **team member** | · |
-| `survey_response.view` | always | **self** | **care relationship** | **care relationship** | · |
-| `survey_response.save_draft` | never | **self** | · | · | · |
-| `survey_response.submit` | always | **self** | · | · | · |
-| `survey_response.submit_on_behalf_of_patient` | always | · | **care relationship** | **care relationship** | · |
-| `survey_response.view_trend` | always | **self** | **care relationship** | **care relationship** | · |
-| `alert.view` | always | · | **team member** | **team member** | · |
-| `alert.view_evaluation_trace` | always | · | **team member** | **team member** | · |
-| `alert.acknowledge` | always | · | **team member** | **team member** | · |
-| `alert.assign` | always | · | **team member** | **team member** | · |
-| `alert.comment` | always | · | **team member** | **team member** | · |
-| `alert.resolve` | always | · | **team member** | **team member** | · |
-| `message_thread.view` | always | **self** | **team member** | **team member** | · |
-| `message_thread.post` | always | **self** | **team member** | **team member** | · |
-| `internal_note.view` | always | · | **team member** | **team member** | · |
-| `internal_note.post` | always | · | **team member** | **team member** | · |
-| `attachment.upload` | always | **self** | **team member** | **team member** | · |
-| `attachment.download` | always | **self** | **care relationship** | **care relationship** | · |
-| `value_entry.view` | always | **self** | **care relationship** | **care relationship** | · |
-| `value_entry.create` | always | **self** | **care relationship** | **care relationship** | · |
-| `symptom_observation.view` | always | **self** | **care relationship** | **care relationship** | · |
-| `symptom_observation.create` | always | **self** | **care relationship** | **care relationship** | · |
-| `symptom_taxonomy.view` | never | · | **any** | **any** | · |
-| `symptom_taxonomy.manage` | always | · | · | **any** | · |
-| `patient_data_export.request` | always | · | **care relationship** | **care relationship** | · |
-| `patient_data_export.download` | always | · | **care relationship** | **care relationship** | · |
-| `staff_account.view` | always | · | **any** | **any** | **any** |
-| `staff_account.create` | always | · | · | · | **any** |
-| `staff_account.deactivate` | always | · | · | · | **any** |
-| `staff_account.reset_credentials` | always | · | · | · | **any** |
-| `patient_account.create` | always | · | · | **any** | **any** |
-| `patient_account.deactivate` | always | · | · | · | **any** |
-| `patient_account.reset_credentials` | always | · | · | · | **any** |
-| `team.view` | never | · | **any** | **any** | **any** |
-| `team.create` | always | · | · | **any** | **any** |
-| `team.update_membership` | always | · | · | **any** | **any** |
+| `patient_clinical_profile.view` | always | **self** | **care relationship** | **care relationship** | — |
+| `care_relationship.view` | always | **self** | **team member** | **team member** | — |
+| `care_relationship.create` | always | — | **team member** | **team member** | — |
+| `care_relationship.end` | always | — | **team member** | **team member** | — |
+| `treatment.view` | always | **self** | **team member** | **team member** | — |
+| `treatment.create` | always | — | — | **any** | — |
+| `treatment.update` | always | — | **team member** | **team member** | — |
+| `treatment.change_lifecycle_state` | always | — | — | **team lead** | — |
+| `treatment.manage_team` | always | — | — | **team lead** | — |
+| `treatment.enrol_patient` | always | — | **team member** | **team member** | — |
+| `treatment.enter_on_behalf_of_patient` | always | — | **team member** | **team member** | — |
+| `treatment.configure_program_rules` | always | — | — | **team lead** | — |
+| `treatment_template.view` | never | — | **any** | **any** | — |
+| `treatment_template.create` | always | — | — | **any** | — |
+| `treatment_template.update_draft` | always | — | — | **any** | — |
+| `treatment_template.publish` | always | — | — | **any** | — |
+| `treatment_template.archive` | always | — | — | **any** | — |
+| `activity.view` | always | **self** | **team member** | **team member** | — |
+| `activity.create` | always | — | **team member** | **team member** | — |
+| `activity.update` | always | — | **team member** | **team member** | — |
+| `activity.cancel` | always | — | **team member** | **team member** | — |
+| `task.view` | always | — | **team member** | **team member** | — |
+| `task.create` | never | — | **team member** | **team member** | — |
+| `task.claim` | never | — | **team member** | **team member** | — |
+| `task.assign_to_other` | never | — | **team member** | **team member** | — |
+| `task.complete` | never | — | **own** | **team member** | — |
+| `survey_template.view` | never | — | **any** | **any** | — |
+| `survey_template.create` | always | — | — | **any** | — |
+| `survey_template.update_draft` | always | — | — | **any** | — |
+| `survey_template.publish` | always | — | — | **any** | — |
+| `survey_template.archive` | always | — | — | **any** | — |
+| `survey_template.configure_alert_rules` | always | — | — | **any** | — |
+| `survey_assignment.view` | always | **self** | **team member** | **team member** | — |
+| `survey_assignment.create` | always | — | **team member** | **team member** | — |
+| `survey_assignment.schedule_recurring` | always | — | **team member** | **team member** | — |
+| `survey_assignment.cancel` | always | — | **team member** | **team member** | — |
+| `survey_assignment.send_reminder` | never | — | **team member** | **team member** | — |
+| `survey_response.view` | always | **self** | **care relationship** | **care relationship** | — |
+| `survey_response.save_draft` | never | **self** | — | — | — |
+| `survey_response.submit` | always | **self** | — | — | — |
+| `survey_response.submit_on_behalf_of_patient` | always | — | **care relationship** | **care relationship** | — |
+| `survey_response.view_trend` | always | **self** | **care relationship** | **care relationship** | — |
+| `alert.view` | always | — | **team member** | **team member** | — |
+| `alert.view_evaluation_trace` | always | — | **team member** | **team member** | — |
+| `alert.acknowledge` | always | — | **team member** | **team member** | — |
+| `alert.assign` | always | — | **team member** | **team member** | — |
+| `alert.comment` | always | — | **team member** | **team member** | — |
+| `alert.resolve` | always | — | **team member** | **team member** | — |
+| `message_thread.view` | always | **self** | **team member** | **team member** | — |
+| `message_thread.post` | always | **self** | **team member** | **team member** | — |
+| `internal_note.view` | always | — | **team member** | **team member** | — |
+| `internal_note.post` | always | — | **team member** | **team member** | — |
+| `attachment.upload` | always | **self** | **team member** | **team member** | — |
+| `attachment.download` | always | **self** | **care relationship** | **care relationship** | — |
+| `value_entry.view` | always | **self** | **care relationship** | **care relationship** | — |
+| `value_entry.create` | always | **self** | **care relationship** | **care relationship** | — |
+| `symptom_observation.view` | always | **self** | **care relationship** | **care relationship** | — |
+| `symptom_observation.create` | always | **self** | **care relationship** | **care relationship** | — |
+| `symptom_taxonomy.view` | never | — | **any** | **any** | — |
+| `symptom_taxonomy.manage` | always | — | — | **any** | — |
+| `patient_data_export.request` | always | — | **care relationship** | **care relationship** | — |
+| `patient_data_export.download` | always | — | **care relationship** | **care relationship** | — |
+| `staff_account.view` | always | — | **any** | **any** | **any** |
+| `staff_account.create` | always | — | — | — | **any** |
+| `staff_account.deactivate` | always | — | — | — | **any** |
+| `staff_account.reset_credentials` | always | — | — | — | **any** |
+| `patient_account.create` | always | — | — | **any** | **any** |
+| `patient_account.deactivate` | always | — | — | — | **any** |
+| `patient_account.reset_credentials` | always | — | — | — | **any** |
+| `team.view` | never | — | **any** | **any** | **any** |
+| `team.create` | always | — | — | **any** | **any** |
+| `team.update_membership` | always | — | — | **any** | **any** |
 | `audit_log.view_own_access_history` | never | **self** | **self** | **self** | **self** |
-| `audit_log.view_full` | always | · | · | · | **any** |
-| `report.view` | always | · | **team member** | **team member** | · |
+| `audit_log.view_full` | always | — | — | — | **any** |
+| `report.view` | always | — | **team member** | **team member** | — |
 | `own_settings.view` | never | **self** | **self** | **self** | **self** |
 | `own_settings.update` | always | **self** | **self** | **self** | **self** |
 | `own_data_export.request` | always | **self** | **self** | **self** | **self** |

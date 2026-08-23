@@ -218,7 +218,7 @@ function BuilderFrame({
                 : 'neutral'
           }
         >
-          {`v${initial.version} · ${intl.formatMessage({ id: `catalog.state.${initial.state}` })}`}
+          {`v${initial.version} — ${intl.formatMessage({ id: `catalog.state.${initial.state}` })}`}
         </StatusChip>
         {initial.licensed_source ? (
           <StatusChip tone="amber">{intl.formatMessage({ id: 'assign.licensed' })}</StatusChip>

@@ -278,7 +278,7 @@ export function AlertPage(): ReactElement {
             {team.map((entry) => (
               <option key={entry.staff_id} value={entry.staff_id}>
                 {entry.given_name} {entry.family_name}
-                {entry.is_lead ? ` · ${intl.formatMessage({ id: 'treatment.lead' })}` : ''}
+                {entry.is_lead ? ` — ${intl.formatMessage({ id: 'treatment.lead' })}` : ''}
               </option>
             ))}
           </select>

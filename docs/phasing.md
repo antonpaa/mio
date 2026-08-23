@@ -6,7 +6,7 @@ application's extent. Work packages map one-to-one to branches
 are dependency bands, not calendar units. No dates here — order, dependency
 and size only.
 
-**Size key:** S — days · M — one to two weeks · L — several weeks of focused
+**Size key:** S — days; M — one to two weeks; L — several weeks of focused
 work. Sizes are relative effort, not commitments.
 
 ## Principles
@@ -32,7 +32,7 @@ Everything else depends on these. WP-01 first; the rest parallelize.
 
 | WP | Branch | Scope | Size | Depends |
 |---|---|---|---|---|
-| WP-01 | `wp/01-scaffold` | pnpm monorepo per [ADR-0003](adr/0003-typescript-node-backend.md): `apps/web` (Vite/React/TanStack), `apps/api` (NestJS/Fastify), `apps/worker`, `packages/{contracts,survey-schema,authz,ui,i18n}`; TS strict; lint/format; CI skeleton (lint · typecheck · test); module-boundary architecture test; local dev via docker-compose (Postgres, Mailpit); CLAUDE.md | M | — |
+| WP-01 | `wp/01-scaffold` | pnpm monorepo per [ADR-0003](adr/0003-typescript-node-backend.md): `apps/web` (Vite/React/TanStack), `apps/api` (NestJS/Fastify), `apps/worker`, `packages/{contracts,survey-schema,authz,ui,i18n}`; TS strict; lint/format; CI skeleton (lint, typecheck, test); module-boundary architecture test; local dev via docker-compose (Postgres, Mailpit); CLAUDE.md | M | — |
 | WP-02 | `wp/02-database` | Migration tooling (plain SQL, forward-only, CI-gated); `identity`/`clinical`/`audit` schemas with the four roles and grants of [data-model.md](architecture/data-model.md); RLS scaffolding + `SET LOCAL` plumbing; append-only audit tables; pg-boss; the two connection pools; Testcontainers integration-test harness proving the grants (admin role cannot read `clinical.*` — the test *is* the guarantee) | M | WP-01 |
 | WP-03 | `wp/03-ui-foundation` | Tokens from [design-system.md](design/design-system.md) as Tailwind `@theme`; self-hosted fonts (E11); logo/mark/favicon assets rebuilt from S5; core components: pill button, card, severity/status chips, inputs, table, list rows, empty/error/loading patterns (S1/S6), the three nav shells as dumb components; React Aria wired; axe-core in CI; component workbench (Storybook or Ladle) | M | WP-01 |
 | WP-04 | `wp/04-authz-toolchain` | Capability-matrix codegen: YAML → Cedar entity model, exhaustive policy test suite (324 grants), UI capability flags, docs table; `validate_matrix.py` folds into the generator; embedded Cedar decision service with the same-transaction audit hook of [authorization.md](architecture/authorization.md) (wired to real resources in WP-10) | M | WP-01, WP-02 |

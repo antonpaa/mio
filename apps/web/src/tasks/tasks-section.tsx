@@ -77,7 +77,7 @@ export function TasksSection({ treatmentId }: { treatmentId: string }): ReactEle
                         month: 'short',
                       })
                     : null}
-                  {task.due_date !== null && task.assignee_id !== null ? ' · ' : ''}
+                  {task.due_date !== null && task.assignee_id !== null ? ' — ' : ''}
                   {task.assignee_id !== null
                     ? `${task.assignee_given ?? ''} ${task.assignee_family ?? ''}`
                     : null}

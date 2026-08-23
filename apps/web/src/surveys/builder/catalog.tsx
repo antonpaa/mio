@@ -145,7 +145,7 @@ export function SurveyCatalogPage(): ReactElement {
                           key={entry.id}
                           tone={STATE_TONE[entry.state as keyof typeof STATE_TONE] ?? 'neutral'}
                         >
-                          {`v${entry.version} · ${intl.formatMessage({ id: `catalog.state.${entry.state}` })}`}
+                          {`v${entry.version} — ${intl.formatMessage({ id: `catalog.state.${entry.state}` })}`}
                         </StatusChip>
                       ))}
                     </div>

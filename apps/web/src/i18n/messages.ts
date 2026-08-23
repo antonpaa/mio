@@ -274,7 +274,7 @@ const en = {
   'assign.failed': 'Could not assign — check the fields and try again.',
   'assign.empty': 'No surveys assigned to this treatment yet.',
   'assign.loadFailed': 'Surveys could not be loaded.',
-  'assign.scheduleSummary': 'Recurring from {date} · answer window {window} d',
+  'assign.scheduleSummary': 'Recurring from {date} — answer window {window} d',
   'assign.nextDue': 'Next due {date}',
   'assign.noSchedule': 'No upcoming occurrence',
   'bodymap.front': 'Front',
@@ -346,9 +346,9 @@ const en = {
   'builder.ruleValueLabel': 'Threshold of rule {id}',
   'builder.ruleOutcomeLabel': 'Outcome of rule {id}',
   'builder.previewWouldAlert':
-    'This submission would raise an alert · {count, plural, one {# rule fired} other {# rules fired}}',
+    'This submission would raise an alert — {count, plural, one {# rule fired} other {# rules fired}}',
   'builder.previewRecorded':
-    'Recorded only · {count, plural, one {# rule fired} other {# rules fired}} — no alert',
+    'Recorded only: {count, plural, one {# rule fired} other {# rules fired}} — no alert',
   'builder.previewNoRules': 'No rule would fire',
   'builder.trendRules': 'Trend rules',
   'builder.trendRulesNote':
@@ -462,10 +462,10 @@ const en = {
   'alerts.timeline': 'History',
   'alerts.timeline.raised':
     'Alert raised by rule — {count, plural, one {# trigger} other {# triggers}}',
-  'alerts.timeline.acknowledged': 'Acknowledged · {name}',
-  'alerts.timeline.assigned': 'Assigned to {name} · {by}',
-  'alerts.timeline.comment': 'Comment · {name}',
-  'alerts.timeline.resolved': 'Resolved · {name}',
+  'alerts.timeline.acknowledged': 'Acknowledged — {name}',
+  'alerts.timeline.assigned': 'Assigned to {name} — {by}',
+  'alerts.timeline.comment': 'Comment — {name}',
+  'alerts.timeline.resolved': 'Resolved — {name}',
   'alerts.comment': 'Comment',
   'alerts.commentPlaceholder': 'Add a note for the care team…',
   'alerts.commentSend': 'Add note',
@@ -810,7 +810,7 @@ const fi: Record<MessageId, string> = {
   'assign.failed': 'Määrääminen epäonnistui — tarkista kentät ja yritä uudelleen.',
   'assign.empty': 'Tähän hoitoon ei ole vielä määrätty kyselyitä.',
   'assign.loadFailed': 'Kyselyitä ei voitu ladata.',
-  'assign.scheduleSummary': 'Toistuva alkaen {date} · vastausaika {window} pv',
+  'assign.scheduleSummary': 'Toistuva alkaen {date} — vastausaika {window} pv',
   'assign.nextDue': 'Seuraava {date}',
   'assign.noSchedule': 'Ei tulevia kertoja',
   'bodymap.front': 'Edestä',
@@ -882,9 +882,9 @@ const fi: Record<MessageId, string> = {
   'builder.ruleValueLabel': 'Säännön {id} raja-arvo',
   'builder.ruleOutcomeLabel': 'Säännön {id} seuraus',
   'builder.previewWouldAlert':
-    'Tämä vastaus nostaisi hälytyksen · {count, plural, one {# sääntö laukesi} other {# sääntöä laukesi}}',
+    'Tämä vastaus nostaisi hälytyksen — {count, plural, one {# sääntö laukesi} other {# sääntöä laukesi}}',
   'builder.previewRecorded':
-    'Vain kirjaus · {count, plural, one {# sääntö laukesi} other {# sääntöä laukesi}} — ei hälytystä',
+    'Vain kirjaus: {count, plural, one {# sääntö laukesi} other {# sääntöä laukesi}} — ei hälytystä',
   'builder.previewNoRules': 'Yksikään sääntö ei laukeaisi',
   'builder.trendRules': 'Trendisäännöt',
   'builder.trendRulesNote':
@@ -998,10 +998,10 @@ const fi: Record<MessageId, string> = {
   'alerts.timeline': 'Historia',
   'alerts.timeline.raised':
     'Sääntö nosti hälytyksen — {count, plural, one {# liipaisin} other {# liipaisinta}}',
-  'alerts.timeline.acknowledged': 'Kuitattu · {name}',
-  'alerts.timeline.assigned': 'Vastuutettu: {name} · {by}',
-  'alerts.timeline.comment': 'Kommentti · {name}',
-  'alerts.timeline.resolved': 'Ratkaistu · {name}',
+  'alerts.timeline.acknowledged': 'Kuitattu — {name}',
+  'alerts.timeline.assigned': 'Vastuutettu: {name} — {by}',
+  'alerts.timeline.comment': 'Kommentti — {name}',
+  'alerts.timeline.resolved': 'Ratkaistu — {name}',
   'alerts.comment': 'Kommentti',
   'alerts.commentPlaceholder': 'Lisää merkintä hoitotiimille…',
   'alerts.commentSend': 'Lisää merkintä',
@@ -1342,7 +1342,7 @@ const sv: Record<MessageId, string> = {
   'assign.failed': 'Det gick inte att tilldela — kontrollera fälten och försök igen.',
   'assign.empty': 'Inga enkäter tilldelade den här behandlingen ännu.',
   'assign.loadFailed': 'Enkäterna kunde inte laddas.',
-  'assign.scheduleSummary': 'Återkommande från {date} · svarsfönster {window} d',
+  'assign.scheduleSummary': 'Återkommande från {date} — svarsfönster {window} d',
   'assign.nextDue': 'Nästa {date}',
   'assign.noSchedule': 'Inga kommande tillfällen',
   'bodymap.front': 'Framifrån',
@@ -1414,9 +1414,9 @@ const sv: Record<MessageId, string> = {
   'builder.ruleValueLabel': 'Tröskelvärde för regel {id}',
   'builder.ruleOutcomeLabel': 'Utfall för regel {id}',
   'builder.previewWouldAlert':
-    'Det här svaret skulle utlösa ett larm · {count, plural, one {# regel utlöstes} other {# regler utlöstes}}',
+    'Det här svaret skulle utlösa ett larm — {count, plural, one {# regel utlöstes} other {# regler utlöstes}}',
   'builder.previewRecorded':
-    'Endast registrering · {count, plural, one {# regel utlöstes} other {# regler utlöstes}} — inget larm',
+    'Endast registrering: {count, plural, one {# regel utlöstes} other {# regler utlöstes}} — inget larm',
   'builder.previewNoRules': 'Ingen regel skulle utlösas',
   'builder.trendRules': 'Trendregler',
   'builder.trendRulesNote':
@@ -1530,10 +1530,10 @@ const sv: Record<MessageId, string> = {
   'alerts.timeline': 'Historik',
   'alerts.timeline.raised':
     'Larm utlöst av regel — {count, plural, one {# utlösare} other {# utlösare}}',
-  'alerts.timeline.acknowledged': 'Kvitterat · {name}',
-  'alerts.timeline.assigned': 'Tilldelat {name} · {by}',
-  'alerts.timeline.comment': 'Kommentar · {name}',
-  'alerts.timeline.resolved': 'Åtgärdat · {name}',
+  'alerts.timeline.acknowledged': 'Kvitterat — {name}',
+  'alerts.timeline.assigned': 'Tilldelat {name} — {by}',
+  'alerts.timeline.comment': 'Kommentar — {name}',
+  'alerts.timeline.resolved': 'Åtgärdat — {name}',
   'alerts.comment': 'Kommentar',
   'alerts.commentPlaceholder': 'Lägg till en anteckning för vårdteamet…',
   'alerts.commentSend': 'Lägg till',

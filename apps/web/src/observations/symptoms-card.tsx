@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button, Card, CardHeader, ErrorState, Skeleton, StatusChip } from '@mio/ui';
+import { Button, Card, CardHeader, ErrorState, IconSymptoms, Skeleton, StatusChip } from '@mio/ui';
 
 /**
  * PP3: the symptom register - per-symptom latest grade, derived trend and
@@ -102,6 +102,7 @@ export function SymptomsCard({ patientId }: { patientId: string }): ReactElement
   return (
     <Card>
       <CardHeader
+        icon={<IconSymptoms size={17} />}
         title={<FormattedMessage id="symptoms.title" />}
         action={
           <Button size="sm" variant="quiet" onPress={() => setReporting(true)}>
