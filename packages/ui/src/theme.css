@@ -1,0 +1,103 @@
+/*
+ * The Mio design system - "warm editorial" (docs/design/design-system.md).
+ * Tailwind v4 CSS-first tokens: every value here traces to the approved
+ * design package; do not invent colors in app code.
+ */
+
+@import './fonts.css';
+
+@theme {
+  /* Base */
+  --color-paper: #f6f4ef;
+  --color-surface: #fffefb;
+  --color-surface-sunken: #f1eee6;
+  --color-ink: #221f1a;
+  --color-ink-strong-secondary: #55503f;
+  --color-secondary: #7c766a;
+  --color-muted: #9c9585;
+  --color-hairline: #efebe0;
+  --color-border: #ddd8cb;
+  --color-border-strong: #c9c3b4;
+
+  /* Teal - primary, calm-positive */
+  --color-teal: #115e59;
+  --color-teal-hover: #0d4a46;
+  --color-teal-tint: #e9f0ec;
+  --color-teal-chip-border: #bfd6ce;
+  --color-teal-on-dark: #7fb5ae;
+
+  /* Amber - Moderate severity, caution */
+  --color-amber: #a16207;
+  --color-amber-tint: #f7eeda;
+  --color-amber-chip-border: #e5d3a8;
+
+  /* Red - High severity, errors */
+  --color-red: #b3372b;
+  --color-red-tint: #f8e7e2;
+  --color-red-chip-border: #ebc5bc;
+  --color-red-tint-soft: #fdf6f4;
+
+  /* Type */
+  --font-sans: 'Schibsted Grotesk', system-ui, sans-serif;
+  --font-display: 'Newsreader', Georgia, serif;
+
+  /* Shape */
+  --radius-pill: 99px;
+  --radius-card: 16px;
+  --radius-inner: 10px;
+
+  /* Depth - warm-tinted, never grey-black */
+  --shadow-resting: 0 1px 6px rgb(60 52 36 / 0.08);
+  --shadow-raised: 0 2px 12px rgb(60 52 36 / 0.1), 0 1px 2px rgb(60 52 36 / 0.08);
+  --shadow-cta: 0 8px 20px rgb(17 94 89 / 0.22);
+
+  /* Motion */
+  --animate-breathe: breathe 2.6s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+
+  @keyframes breathe {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.85;
+    }
+    50% {
+      transform: scale(1.08);
+      opacity: 1;
+    }
+  }
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+}
+
+@layer base {
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* One focus treatment everywhere; components rely on it. */
+  :focus-visible {
+    outline: 2px solid var(--color-teal);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

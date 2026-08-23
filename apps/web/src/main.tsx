@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createRouter, RouterProvider } from '@tanstack/react-router';
 import { StrictMode } from 'react';
+import './styles.css';
 import { createRoot } from 'react-dom/client';
 import { routeTree } from './routes/route-tree.js';
 
