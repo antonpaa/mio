@@ -1,0 +1,14 @@
+{
+  "name": "@mio/contracts",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "API contract types shared between client and server (OpenAPI-first from WP-06 on)",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@mio/worker",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Async worker - queue consumption lands with pg-boss in WP-02 (ADR-0008)",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0"
+  }
+}
