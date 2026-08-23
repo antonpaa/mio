@@ -1,9 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { ROLE_CAPABILITIES, type Role } from '@mio/authz';
-import { Avatar, Button, ErrorState, ListRow, Skeleton, StatusChip } from '@mio/ui';
+import { Avatar, Button, ConfirmDialog, ErrorState, ListRow, Skeleton, StatusChip } from '@mio/ui';
+import { ActivitiesSection } from '../scheduling/activities-section.js';
+import { TasksSection } from '../tasks/tasks-section.js';
+import { SurveysSection } from '../surveys/surveys-section.js';
 import { useSession } from '../session/session.js';
 
 interface TeamEntry {
@@ -44,6 +47,8 @@ export function TreatmentDetailPage(): ReactElement {
   const session = useSession();
   const queryClient = useQueryClient();
   const { treatmentId } = useParams({ strict: false }) as { treatmentId: string };
+  // Terminal transitions (completed, discontinued) prompt before firing.
+  const [confirmTransition, setConfirmTransition] = useState<string | null>(null);
   const treatment = useQuery({
     queryKey: ['treatment', treatmentId],
     queryFn: async () => {
@@ -115,7 +120,11 @@ export function TreatmentDetailPage(): ReactElement {
                 variant={to === 'discontinued' ? 'danger' : 'quiet'}
                 size="sm"
                 isDisabled={changeState.isPending}
-                onPress={() => void changeState.mutate(to)}
+                onPress={() =>
+                  to === 'completed' || to === 'discontinued'
+                    ? setConfirmTransition(to)
+                    : void changeState.mutate(to)
+                }
               >
                 {intl.formatMessage({ id: `treatment.transition.${to}` })}
               </Button>
@@ -123,6 +132,33 @@ export function TreatmentDetailPage(): ReactElement {
           </div>
         ) : null}
       </header>
+
+      {confirmTransition !== null ? (
+        <ConfirmDialog
+          title={intl.formatMessage({ id: `treatment.confirm.${confirmTransition}.title` })}
+          cancelLabel={intl.formatMessage({ id: 'confirm.keep' })}
+          confirmLabel={intl.formatMessage({ id: `treatment.transition.${confirmTransition}` })}
+          danger={confirmTransition === 'discontinued'}
+          busy={changeState.isPending}
+          onCancel={() => setConfirmTransition(null)}
+          onConfirm={() => {
+            changeState.mutate(confirmTransition, {
+              onSettled: () => setConfirmTransition(null),
+            });
+          }}
+        >
+          <FormattedMessage
+            id={`treatment.confirm.${confirmTransition}.body`}
+            values={{ name: data.name }}
+          />
+        </ConfirmDialog>
+      ) : null}
+
+      <ActivitiesSection treatmentId={treatmentId} />
+
+      <TasksSection treatmentId={treatmentId} />
+
+      <SurveysSection treatmentId={treatmentId} />
 
       <section className="rounded-card border border-black/5 bg-surface px-5 py-4 shadow-resting">
         <h2 className="mb-2 text-sm font-semibold text-ink">

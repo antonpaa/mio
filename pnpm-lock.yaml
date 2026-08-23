@@ -50,6 +50,12 @@ importers:
       '@mio/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@mio/schedule':
+        specifier: workspace:*
+        version: link:../../packages/schedule
+      '@mio/survey-schema':
+        specifier: workspace:*
+        version: link:../../packages/survey-schema
       '@nestjs/common':
         specifier: ^11.2.1
         version: 11.2.1(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -114,6 +120,12 @@ importers:
       '@mio/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@mio/schedule':
+        specifier: workspace:*
+        version: link:../../packages/schedule
+      '@mio/survey-schema':
+        specifier: workspace:*
+        version: link:../../packages/survey-schema
       '@mio/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -172,10 +184,25 @@ importers:
       '@mio/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@mio/schedule':
+        specifier: workspace:*
+        version: link:../../packages/schedule
+      nodemailer:
+        specifier: ^9.0.5
+        version: 9.0.5
+      pg:
+        specifier: ^8.23.0
+        version: 8.23.0
     devDependencies:
       '@types/node':
         specifier: ^26.2.0
         version: 26.2.0
+      '@types/nodemailer':
+        specifier: ^8.0.1
+        version: 8.0.1
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
 
   packages/authz:
     dependencies:
@@ -219,6 +246,8 @@ importers:
 
   packages/i18n: {}
 
+  packages/schedule: {}
+
   packages/survey-schema: {}
 
   packages/synthetic:
@@ -233,6 +262,9 @@ importers:
       '@mio/authz':
         specifier: workspace:*
         version: link:../authz
+      '@mio/survey-schema':
+        specifier: workspace:*
+        version: link:../survey-schema
       '@swc-node/register':
         specifier: ^1.12.1
         version: 1.12.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(@swc/types@0.1.28)(typescript@6.0.3)

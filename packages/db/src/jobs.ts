@@ -15,6 +15,10 @@ import type pg from 'pg';
 export const QUEUES = {
   /** Smoke queue proving the bus end to end; real queues arrive per WP. */
   heartbeat: 'heartbeat',
+  /** Daily rolling-horizon extension of materialised schedules (WP-12). */
+  scheduleExtend: 'schedule-extend',
+  /** Daily survey-occurrence sweep: reminders + missed marking (WP-17). */
+  surveySweep: 'survey-sweep',
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

@@ -1,11 +1,13 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import {
   AppShell,
   Avatar,
+  BodyMap,
   Button,
   Card,
   CardHeader,
+  ConfirmDialog,
   CountBadge,
   EmptyState,
   ErrorState,
@@ -110,6 +112,7 @@ describe('kit renders and is axe-clean', () => {
       <AppShell
         variant="admin"
         navLabel="Main navigation"
+        menuLabel="Menu"
         items={[
           { label: 'Users', href: '/admin/users', active: true },
           { label: 'Audit log', href: '/admin/audit', badge: 2 },
@@ -130,6 +133,54 @@ describe('kit renders and is axe-clean', () => {
     expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeDefined();
     expect(screen.getByText('Administration')).toBeDefined();
     expect(screen.getByRole('link', { name: /Users/ })).toBeDefined();
+    // the mobile menu panel stays out of the accessibility tree until opened
+    const toggle = screen.getByRole('button', { name: 'Menu' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getAllByRole('link', { name: /Users/ })).toHaveLength(2);
+    expect(await axeViolations(container)).toEqual([]);
+  });
+
+  it('body map: parallel checkbox group carries the same state', async () => {
+    const toggles: string[] = [];
+    const { container } = render(
+      <main>
+        <BodyMap
+          selected={['chest', 'forearm-left']}
+          onToggle={(id) => toggles.push(id)}
+          labels={{ chest: 'Chest', 'forearm-left': 'Left forearm', head: 'Head' }}
+          viewLabels={{ front: 'Front', back: 'Back' }}
+          legendLabel="Body areas"
+          summary="2 areas selected — chest, left forearm"
+        />
+      </main>,
+    );
+    expect(screen.getByText('2 areas selected — chest, left forearm')).toBeDefined();
+    const chest = screen.getByRole('checkbox', { name: 'Chest' }) as HTMLInputElement;
+    expect(chest.checked).toBe(true);
+    const head = screen.getByRole('checkbox', { name: 'Head' }) as HTMLInputElement;
+    expect(head.checked).toBe(false);
+    fireEvent.click(head);
+    expect(toggles).toEqual(['head']);
+    expect(await axeViolations(container)).toEqual([]);
+  });
+
+  it('confirm dialog: alertdialog with safe default focus', async () => {
+    const { container } = render(
+      <ConfirmDialog
+        title="Discontinue this treatment?"
+        cancelLabel="Go back"
+        confirmLabel="Discontinue"
+        danger
+        onCancel={() => {}}
+        onConfirm={() => {}}
+      >
+        <p>This cannot be undone.</p>
+      </ConfirmDialog>,
+    );
+    expect(screen.getByRole('alertdialog', { name: 'Discontinue this treatment?' })).toBeDefined();
+    expect(document.activeElement?.textContent).toBe('Go back');
     expect(await axeViolations(container)).toEqual([]);
   });
 });

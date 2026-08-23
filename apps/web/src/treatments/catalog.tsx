@@ -131,6 +131,9 @@ export function TreatmentCatalogPage(): ReactElement {
           aria-modal="true"
           aria-labelledby="use-for-title"
           className="fixed inset-0 z-50 flex items-center justify-center bg-ink/30 p-4"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') setUseFor(null);
+          }}
         >
           <div className="w-full max-w-sm rounded-card bg-surface p-6 shadow-raised">
             <h2 id="use-for-title" className="font-display text-lg italic text-ink">

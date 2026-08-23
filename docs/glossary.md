@@ -49,8 +49,10 @@ interface and in translation.
 | Treatment programme | Hoito-ohjelma | Behandlingsprogram | |
 | Treatment template | Hoitomalli | Behandlingsmall | ⚠️ |
 | Activity | Tapahtuma | Aktivitet | ⚠️ Not *toimenpide*, which means a clinical procedure |
+| Calendar | Kalenteri | Kalender | Patient-side consolidated view (P9) |
 | Task | Tehtävä | Uppgift | Clinician-side work item |
 | Claim (a task) | Ota tehtävä | Ta uppgift | ⚠️ |
+| Assign (a task) | Osoita tehtävä | Tilldela uppgift | Hand to a named team member |
 | Unclaimed | Ottamatta | Ej tagen | Team-queue state ⚠️ |
 | Team queue | Tiimin jono | Teamets kö | ⚠️ |
 
@@ -76,6 +78,7 @@ interface and in translation.
 | Overdue | Myöhässä | Försenad | |
 | Body map | Kehokartta | Kroppskarta | |
 | Recurrence | Toistuvuus | Upprepning | |
+| Phase (of a recurrence) | Vaihe | Fas | Ordered leg of a phased schedule (T3) ⚠️ |
 | Answer window | Vastausaika | Svarsfönster | Per-occurrence response period ⚠️ |
 | Conditional logic | Ehdollinen logiikka | Villkorslogik | Follow-up branching ⚠️ |
 | Follow-up question | Jatkokysymys | Följdfråga | ⚠️ |

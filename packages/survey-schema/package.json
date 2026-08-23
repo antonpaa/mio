@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "The one implementation of survey structure, visibility and validation (built out in WP-14)",
+  "description": "The one implementation of the survey question tree (docs/architecture/surveys-and-alerts.md): visibility, progress, typed validation and the linear-time-safe regex subset (E12) - shared verbatim by the renderer, the builder preview and the authoritative server",
   "exports": {
     ".": "./src/index.ts"
   },
