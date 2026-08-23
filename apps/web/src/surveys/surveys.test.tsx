@@ -98,6 +98,16 @@ beforeEach(() => {
         });
       if (url === '/api/patient/surveys') {
         return json({
+          due: [
+            {
+              activityId: 'a1',
+              responseId: null,
+              dueDate: '2020-01-05',
+              overdue: true,
+              title: 'Veckovis symtomenkät',
+              treatmentName: 'Breast ca adjuvant FEC',
+            },
+          ],
           fillable: [
             {
               surveyId: 'srv1',
@@ -137,12 +147,15 @@ beforeEach(() => {
 });
 
 describe('P3 minimal list', () => {
-  it('shows fillable and draft sections', async () => {
+  it('shows due, fillable and draft sections with the overdue chip', async () => {
     vi.mocked(api.whoami).mockResolvedValue(PATIENT);
     const { container } = render(appAt('/surveys'));
     await screen.findByRole('heading', { name: 'Surveys' });
     await screen.findByText('Weekly symptom survey');
     await screen.findByText('1 of 3');
+    await screen.findByText('Veckovis symtomenkät');
+    expect(screen.getByText('Overdue')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Fill in' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Start' })).toBeTruthy();
     const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });
     expect(results.violations.map((violation) => violation.id)).toEqual([]);

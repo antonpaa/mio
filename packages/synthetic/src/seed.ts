@@ -42,12 +42,15 @@ export async function seedWorld(
     });
 
     await pool.query('BEGIN');
+    // FK order: responses and occurrences first, then the catalog they
+    // reference, then the treatment graph.
     await pool.query('DELETE FROM clinical.survey_response');
+    await pool.query('DELETE FROM clinical.task');
+    await pool.query('DELETE FROM clinical.activity');
+    await pool.query('DELETE FROM clinical.schedule');
     await pool.query('DELETE FROM clinical.treatment_survey');
     await pool.query('DELETE FROM clinical.survey_version');
     await pool.query('DELETE FROM clinical.survey');
-    await pool.query('DELETE FROM clinical.task');
-    await pool.query('DELETE FROM clinical.activity');
     await pool.query('DELETE FROM clinical.schedule');
     await pool.query('DELETE FROM clinical.care_relationship');
     await pool.query('DELETE FROM clinical.treatment_care_team');

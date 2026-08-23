@@ -9,6 +9,8 @@ import {
 } from '@mio/schedule';
 import type pg from 'pg';
 import { createLifecycle } from './lifecycle.js';
+import { createReminderSender } from './reminder-mail.js';
+import { sweepSurveyOccurrences } from './survey-sweep.js';
 
 const lifecycle = createLifecycle();
 
@@ -34,7 +36,7 @@ export async function extendScheduleHorizons(
   try {
     await client.query('BEGIN');
     await client.query(
-      `SELECT set_config('app.user_id', '', true), set_config('app.realm', 'staff', true)`,
+      `SELECT set_config('app.user_id', '', true), set_config('app.realm', 'system', true)`,
     );
     const { rows } = await client.query(
       `SELECT id, treatment_id, patient_id, timezone, anchor_date::text, segments,
@@ -86,6 +88,15 @@ async function main(): Promise<void> {
   // catches up without waiting for the clock.
   await boss.schedule(QUEUES.scheduleExtend, '10 3 * * *');
   await boss.send(QUEUES.scheduleExtend, {});
+
+  const sendReminder = createReminderSender();
+  await boss.createQueue(QUEUES.surveySweep);
+  await boss.work(QUEUES.surveySweep, async () => {
+    const result = await sweepSurveyOccurrences(pool, sendReminder);
+    log('info', 'survey occurrences swept', { ...result });
+  });
+  await boss.schedule(QUEUES.surveySweep, '40 3 * * *');
+  await boss.send(QUEUES.surveySweep, {});
 
   log('info', 'mio worker started, job bus running');
 }

@@ -9,6 +9,14 @@ import { useLocaleControls } from '../app/locale-context.js';
  * submissions. Due dates and occurrences ride WP-17. */
 
 interface SurveyList {
+  due: {
+    activityId: string;
+    responseId: string | null;
+    dueDate: string;
+    overdue: boolean;
+    title: string;
+    treatmentName: string;
+  }[];
   fillable: {
     surveyId: string;
     treatmentId: string;
@@ -37,6 +45,20 @@ export function PatientSurveysPage(): ReactElement {
     },
     retry: false,
   });
+  const fillOccurrence = useMutation({
+    mutationFn: async (activityId: string) => {
+      const response = await fetch(`/api/patient/activities/${activityId}/fill`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'same-origin',
+        body: '{}',
+      });
+      if (!response.ok) throw new Error(`fill: ${response.status}`);
+      return (await response.json()) as { responseId: string };
+    },
+    onSuccess: (data) =>
+      void navigate({ to: '/surveys/fill/$responseId', params: { responseId: data.responseId } }),
+  });
   const start = useMutation({
     mutationFn: async (input: { surveyId: string; treatmentId: string }) => {
       const response = await fetch(`/api/patient/surveys/${input.surveyId}/start`, {
@@ -63,7 +85,10 @@ export function PatientSurveysPage(): ReactElement {
   if (surveys.isError) return <ErrorState onRetry={() => void surveys.refetch()} />;
   const data = surveys.data;
   const nothing =
-    data.fillable.length === 0 && data.drafts.length === 0 && data.submitted.length === 0;
+    data.due.length === 0 &&
+    data.fillable.length === 0 &&
+    data.drafts.length === 0 &&
+    data.submitted.length === 0;
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-5">
@@ -75,6 +100,47 @@ export function PatientSurveysPage(): ReactElement {
         <EmptyState title={intl.formatMessage({ id: 'surveys.emptyTitle' })}>
           <FormattedMessage id="surveys.empty" />
         </EmptyState>
+      ) : null}
+
+      {data.due.length > 0 ? (
+        <section className="rounded-card border border-black/5 bg-surface px-5 py-4 shadow-resting">
+          <h2 className="mb-1 text-sm font-semibold text-ink">
+            <FormattedMessage id="surveys.dueHeading" />
+          </h2>
+          {data.due.map((entry) => (
+            <ListRow
+              key={entry.activityId}
+              trailing={
+                <div className="flex items-center gap-2">
+                  {entry.overdue ? (
+                    <StatusChip tone="red">
+                      {intl.formatMessage({ id: 'surveys.overdue' })}
+                    </StatusChip>
+                  ) : (
+                    <StatusChip tone="neutral">
+                      {intl.formatDate(`${entry.dueDate}T12:00:00`, {
+                        day: 'numeric',
+                        month: 'short',
+                      })}
+                    </StatusChip>
+                  )}
+                  <Button
+                    size="sm"
+                    isDisabled={fillOccurrence.isPending}
+                    onPress={() => void fillOccurrence.mutate(entry.activityId)}
+                  >
+                    <FormattedMessage
+                      id={entry.responseId !== null ? 'surveys.resume' : 'surveys.fill'}
+                    />
+                  </Button>
+                </div>
+              }
+            >
+              <p className="text-sm font-medium text-ink">{entry.title}</p>
+              <p className="text-xs text-secondary">{entry.treatmentName}</p>
+            </ListRow>
+          ))}
+        </section>
       ) : null}
 
       {data.drafts.length > 0 ? (

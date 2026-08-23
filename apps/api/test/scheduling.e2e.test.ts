@@ -286,8 +286,16 @@ describe('worker horizon extension', () => {
     );
     await owner.query(`DELETE FROM clinical.activity WHERE schedule_id IS NOT NULL
       AND occurrence_date > (SELECT min(generated_until) FROM clinical.schedule)`);
-    const first = await extendScheduleHorizons(owner as never, '2026-09-15');
-    const second = await extendScheduleHorizons(owner as never, '2026-09-15');
+    // the REAL worker role - RLS applies, unlike the owner pool, so this
+    // proves the system-realm policies actually let the job see its rows
+    const { createRolePool } = await import('@mio/db');
+    const workerPool = createRolePool({
+      connectionString: db.connectionString,
+      role: 'mio_worker',
+    });
+    const first = await extendScheduleHorizons(workerPool, '2026-09-15');
+    const second = await extendScheduleHorizons(workerPool, '2026-09-15');
+    await workerPool.end();
     expect(first).toBeGreaterThan(0);
     expect(second).toBe(0);
   });

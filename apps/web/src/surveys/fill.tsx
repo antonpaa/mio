@@ -342,7 +342,7 @@ function QuestionInput({
           <input
             type="number"
             aria-label={text?.label}
-            className={`${inputClass} max-w-40`}
+            className={`${inputClass} block max-w-40`}
             value={typeof value === 'number' ? value : ''}
             step={
               question.validation?.decimals === 0
@@ -364,7 +364,7 @@ function QuestionInput({
         <input
           type="date"
           aria-label={text?.label}
-          className={`${inputClass} max-w-52`}
+          className={`${inputClass} block max-w-52`}
           value={typeof value === 'string' ? value : ''}
           onChange={(event) => onChange(event.currentTarget.value || undefined)}
         />

@@ -12,11 +12,13 @@
   },
   "devDependencies": {
     "@types/node": "^26.2.0",
+    "@types/nodemailer": "^8.0.1",
     "@types/pg": "^8.23.1"
   },
   "dependencies": {
     "@mio/db": "workspace:*",
     "@mio/schedule": "workspace:*",
+    "nodemailer": "^9.0.5",
     "pg": "^8.23.0"
   }
 }
