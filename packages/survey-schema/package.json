@@ -1,0 +1,14 @@
+{
+  "name": "@mio/survey-schema",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "The one implementation of survey structure, visibility and validation (built out in WP-14)",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  }
+}

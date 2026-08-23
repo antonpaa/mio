@@ -1,0 +1,33 @@
+{
+  "name": "mio",
+  "private": true,
+  "version": "0.0.0",
+  "engines": {
+    "node": ">=22.12",
+    "pnpm": ">=10"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "test": "pnpm -r test",
+    "boundaries": "depcruise apps packages --config .dependency-cruiser.cjs",
+    "check": "pnpm lint && pnpm format && pnpm typecheck && pnpm test && pnpm boundaries",
+    "dev:services": "docker compose up -d",
+    "dev:services:down": "docker compose down"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "dependency-cruiser": "^18.2.0",
+    "eslint": "^10.9.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.11.0",
+    "prettier": "^3.9.6",
+    "tsx": "^4.23.12",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.67.0",
+    "vitest": "^4.1.11"
+  }
+}

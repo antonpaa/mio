@@ -1,0 +1,14 @@
+{
+  "name": "@mio/i18n",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Locales and message-loading conventions",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  }
+}

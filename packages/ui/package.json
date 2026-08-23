@@ -1,0 +1,14 @@
+{
+  "name": "@mio/ui",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Design-system components; tokens land in WP-03",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@mio/authz",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Authorization primitives; Cedar toolchain lands in WP-04",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  }
+}

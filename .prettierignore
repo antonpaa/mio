@@ -1,0 +1,7 @@
+pnpm-lock.yaml
+dist/
+coverage/
+design/
+docs/authz/capability-matrix.yaml
+*.md
+docs/
