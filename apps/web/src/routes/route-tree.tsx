@@ -13,6 +13,8 @@ import { VerifyPage } from '../auth/verify.js';
 import { WelcomePage } from '../auth/welcome.js';
 import { ForgotPage, ForgotSentPage, ResetPage } from '../auth/forgot.js';
 import { PlaceholderHome, SignedInShell } from '../app/shells.js';
+import { RosterPage } from '../patients/roster.js';
+import { PatientProfilePage } from '../patients/profile.js';
 
 interface LocaleControls {
   locale: Locale;
@@ -139,6 +141,30 @@ const resetRoute = createRoute({
   component: () => <AuthPage page={<ResetPage />} />,
 });
 
+function ShellPage({ page }: { page: ReactElement }): ReactElement {
+  const session = useSession();
+  if (session.loading || !session.account) return <Splash />;
+  return <SignedInShell>{page}</SignedInShell>;
+}
+
+const requireSession = async ({ context }: { context: RouterContext }): Promise<void> => {
+  const session = await context.queryClient.ensureQueryData(SESSION_QUERY);
+  if (!session) throw redirect({ to: '/login' });
+};
+
+const patientsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/patients',
+  beforeLoad: requireSession,
+  component: () => <ShellPage page={<RosterPage />} />,
+});
+const patientProfileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/patients/$patientId',
+  beforeLoad: requireSession,
+  component: () => <ShellPage page={<PatientProfilePage />} />,
+});
+
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
@@ -147,4 +173,6 @@ export const routeTree = rootRoute.addChildren([
   forgotSentRoute,
   welcomeRoute,
   resetRoute,
+  patientsRoute,
+  patientProfileRoute,
 ]);
