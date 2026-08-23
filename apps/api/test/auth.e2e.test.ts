@@ -59,8 +59,9 @@ beforeAll(async () => {
     `TRUNCATE identity.patient_session, identity.staff_session, identity.credential_token,
               identity.terms_acceptance RESTART IDENTITY`,
   );
-  await owner.query(`DELETE FROM identity.patient_account`);
-  await owner.query(`DELETE FROM identity.staff_account`);
+  // CASCADE: later suites seed dependents (team memberships, sessions);
+  // fixture reset must not depend on suite order.
+  await owner.query(`TRUNCATE identity.patient_account, identity.staff_account CASCADE`);
   ({ staffId, patientId } = await seedAccounts());
 
   process.env['MIO_DATABASE_URL'] = db.connectionString;

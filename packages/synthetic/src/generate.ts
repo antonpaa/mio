@@ -204,7 +204,9 @@ export function generateWorld(profileName: 'demo' | 'perf', seed: number): Synth
           ? ['chemo-symptoms', 'psa-reporting']
           : ['weekly-symptoms', 'wellbeing'],
       });
-      if (active) for (const memberId of team.memberIds) carers.add(memberId);
+      // v1 rule (0005 migration): membership grants the relationship
+      // regardless of lifecycle state - completed treatments keep access.
+      for (const memberId of team.memberIds) carers.add(memberId);
     }
     careRelationships.set(patient.id, [...carers]);
   }

@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from '@tanstack/react-router';
+import { Link, useParams } from '@tanstack/react-router';
 import type { ReactElement, ReactNode } from 'react';
-import { FormattedMessage } from 'react-intl';
-import { Avatar, ErrorState, Skeleton } from '@mio/ui';
+import { FormattedMessage, useIntl } from 'react-intl';
+import { Avatar, Card, CardHeader, ErrorState, ListRow, Skeleton, StatusChip } from '@mio/ui';
 
 interface PatientProfile {
   patientId: string;
@@ -13,6 +13,78 @@ interface PatientProfile {
   phone: string | null;
   locale: string;
   careTeamSize: number;
+}
+
+interface ProgramRow {
+  id: string;
+  name: string;
+  state: 'draft' | 'active' | 'paused' | 'completed' | 'discontinued';
+  version: number | null;
+  template_name: string | null;
+}
+
+const PROGRAM_TONE = {
+  draft: 'neutral',
+  active: 'teal',
+  paused: 'amber',
+  completed: 'neutral',
+  discontinued: 'red',
+} as const;
+
+function ProgramsCard({ patientId }: { patientId: string }): ReactElement {
+  const intl = useIntl();
+  const programs = useQuery({
+    queryKey: ['patient-programs', patientId],
+    queryFn: async () => {
+      const response = await fetch(`/api/staff/patients/${patientId}/treatments`, {
+        credentials: 'same-origin',
+      });
+      if (!response.ok) throw new Error(`programs: ${response.status}`);
+      return (await response.json()) as ProgramRow[];
+    },
+    retry: false,
+  });
+  if (programs.isPending) return <Skeleton className="h-28 w-full" />;
+  if (programs.isError) return <ErrorState onRetry={() => void programs.refetch()} />;
+  return (
+    <Card>
+      <CardHeader title={<FormattedMessage id="pp.programsCard" />} />
+      {programs.data.length === 0 ? (
+        <p className="text-sm text-secondary">
+          <FormattedMessage id="pp.noPrograms" />
+        </p>
+      ) : (
+        programs.data.map((program) => (
+          <ListRow
+            key={program.id}
+            trailing={
+              <Link
+                to="/treatments/$treatmentId"
+                params={{ treatmentId: program.id }}
+                className="text-teal hover:text-teal-hover"
+              >
+                <FormattedMessage id="roster.open" />
+              </Link>
+            }
+          >
+            <p className="text-sm font-medium text-ink">
+              {program.name}
+              <span className="ml-2">
+                <StatusChip tone={PROGRAM_TONE[program.state]}>
+                  {intl.formatMessage({ id: `treatment.state.${program.state}` })}
+                </StatusChip>
+              </span>
+            </p>
+            {program.template_name ? (
+              <p className="text-xs text-muted">
+                {program.template_name} v{program.version}
+              </p>
+            ) : null}
+          </ListRow>
+        ))
+      )}
+    </Card>
+  );
 }
 
 async function fetchProfile(patientId: string): Promise<PatientProfile> {
@@ -113,7 +185,8 @@ export function PatientProfilePage(): ReactElement {
             </p>
           </div>
         </header>
-        <p className="text-sm text-secondary">
+        <ProgramsCard patientId={patientId} />
+        <p className="mt-4 text-sm text-secondary">
           <FormattedMessage id="pp.placeholder" />
         </p>
       </div>
