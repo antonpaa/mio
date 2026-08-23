@@ -41,8 +41,9 @@ export interface RuleTrace {
   ruleId: string;
   questionId: string | null;
   condition: RuleWhen | TrendWhen;
-  /** which rule layer supplied the condition; WP-22 adds 'program' */
-  source: 'template';
+  /** which rule layer supplied the condition (template default, or a
+   * program override - WP-22) */
+  source: 'template' | 'program';
   /** the answer the condition read, exactly as submitted; null for
    * absence-driven (missed) conditions */
   observed: unknown;
@@ -219,7 +220,7 @@ export function evaluateTrends(definition: SurveyDefinition, entries: TrendEntry
         ruleId: rule.id,
         questionId,
         condition: when,
-        source: 'template',
+        source: rule.source ?? 'template',
         observed:
           questionId !== null && latest.answers !== undefined ? latest.answers[questionId] : null,
         window: windowOf(tail, questionId),
@@ -257,7 +258,7 @@ export function evaluateResponse(definition: SurveyDefinition, answers: Answers)
           ruleId: rule.id,
           questionId: question.id,
           condition: rule.when,
-          source: 'template',
+          source: rule.source ?? 'template',
           observed: answer,
           ...(matched !== undefined ? { matched } : {}),
           outcomes: rule.outcomes,

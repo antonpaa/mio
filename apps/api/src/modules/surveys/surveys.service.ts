@@ -16,6 +16,8 @@ import {
   writeChangeEvent,
 } from '@mio/db';
 import {
+  applyOverrides,
+  BODY_REGION_IDS,
   canonicalJson,
   deriveObservations,
   evaluateResponse,
@@ -27,9 +29,12 @@ import {
   patientView,
   progressOf,
   validateDefinition,
+  validateOverrides,
   validateSubmission,
   type Answers,
   type LocaleBundle,
+  type ProgramOverrides,
+  type RuleTrace,
   type SurveyDefinition,
   type TrendEntry,
 } from '@mio/survey-schema';
@@ -42,6 +47,7 @@ import {
   parseDate,
   type ScheduleSegment,
 } from '@mio/schedule';
+import { citeTrigger } from '../../shared/trigger-citation.js';
 import { APP_POOL } from '../../shared/db.module.js';
 import type { PatientPrincipal } from '../../shared/patient-session.js';
 import type { StaffPrincipal } from '../../shared/staff-session.js';
@@ -550,17 +556,24 @@ export class SurveysService {
           // the patient realm holds no UPDATE on clinical.activity
           await client.query(`SELECT app.complete_survey_occurrence($1)`, [response.activity_id]);
         }
-        // WP-18/20: single-response AND trend evaluation run in the SAME
-        // transaction as the submission - triggers, alert, notifications
-        // and rule-created tasks commit with the answers or not at all.
-        // The patient's reply stays the designed P12 copy; nothing
-        // rule-shaped is returned here.
-        const singles = evaluateResponse(version.definition, result.answers);
+        // WP-18/20/22: single-response AND trend evaluation run in the
+        // SAME transaction as the submission, against the treatment's
+        // EFFECTIVE rule set (template + program overrides) - triggers,
+        // alert, notifications and rule-created tasks commit with the
+        // answers or not at all. The patient's reply stays the designed
+        // P12 copy; nothing rule-shaped is returned here.
+        const { rows: overrideRows } = await client.query<{ rule_overrides: ProgramOverrides }>(
+          `SELECT rule_overrides FROM clinical.treatment_survey
+            WHERE treatment_id = $1 AND survey_id = $2`,
+          [response.treatment_id, version.survey_id],
+        );
+        const effective = applyOverrides(version.definition, overrideRows[0]?.rule_overrides ?? {});
+        const singles = evaluateResponse(effective, result.answers);
         const trends =
           response.activity_id === null
             ? { fired: [], severity: null }
             : evaluateTrends(
-                version.definition,
+                effective,
                 await this.occurrenceHistory(client, response.activity_id, {
                   responseId,
                   answers: result.answers,
@@ -1390,6 +1403,301 @@ export class SurveysService {
         detail: { surveyId, fromVersion: source.version, version },
       });
       return { versionId, version };
+    });
+  }
+
+  /** Resolve one attachment's effective version + overrides for the
+   * program-rules panel and the C7 standing computation. */
+  private async loadAttachment(
+    client: pg.ClientBase,
+    treatmentId: string,
+    surveyId: string,
+  ): Promise<{ version: VersionRow; overrides: ProgramOverrides } | undefined> {
+    const { rows } = await client.query(
+      `SELECT ts.rule_overrides, v.id, v.survey_id, v.version, v.definition, v.locales,
+              v.content_hash
+         FROM clinical.treatment_survey ts
+         JOIN clinical.survey_version v ON v.id = COALESCE(
+           ts.pinned_version_id,
+           (SELECT v2.id FROM clinical.survey_version v2
+             WHERE v2.survey_id = ts.survey_id AND v2.state = 'published'
+             ORDER BY v2.version DESC LIMIT 1))
+        WHERE ts.treatment_id = $1 AND ts.survey_id = $2 AND ts.removed_at IS NULL`,
+      [treatmentId, surveyId],
+    );
+    const row = rows[0] as (VersionRow & { rule_overrides: ProgramOverrides }) | undefined;
+    if (!row) return undefined;
+    return {
+      version: {
+        id: row.id,
+        survey_id: row.survey_id,
+        version: row.version,
+        definition: row.definition,
+        locales: row.locales,
+        content_hash: row.content_hash,
+      },
+      overrides: row.rule_overrides ?? {},
+    };
+  }
+
+  private decideProgramRules(
+    staff: StaffPrincipal,
+    treatmentId: string,
+    context: { patientId: string; teamUserIds: string[]; leadUserIds: string[] },
+  ): 'allow' | 'deny' {
+    return authorize({
+      principal: { userId: staff.userId, role: staff.role },
+      action: 'configure_program_rules',
+      resource: {
+        type: 'treatment',
+        id: treatmentId,
+        patientId: context.patientId,
+        teamUserIds: context.teamUserIds,
+        leadUserIds: context.leadUserIds,
+      },
+    }).decision;
+  }
+
+  /** The program-rules panel payload: the effective version, its locales
+   * for labels, and the current overrides. REGULATED-ADJACENT read, so
+   * it is audited like the write. */
+  async programRules(
+    staff: StaffPrincipal,
+    treatmentId: string,
+    surveyId: string,
+  ): Promise<object> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const context = await this.treatmentContext(client, treatmentId);
+      if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
+      const decision = this.decideProgramRules(staff, treatmentId, context);
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'treatment.configure_program_rules',
+        resourceType: 'program_rules',
+        resourceId: `${treatmentId}:${surveyId}`,
+        patientId: context.patientId,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const attachment = await this.loadAttachment(client, treatmentId, surveyId);
+      if (!attachment) throw new NotFoundException({ status: 'unknown_attachment' });
+      return {
+        versionId: attachment.version.id,
+        version: attachment.version.version,
+        definition: attachment.version.definition,
+        locales: attachment.version.locales,
+        overrides: attachment.overrides,
+      };
+    });
+  }
+
+  /** Write the program's override layer. Validated against the effective
+   * version so an override can never reference a rule that is not there. */
+  async saveProgramRules(
+    staff: StaffPrincipal,
+    treatmentId: string,
+    surveyId: string,
+    overrides: ProgramOverrides,
+  ): Promise<{ status: string }> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const context = await this.treatmentContext(client, treatmentId);
+      if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
+      const decision = this.decideProgramRules(staff, treatmentId, context);
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'treatment.configure_program_rules',
+        resourceType: 'program_rules',
+        resourceId: `${treatmentId}:${surveyId}`,
+        patientId: context.patientId,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const attachment = await this.loadAttachment(client, treatmentId, surveyId);
+      if (!attachment) throw new NotFoundException({ status: 'unknown_attachment' });
+      const issues = validateOverrides(
+        attachment.version.definition,
+        overrides ?? {},
+        BODY_REGION_IDS,
+      );
+      if (issues.length > 0) {
+        throw new BadRequestException({ status: 'invalid_overrides', issues });
+      }
+      await client.query(
+        `UPDATE clinical.treatment_survey SET rule_overrides = $3
+          WHERE treatment_id = $1 AND survey_id = $2`,
+        [treatmentId, surveyId, JSON.stringify(overrides ?? {})],
+      );
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'treatment.configure_program_rules',
+        resourceType: 'treatment_survey',
+        resourceId: `${treatmentId}:${surveyId}`,
+        patientId: context.patientId,
+        detail: {
+          overriddenRules: Object.keys(overrides?.rules ?? {}),
+          criticalSets: Object.keys(overrides?.criticalRegions ?? {}),
+        },
+      });
+      return { status: 'saved' };
+    });
+  }
+
+  /** C7: one response with per-answer STANDING against the program's
+   * effective rules ("Above expected" / "Expected in this program" /
+   * "Critical area"), the stored triggers it actually raised, and the
+   * program rule summary. Staff surface - the full definition ships. */
+  async responseDetail(staff: StaffPrincipal, responseId: string): Promise<object> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const { response, version } = await this.loadResponse(client, responseId);
+      const context = await this.treatmentContext(client, response.treatment_id);
+      if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
+      const decision = authorize({
+        principal: { userId: staff.userId, role: staff.role },
+        action: 'view',
+        resource: {
+          type: 'survey_response',
+          id: responseId,
+          patientId: response.patient_id,
+          careTeamUserIds: [staff.userId],
+        },
+      }).decision;
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_response.view',
+        resourceType: 'survey_response',
+        resourceId: responseId,
+        patientId: response.patient_id,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+
+      const attachment = await this.loadAttachment(
+        client,
+        response.treatment_id,
+        version.survey_id,
+      );
+      const overrides = attachment?.overrides ?? {};
+      // standing is computed against the response's OWN version with the
+      // program's overrides - the exact rule set this program applies to
+      // these answers
+      const effective = applyOverrides(version.definition, overrides);
+      const evaluation = evaluateResponse(effective, response.answers);
+      const standing: Record<string, 'above_expected' | 'critical_area' | 'expected'> = {};
+      for (const fired of evaluation.fired) {
+        if (fired.questionId === null || fired.severity === null) continue;
+        const kind = fired.trace.condition.kind;
+        standing[fired.questionId] =
+          kind === 'critical_region' ? 'critical_area' : 'above_expected';
+      }
+
+      const { rows: head } = await client.query(
+        `SELECT t.name AS treatment_name, s.name AS survey_name,
+                p.given_name AS patient_given, p.family_name AS patient_family,
+                b.given_name AS behalf_given, b.family_name AS behalf_family
+           FROM clinical.survey_response r
+           JOIN clinical.treatment t ON t.id = r.treatment_id
+           JOIN clinical.survey_version v ON v.id = r.survey_version_id
+           JOIN clinical.survey s ON s.id = v.survey_id
+           JOIN identity.patient_account p ON p.id = r.patient_id
+           LEFT JOIN identity.staff_account b ON b.id = r.on_behalf_by
+          WHERE r.id = $1`,
+        [responseId],
+      );
+      const { rows: triggerRows } = await client.query<{
+        id: string;
+        rule_id: string;
+        severity: string | null;
+        trace: RuleTrace;
+        alert_id: string | null;
+      }>(
+        `SELECT id, rule_id, severity, trace, alert_id
+           FROM clinical.rule_trigger WHERE survey_response_id = $1 ORDER BY rule_id`,
+        [responseId],
+      );
+      return {
+        response: {
+          id: response.id,
+          status: response.status,
+          locale: response.locale,
+          submitted_at: response.submitted_at,
+          answers: response.answers,
+          treatment_id: response.treatment_id,
+          patient_id: response.patient_id,
+          version: version.version,
+          ...head[0],
+        },
+        definition: version.definition,
+        effectiveDefinition: effective,
+        locales: version.locales,
+        overrides,
+        standing,
+        triggers: triggerRows.map((row) => ({
+          id: row.id,
+          rule_id: row.rule_id,
+          severity: row.severity,
+          alert_id: row.alert_id,
+          source: row.trace.source,
+          citation: citeTrigger(row.trace, version.locales, response.locale),
+        })),
+      };
+    });
+  }
+
+  /** PP4: the patient's completed surveys, each color-coded by what its
+   * submission raised and opening the WHOLE response bound to its exact
+   * version. One list-level audited disclosure. */
+  async patientResponses(staff: StaffPrincipal, patientId: string): Promise<object[]> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const { rows: care } = await client.query(
+        `SELECT 1 FROM clinical.care_relationship
+          WHERE patient_id = $1 AND staff_id = $2 AND ended_at IS NULL`,
+        [patientId, staff.userId],
+      );
+      if (care.length === 0) throw new NotFoundException({ status: 'unknown_patient' });
+      const decision = authorize({
+        principal: { userId: staff.userId, role: staff.role },
+        action: 'view',
+        resource: {
+          type: 'survey_response',
+          id: 'list',
+          patientId,
+          careTeamUserIds: [staff.userId],
+        },
+      }).decision;
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_response.view',
+        resourceType: 'survey_response_list',
+        resourceId: patientId,
+        patientId,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const { rows } = await client.query(
+        `SELECT r.id, r.locale, r.submitted_at::text AS submitted_at,
+                v.version, s.name AS survey_name,
+                b.given_name AS behalf_given, b.family_name AS behalf_family,
+                (SELECT a.severity FROM clinical.alert a
+                  WHERE a.survey_response_id = r.id
+                  ORDER BY CASE a.severity WHEN 'high' THEN 3 WHEN 'moderate' THEN 2 ELSE 1 END DESC
+                  LIMIT 1) AS alert_severity,
+                (SELECT count(*)::int FROM clinical.rule_trigger rt
+                  WHERE rt.survey_response_id = r.id) AS trigger_count
+           FROM clinical.survey_response r
+           JOIN clinical.survey_version v ON v.id = r.survey_version_id
+           JOIN clinical.survey s ON s.id = v.survey_id
+           LEFT JOIN identity.staff_account b ON b.id = r.on_behalf_by
+          WHERE r.patient_id = $1 AND r.status = 'submitted'
+          ORDER BY r.submitted_at DESC
+          LIMIT 100`,
+        [patientId],
+      );
+      return rows as object[];
     });
   }
 }

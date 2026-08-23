@@ -1,8 +1,10 @@
 import type pg from 'pg';
 import { persistEvaluation, ruleTextsFromBundles, writeChangeEvent } from '@mio/db';
 import {
+  applyOverrides,
   evaluateTrends,
   type LocaleBundle,
+  type ProgramOverrides,
   type SurveyDefinition,
   type TrendEntry,
 } from '@mio/survey-schema';
@@ -158,8 +160,9 @@ async function evaluateMissedTrends(
       id: string;
       definition: SurveyDefinition;
       locales: LocaleBundle[];
+      rule_overrides: ProgramOverrides;
     }>(
-      `SELECT v.id, v.definition, v.locales
+      `SELECT v.id, v.definition, v.locales, ts.rule_overrides
          FROM clinical.treatment_survey ts
          JOIN clinical.survey_version v ON v.id = COALESCE(
            ts.pinned_version_id,
@@ -170,7 +173,9 @@ async function evaluateMissedTrends(
       [anchor.treatment_id, anchor.survey_id],
     );
     const version = versions[0];
-    if (!version || (version.definition.trendRules ?? []).length === 0) continue;
+    if (!version) continue;
+    const effective = applyOverrides(version.definition, version.rule_overrides ?? {});
+    if ((effective.trendRules ?? []).length === 0) continue;
 
     const { rows: history } = await client.query<{
       activity_id: string;
@@ -207,7 +212,7 @@ async function evaluateMissedTrends(
             activityId: row.activity_id,
           },
     );
-    const evaluation = evaluateTrends(version.definition, entries);
+    const evaluation = evaluateTrends(effective, entries);
     if (evaluation.fired.length === 0) continue;
     const persisted = await persistEvaluation(
       client,

@@ -5,6 +5,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { Avatar, Card, CardHeader, ErrorState, ListRow, Skeleton, StatusChip } from '@mio/ui';
 import { ValuesCard } from '../observations/values-card.js';
 import { SymptomsCard } from '../observations/symptoms-card.js';
+import { ResponsesCard } from '../surveys/responses-card.js';
 
 interface PatientProfile {
   patientId: string;
@@ -191,6 +192,7 @@ export function PatientProfilePage(): ReactElement {
           <ProgramsCard patientId={patientId} />
           <ValuesCard patientId={patientId} />
           <SymptomsCard patientId={patientId} />
+          <ResponsesCard patientId={patientId} />
         </div>
       </div>
     </div>

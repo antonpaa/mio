@@ -89,6 +89,8 @@ export interface TrendRule {
   id: string;
   when: TrendWhen;
   outcomes: RuleOutcome[];
+  /** set at resolution time by applyOverrides - never stored */
+  source?: 'template' | 'program';
 }
 
 /**
@@ -100,6 +102,9 @@ export interface QuestionRule {
   id: string;
   when: RuleWhen;
   outcomes: RuleOutcome[];
+  /** which layer supplied the effective condition. Set at RESOLUTION time
+   * by applyOverrides - never stored in a version. */
+  source?: 'template' | 'program';
 }
 
 /**

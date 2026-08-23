@@ -20,6 +20,7 @@ import { TasksPage } from '../tasks/tasks-page.js';
 import { MyTasksCard } from '../tasks/my-tasks-card.js';
 import { TriageCard } from '../alerts/triage-card.js';
 import { AlertPage } from '../alerts/alert-page.js';
+import { ResponseDetailPage } from '../surveys/response-detail.js';
 import { PatientSurveysPage } from '../surveys/patient-surveys.js';
 import { SurveyFillPage } from '../surveys/fill.js';
 import { SurveySubmittedPage } from '../surveys/submitted.js';
@@ -253,6 +254,13 @@ const alertRoute = createRoute({
   component: () => <ShellPage page={<AlertPage />} />,
 });
 
+const responseDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/responses/$responseId',
+  beforeLoad: requireSession,
+  component: () => <ShellPage page={<ResponseDetailPage />} />,
+});
+
 /** /calendar is the patient's consolidated view (P9); staff have no page
  * here yet - their day lives on the dashboard (C1, WP-13+). */
 function CalendarIndex(): ReactElement {
@@ -295,4 +303,5 @@ export const routeTree = rootRoute.addChildren([
   surveySubmittedRoute,
   surveyBuilderRoute,
   alertRoute,
+  responseDetailRoute,
 ]);

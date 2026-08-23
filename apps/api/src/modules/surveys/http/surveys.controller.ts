@@ -132,6 +132,41 @@ export class StaffSurveysController {
     return this.surveys.newDraft(staff, surveyId);
   }
 
+  @Get('treatments/:treatmentId/surveys/:surveyId/rules')
+  programRules(
+    @CurrentStaff() staff: StaffPrincipal,
+    @Param('treatmentId') treatmentId: string,
+    @Param('surveyId') surveyId: string,
+  ) {
+    return this.surveys.programRules(staff, treatmentId, surveyId);
+  }
+
+  @Post('treatments/:treatmentId/surveys/:surveyId/rules')
+  @HttpCode(200)
+  saveProgramRules(
+    @CurrentStaff() staff: StaffPrincipal,
+    @Param('treatmentId') treatmentId: string,
+    @Param('surveyId') surveyId: string,
+    @Body() body: { overrides?: object },
+  ) {
+    return this.surveys.saveProgramRules(
+      staff,
+      treatmentId,
+      surveyId,
+      (body.overrides ?? {}) as never,
+    );
+  }
+
+  @Get('responses/:responseId')
+  responseDetail(@CurrentStaff() staff: StaffPrincipal, @Param('responseId') responseId: string) {
+    return this.surveys.responseDetail(staff, responseId);
+  }
+
+  @Get('patients/:patientId/responses')
+  patientResponses(@CurrentStaff() staff: StaffPrincipal, @Param('patientId') patientId: string) {
+    return this.surveys.patientResponses(staff, patientId);
+  }
+
   @Get('treatments/:treatmentId/surveys')
   assignments(@CurrentStaff() staff: StaffPrincipal, @Param('treatmentId') treatmentId: string) {
     return this.surveys.listAssignments(staff, treatmentId);

@@ -50,6 +50,12 @@ export {
 } from './definition.js';
 export { deriveObservations, type DerivedObservation } from './observations.js';
 export {
+  applyOverrides,
+  validateOverrides,
+  type OverrideIssue,
+  type ProgramOverrides,
+} from './overrides.js';
+export {
   evaluateResponse,
   evaluateTrends,
   maxSeverity,
