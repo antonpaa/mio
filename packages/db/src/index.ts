@@ -20,3 +20,4 @@ export {
   type JobBusOptions,
   type QueueName,
 } from './jobs.js';
+export { writeAccessEvent, type AccessEventInput } from './audit.js';

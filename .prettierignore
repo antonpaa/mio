@@ -5,3 +5,5 @@ design/
 docs/authz/capability-matrix.yaml
 *.md
 docs/
+*.generated.ts
+docs/authz/matrix.generated.md

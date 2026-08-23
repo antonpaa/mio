@@ -1,6 +1,6 @@
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createRolePool, migrate, withUserContext } from '../src/index.js';
+import { createRolePool, migrate, withUserContext, writeAccessEvent } from '../src/index.js';
 import { provisionTestDatabase, type TestDatabase } from './test-db.js';
 
 /**
@@ -152,6 +152,28 @@ describe('audit is append-only', () => {
     );
     await expect(owner.query('DELETE FROM audit.access_event')).rejects.toThrow(/append-only/);
     await expect(owner.query('TRUNCATE audit.access_event')).rejects.toThrow(/append-only/);
+  });
+});
+
+describe('the same-transaction audit hook', () => {
+  it('writes an access event on the caller transaction under the app role', async () => {
+    const app = createRolePool({ connectionString: db.connectionString, role: 'mio_app', max: 1 });
+    try {
+      const id = await withUserContext(app, { userId: USER_A, realm: 'staff' }, (client) =>
+        writeAccessEvent(client, {
+          actorUserId: USER_A,
+          actorRealm: 'staff',
+          action: 'patient_clinical_profile.view',
+          resourceType: 'patient_clinical_profile',
+          resourceId: 'profile-1',
+          patientId: USER_B,
+          decision: 'deny',
+        }),
+      );
+      expect(id).toMatch(/^[0-9a-f-]{36}$/);
+    } finally {
+      await app.end();
+    }
   });
 });
 

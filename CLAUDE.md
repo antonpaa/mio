@@ -10,7 +10,7 @@ pnpm install               # workspace install (SessionStart hook does this on t
 pnpm check                 # lint + format + typecheck + test + boundaries — run before pushing
 pnpm lint / format / typecheck / test
 pnpm boundaries            # dependency-cruiser architecture rules
-python3 docs/authz/validate_matrix.py   # capability matrix invariants
+pnpm --filter @mio/authz generate  # regenerate matrix artifacts (schema, flags, docs table)
 pnpm dev:services          # Postgres 17 + Mailpit (http://localhost:8025)
 pnpm migrate               # apply SQL migrations (DATABASE_URL, owner user)
 pnpm --filter @mio/api dev     # API on :3000
