@@ -1,16 +1,150 @@
-import { createRootRoute, createRoute, Outlet } from '@tanstack/react-router';
+import { createRootRouteWithContext, createRoute, Outlet, redirect } from '@tanstack/react-router';
+import type { QueryClient } from '@tanstack/react-query';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactElement } from 'react';
+import { IntlProvider } from 'react-intl';
+import type { Locale } from '@mio/i18n';
 import { Splash } from '@mio/ui';
+import { MESSAGES } from '../i18n/messages.js';
+import { detectLocale, persistLocale } from '../lib/locale.js';
+import { SessionProvider, SESSION_QUERY, useSession } from '../session/session.js';
+import { AuthLayout } from '../auth/auth-layout.js';
+import { SignInPage } from '../auth/sign-in.js';
+import { VerifyPage } from '../auth/verify.js';
+import { WelcomePage } from '../auth/welcome.js';
+import { ForgotPage, ForgotSentPage, ResetPage } from '../auth/forgot.js';
+import { PlaceholderHome, SignedInShell } from '../app/shells.js';
 
-const rootRoute = createRootRoute({
-  component: Outlet,
-});
+interface LocaleControls {
+  locale: Locale;
+  setLocale: (locale: Locale) => void;
+}
 
-// L0: the launch screen while the session resolves. The login flow replaces
-// this as the index in WP-08.
+const LocaleContext = createContext<LocaleControls | null>(null);
+
+export function useLocaleControls(): LocaleControls {
+  const value = useContext(LocaleContext);
+  if (!value) throw new Error('locale context missing');
+  return value;
+}
+
+function Root(): ReactElement {
+  const [locale, setLocaleState] = useState<Locale>(() => detectLocale());
+  const controls = useMemo<LocaleControls>(
+    () => ({
+      locale,
+      setLocale: (next) => {
+        persistLocale(next);
+        setLocaleState(next);
+      },
+    }),
+    [locale],
+  );
+  return (
+    <LocaleContext.Provider value={controls}>
+      <IntlProvider locale={locale} messages={MESSAGES[locale]} defaultLocale="en">
+        <SessionProvider>
+          <AccountLocaleSync />
+          <Outlet />
+        </SessionProvider>
+      </IntlProvider>
+    </LocaleContext.Provider>
+  );
+}
+
+/** After sign-in the account's stored locale wins (persistent choice). */
+function AccountLocaleSync(): null {
+  const session = useSession();
+  const controls = useLocaleControls();
+  useEffect(() => {
+    if (session.account && session.account.locale !== controls.locale) {
+      controls.setLocale(session.account.locale);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sync on account change only
+  }, [session.account]);
+  return null;
+}
+
+export interface RouterContext {
+  queryClient: QueryClient;
+}
+
+const rootRoute = createRootRouteWithContext<RouterContext>()({ component: Root });
+
+function AuthedIndex(): ReactElement {
+  const session = useSession();
+  // beforeLoad already guaranteed a session exists; the context value can
+  // lag one microtask behind the cache, so render the splash - never a
+  // redirect - while it catches up.
+  if (session.loading || !session.account) return <Splash />;
+  return (
+    <SignedInShell>
+      <PlaceholderHome />
+    </SignedInShell>
+  );
+}
+
+function AuthPage({ page }: { page: ReactElement }): ReactElement {
+  const controls = useLocaleControls();
+  return (
+    <AuthLayout locale={controls.locale} onLocaleChange={controls.setLocale}>
+      {page}
+    </AuthLayout>
+  );
+}
+
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: Splash,
+  // The auth gate lives in the ROUTER, not in a component effect: it reads
+  // the query cache directly, which is synchronous with establish()/logout,
+  // while React context notifications are microtask-deferred.
+  beforeLoad: async ({ context }) => {
+    const session = await context.queryClient.ensureQueryData(SESSION_QUERY);
+    if (!session) throw redirect({ to: '/login' });
+  },
+  component: AuthedIndex,
+});
+const loginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/login',
+  component: () => <AuthPage page={<SignInPage />} />,
+});
+const verifyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/login/verify',
+  component: () => <AuthPage page={<VerifyPage />} />,
+  validateSearch: (search: Record<string, unknown>) => ({
+    realm: search['realm'] === 'staff' ? ('staff' as const) : ('patient' as const),
+    challenge: String(search['challenge'] ?? ''),
+  }),
+});
+const forgotRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/login/forgot',
+  component: () => <AuthPage page={<ForgotPage />} />,
+});
+const forgotSentRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/login/forgot/sent',
+  component: () => <AuthPage page={<ForgotSentPage />} />,
+});
+const welcomeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/welcome/$token',
+  component: () => <AuthPage page={<WelcomePage />} />,
+});
+const resetRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/reset/$token',
+  component: () => <AuthPage page={<ResetPage />} />,
 });
 
-export const routeTree = rootRoute.addChildren([indexRoute]);
+export const routeTree = rootRoute.addChildren([
+  indexRoute,
+  loginRoute,
+  verifyRoute,
+  forgotRoute,
+  forgotSentRoute,
+  welcomeRoute,
+  resetRoute,
+]);

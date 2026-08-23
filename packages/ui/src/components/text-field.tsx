@@ -29,7 +29,7 @@ export function TextField({
         {...(placeholder !== undefined ? { placeholder } : {})}
         className={
           'rounded-inner border border-border bg-surface px-3.5 py-2.5 text-sm text-ink ' +
-          'placeholder:text-muted invalid:border-red'
+          'placeholder:text-muted user-invalid:border-red'
         }
       />
       {description !== undefined ? (
