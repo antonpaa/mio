@@ -159,9 +159,13 @@ export function BodyMap({
       {/* The parallel representation: the same regions, the same state,
           fully labelled - keyboard and AT operate here. */}
       <fieldset className="mt-3 rounded-inner border border-hairline bg-paper px-3 py-2.5">
-        <legend className="px-1 text-xs font-medium uppercase tracking-wide text-muted">
+        {/* The legend names the group for AT; the visible caption lives
+            INSIDE the box - a styled legend straddles the border and the
+            border line runs through the text. */}
+        <legend className="sr-only">{legendLabel}</legend>
+        <p aria-hidden className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted">
           {legendLabel}
-        </legend>
+        </p>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-3">
           {allRegionIds.map((id) => (
             <label key={id} className="flex items-center gap-2 text-sm text-ink">
