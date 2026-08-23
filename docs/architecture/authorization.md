@@ -109,9 +109,13 @@ Approach: load the entity slice for a request once, evaluate all decisions for
 that request against it, and keep the slice request-scoped. Care relationships
 and team memberships are the entities that matter and both are small per user.
 
-This is a known optimisation target, not a solved problem. It should be measured
-against a realistic synthetic dataset (20,000 patients) before launch rather than
-discovered in production.
+This is a known optimisation target, not a solved problem, and it is now
+measured on every CI push: the WP-05 baseline runs roster-style decisions
+against the 20,000-patient synthetic world. First measurements (WP-05):
+~1.5 ms per decision after moving action-group membership out of the
+per-call schema — cedar-wasm is stateless, and shipping the schema on the
+hot path had cost 20x that. The remaining per-call cost is policy-text
+parsing; request-scoped batching is the next lever if worklists need it.
 
 ## Policy change control
 

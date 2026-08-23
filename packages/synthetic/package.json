@@ -1,0 +1,20 @@
+{
+  "name": "@mio/synthetic",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Deterministic synthetic-data generator - the only data allowed outside production (E8)",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "node --import @swc-node/register/esm-register src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@mio/authz": "workspace:*",
+    "@swc-node/register": "^1.12.1",
+    "@types/node": "^26.2.0"
+  }
+}

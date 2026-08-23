@@ -3,7 +3,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as cedar from '@cedar-policy/cedar-wasm/nodejs';
 import { ROLE_REALM, type Realm, type Role } from './roles.js';
-import { ACTION_METADATA, EMPTY_GROUPS, RESOURCE_ATTRS } from './capabilities.generated.js';
+import {
+  ACTION_GROUPS,
+  ACTION_METADATA,
+  EMPTY_GROUPS,
+  RESOURCE_ATTRS,
+} from './capabilities.generated.js';
 import { CEDAR_SCHEMA } from './cedar-schema.generated.js';
 import { pascalCase } from './cedar.js';
 
@@ -110,6 +115,7 @@ export function authorize(input: AuthorizeInput): AuthorizeResult {
     ...(input.resource.leadUserIds ?? []),
   ]);
 
+  const groups = ACTION_GROUPS[actionId] ?? [];
   const entities = [
     { uid: { type: 'Mio::Role', id: input.principal.role }, attrs: {}, parents: [] },
     ...[...allUserIds].map((id) => ({
@@ -119,6 +125,17 @@ export function authorize(input: AuthorizeInput): AuthorizeResult {
         id === input.principal.userId ? [{ type: 'Mio::Role', id: input.principal.role }] : [],
     })),
     { uid: { type: resourceType, id: input.resource.id }, attrs, parents: [] },
+    // Action-group membership as entity parents: with these in the slice
+    // the hot path needs no schema, and skipping the schema is what makes
+    // isAuthorized cheap - cedar-wasm is stateless and would otherwise
+    // re-parse the full schema on every single call. Policies and schema
+    // still validate together at startup/test time via validatePolicies().
+    ...groups.map((group) => ({ uid: { type: 'Mio::Action', id: group }, attrs: {}, parents: [] })),
+    {
+      uid: { type: 'Mio::Action', id: actionId },
+      attrs: {},
+      parents: groups.map((group) => ({ type: 'Mio::Action', id: group })),
+    },
   ];
 
   const answer = cedar.isAuthorized({
@@ -126,8 +143,6 @@ export function authorize(input: AuthorizeInput): AuthorizeResult {
     action: { type: 'Mio::Action', id: actionId },
     resource: { type: resourceType, id: input.resource.id },
     context: {},
-    schema: CEDAR_SCHEMA,
-    validateRequest: true,
     policies: { staticPolicies: POLICIES },
     entities: entities as never,
   });

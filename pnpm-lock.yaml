@@ -176,6 +176,18 @@ importers:
 
   packages/survey-schema: {}
 
+  packages/synthetic:
+    devDependencies:
+      '@mio/authz':
+        specifier: workspace:*
+        version: link:../authz
+      '@swc-node/register':
+        specifier: ^1.12.1
+        version: 1.12.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(@swc/types@0.1.28)(typescript@6.0.3)
+      '@types/node':
+        specifier: ^26.2.0
+        version: 26.2.0
+
   packages/ui:
     dependencies:
       react-aria-components:

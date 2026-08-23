@@ -284,6 +284,344 @@ export const EMPTY_GROUPS: readonly string[] = [
   "grp:administrator:team_lead"
 ];
 
+/** role:scope action-group membership per action - the engine supplies
+ * these as action-entity parents so the hot path needs no schema. */
+export const ACTION_GROUPS: Record<string, readonly string[]> = {
+  "patient_identity.view": [
+    "grp:patient:self",
+    "grp:treatment_member:care_relationship",
+    "grp:treatment_lead:care_relationship",
+    "grp:administrator:any"
+  ],
+  "patient_identity.update_contact_details": [
+    "grp:patient:self",
+    "grp:treatment_member:care_relationship",
+    "grp:treatment_lead:care_relationship",
+    "grp:administrator:any"
+  ],
+  "patient_clinical_profile.view": [
+    "grp:patient:self",
+    "grp:treatment_member:care_relationship",
+    "grp:treatment_lead:care_relationship"
+  ],
+  "care_relationship.view": [
+    "grp:patient:self",
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "care_relationship.create": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "care_relationship.end": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "treatment.view": [
+    "grp:patient:self",
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "treatment.create": [
+    "grp:treatment_lead:any"
+  ],
+  "treatment.update": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "treatment.change_lifecycle_state": [
+    "grp:treatment_lead:team_lead"
+  ],
+  "treatment.manage_team": [
+    "grp:treatment_lead:team_lead"
+  ],
+  "treatment.enrol_patient": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "treatment.enter_on_behalf_of_patient": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "treatment.configure_program_rules": [
+    "grp:treatment_lead:team_lead"
+  ],
+  "treatment_template.view": [
+    "grp:treatment_member:any",
+    "grp:treatment_lead:any"
+  ],
+  "treatment_template.create": [
+    "grp:treatment_lead:any"
+  ],
+  "treatment_template.update_draft": [
+    "grp:treatment_lead:any"
+  ],
+  "treatment_template.publish": [
+    "grp:treatment_lead:any"
+  ],
+  "treatment_template.archive": [
+    "grp:treatment_lead:any"
+  ],
+  "activity.view": [
+    "grp:patient:self",
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "activity.create": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "activity.update": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "activity.cancel": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "task.view": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "task.create": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "task.claim": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "task.assign_to_other": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "task.complete": [
+    "grp:treatment_member:own",
+    "grp:treatment_lead:team_member"
+  ],
+  "survey_template.view": [
+    "grp:treatment_member:any",
+    "grp:treatment_lead:any"
+  ],
+  "survey_template.create": [
+    "grp:treatment_lead:any"
+  ],
+  "survey_template.update_draft": [
+    "grp:treatment_lead:any"
+  ],
+  "survey_template.publish": [
+    "grp:treatment_lead:any"
+  ],
+  "survey_template.archive": [
+    "grp:treatment_lead:any"
+  ],
+  "survey_template.configure_alert_rules": [
+    "grp:treatment_lead:any"
+  ],
+  "survey_assignment.view": [
+    "grp:patient:self",
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "survey_assignment.create": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "survey_assignment.schedule_recurring": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "survey_assignment.cancel": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "survey_assignment.send_reminder": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "survey_response.view": [
+    "grp:patient:self",
+    "grp:treatment_member:care_relationship",
+    "grp:treatment_lead:care_relationship"
+  ],
+  "survey_response.save_draft": [
+    "grp:patient:self"
+  ],
+  "survey_response.submit": [
+    "grp:patient:self"
+  ],
+  "survey_response.submit_on_behalf_of_patient": [
+    "grp:treatment_member:care_relationship",
+    "grp:treatment_lead:care_relationship"
+  ],
+  "survey_response.view_trend": [
+    "grp:patient:self",
+    "grp:treatment_member:care_relationship",
+    "grp:treatment_lead:care_relationship"
+  ],
+  "alert.view": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "alert.view_evaluation_trace": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "alert.acknowledge": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "alert.assign": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "alert.comment": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "alert.resolve": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "message_thread.view": [
+    "grp:patient:self",
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "message_thread.post": [
+    "grp:patient:self",
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "internal_note.view": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "internal_note.post": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "attachment.upload": [
+    "grp:patient:self",
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "attachment.download": [
+    "grp:patient:self",
+    "grp:treatment_member:care_relationship",
+    "grp:treatment_lead:care_relationship"
+  ],
+  "value_entry.view": [
+    "grp:patient:self",
+    "grp:treatment_member:care_relationship",
+    "grp:treatment_lead:care_relationship"
+  ],
+  "value_entry.create": [
+    "grp:patient:self",
+    "grp:treatment_member:care_relationship",
+    "grp:treatment_lead:care_relationship"
+  ],
+  "symptom_observation.view": [
+    "grp:patient:self",
+    "grp:treatment_member:care_relationship",
+    "grp:treatment_lead:care_relationship"
+  ],
+  "symptom_observation.create": [
+    "grp:patient:self",
+    "grp:treatment_member:care_relationship",
+    "grp:treatment_lead:care_relationship"
+  ],
+  "symptom_taxonomy.view": [
+    "grp:treatment_member:any",
+    "grp:treatment_lead:any"
+  ],
+  "symptom_taxonomy.manage": [
+    "grp:treatment_lead:any"
+  ],
+  "patient_data_export.request": [
+    "grp:treatment_member:care_relationship",
+    "grp:treatment_lead:care_relationship"
+  ],
+  "patient_data_export.download": [
+    "grp:treatment_member:care_relationship",
+    "grp:treatment_lead:care_relationship"
+  ],
+  "staff_account.view": [
+    "grp:treatment_member:any",
+    "grp:treatment_lead:any",
+    "grp:administrator:any"
+  ],
+  "staff_account.create": [
+    "grp:administrator:any"
+  ],
+  "staff_account.deactivate": [
+    "grp:administrator:any"
+  ],
+  "staff_account.reset_credentials": [
+    "grp:administrator:any"
+  ],
+  "patient_account.create": [
+    "grp:treatment_lead:any",
+    "grp:administrator:any"
+  ],
+  "patient_account.deactivate": [
+    "grp:administrator:any"
+  ],
+  "patient_account.reset_credentials": [
+    "grp:administrator:any"
+  ],
+  "team.view": [
+    "grp:treatment_member:any",
+    "grp:treatment_lead:any",
+    "grp:administrator:any"
+  ],
+  "team.create": [
+    "grp:treatment_lead:any",
+    "grp:administrator:any"
+  ],
+  "team.update_membership": [
+    "grp:treatment_lead:any",
+    "grp:administrator:any"
+  ],
+  "audit_log.view_own_access_history": [
+    "grp:patient:self",
+    "grp:treatment_member:self",
+    "grp:treatment_lead:self",
+    "grp:administrator:self"
+  ],
+  "audit_log.view_full": [
+    "grp:administrator:any"
+  ],
+  "report.view": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "own_settings.view": [
+    "grp:patient:self",
+    "grp:treatment_member:self",
+    "grp:treatment_lead:self",
+    "grp:administrator:self"
+  ],
+  "own_settings.update": [
+    "grp:patient:self",
+    "grp:treatment_member:self",
+    "grp:treatment_lead:self",
+    "grp:administrator:self"
+  ],
+  "own_data_export.request": [
+    "grp:patient:self",
+    "grp:treatment_member:self",
+    "grp:treatment_lead:self",
+    "grp:administrator:self"
+  ],
+  "own_data_export.download": [
+    "grp:patient:self",
+    "grp:treatment_member:self",
+    "grp:treatment_lead:self",
+    "grp:administrator:self"
+  ]
+};
+
 export const ACTION_METADATA: Record<string, { audit: 'always' | 'never'; patientScoped: boolean }> = {
   "patient_identity.view": {
     "audit": "always",

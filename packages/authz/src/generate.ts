@@ -41,15 +41,18 @@ export function generateArtifacts(): Artifact[] {
 
   const capabilities: Record<string, string[]> = Object.fromEntries(ROLES.map((r) => [r, []]));
   const metadata: Record<string, { audit: 'always' | 'never'; patientScoped: boolean }> = {};
+  const actionGroups: Record<string, string[]> = {};
   const populatedGroups = new Set<string>();
   for (const resource of matrix.resources) {
     for (const action of resource.actions) {
       const id = actionId(resource.id, action.id);
       metadata[id] = { audit: action.audit, patientScoped: resource.patientScoped };
+      actionGroups[id] = [];
       for (const role of ROLES) {
         const scope = action.grants[role];
         if (scope !== 'deny') {
           (capabilities[role] as string[]).push(id);
+          (actionGroups[id] as string[]).push(groupId(role, scope));
           populatedGroups.add(groupId(role, scope));
         }
       }
@@ -85,6 +88,13 @@ export function generateArtifacts(): Artifact[] {
     '/** role:scope action groups with no member action in the matrix - their\n' +
     ' * pattern policies can never apply, which validation must excuse. */\n' +
     `export const EMPTY_GROUPS: readonly string[] = ${JSON.stringify(emptyGroups, null, 2)};\n\n` +
+    '/** role:scope action-group membership per action - the engine supplies\n' +
+    ' * these as action-entity parents so the hot path needs no schema. */\n' +
+    `export const ACTION_GROUPS: Record<string, readonly string[]> = ${JSON.stringify(
+      actionGroups,
+      null,
+      2,
+    )};\n\n` +
     `export const ACTION_METADATA: Record<string, { audit: 'always' | 'never'; patientScoped: boolean }> = ${JSON.stringify(
       metadata,
       null,

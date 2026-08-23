@@ -11,6 +11,7 @@ pnpm check                 # lint + format + typecheck + test + boundaries — r
 pnpm lint / format / typecheck / test
 pnpm boundaries            # dependency-cruiser architecture rules
 pnpm --filter @mio/authz generate  # regenerate matrix artifacts (schema, flags, docs table)
+pnpm --filter @mio/synthetic generate -- --profile demo --seed 42  # synthetic world fixtures
 pnpm dev:services          # Postgres 17 + Mailpit (http://localhost:8025)
 pnpm migrate               # apply SQL migrations (DATABASE_URL, owner user)
 pnpm --filter @mio/api dev     # API on :3000
@@ -26,7 +27,8 @@ apps/api      NestJS on Fastify — modular monolith; modules under src/modules/
               imported ONLY via their index.ts (dependency-cruiser enforces this)
 apps/web      Vite + React 19 + TanStack Router/Query; same-origin API
 apps/worker   async jobs — pg-boss consumer over @mio/db
-packages/     contracts · survey-schema · authz · i18n · ui · db — shared,
+packages/     contracts · survey-schema · authz · i18n · ui · db · synthetic —
+              shared,
               source-first; never import from apps. @mio/db owns migrations
               (packages/db/migrations/*.sql, forward-only), role-carrying
               pools, the RLS user context and the job bus
