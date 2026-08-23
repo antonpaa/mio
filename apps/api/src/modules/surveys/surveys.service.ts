@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import {
   BadRequestException,
   ForbiddenException,
@@ -10,10 +10,12 @@ import type pg from 'pg';
 import { authorize } from '@mio/authz/engine';
 import { withUserContext, writeAccessEvent, writeChangeEvent } from '@mio/db';
 import {
+  canonicalJson,
   missingTranslations,
   normaliseDraft,
   patientView,
   progressOf,
+  validateDefinition,
   validateSubmission,
   type Answers,
   type LocaleBundle,
@@ -864,4 +866,390 @@ export class SurveysService {
       },
     );
   }
+
+  private decideTemplate(
+    staff: StaffPrincipal,
+    action: 'view' | 'create' | 'update_draft' | 'publish' | 'archive',
+    resourceId: string,
+  ): 'allow' | 'deny' {
+    return authorize({
+      principal: { userId: staff.userId, role: staff.role },
+      action,
+      resource: { type: 'survey_template', id: resourceId },
+    }).decision;
+  }
+
+  private static hashContent(definition: SurveyDefinition, locales: LocaleBundle[]): string {
+    return createHash('sha256').update(canonicalJson({ definition, locales })).digest('hex');
+  }
+
+  /** Missing-text count per locale: title + labels + option labels. */
+  private static completeness(
+    definition: SurveyDefinition,
+    locales: LocaleBundle[],
+  ): Record<string, number> {
+    return Object.fromEntries(
+      locales.map((bundle) => [
+        bundle.locale,
+        missingTranslations(definition, bundle).length + (bundle.title.trim() === '' ? 1 : 0),
+      ]),
+    );
+  }
+
+  /** B1 "+ New survey": the survey and an EMPTY draft v1 to edit. */
+  async createSurvey(
+    staff: StaffPrincipal,
+    input: { name: string; kind?: string; licensedSource?: string },
+  ): Promise<{ surveyId: string; versionId: string }> {
+    if (!input.name?.trim()) throw new BadRequestException({ status: 'name_required' });
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const decision = this.decideTemplate(staff, 'create', 'new');
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.create',
+        resourceType: 'survey_template',
+        resourceId: null,
+        patientId: null,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+
+      const surveyId = randomUUID();
+      const versionId = randomUUID();
+      const kind = input.kind === 'symptom' ? 'symptom' : 'generic';
+      const definition: SurveyDefinition = {
+        kind: kind as 'symptom' | 'generic',
+        pages: [{ id: 'page-1', questions: [] }],
+      };
+      const locales: LocaleBundle[] = (['en', 'fi', 'sv'] as const).map((locale) => ({
+        locale,
+        title: locale === 'en' ? input.name.trim() : '',
+        questions: {},
+      }));
+      await client.query(
+        `INSERT INTO clinical.survey (id, name, kind, licensed_source, created_by)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [surveyId, input.name.trim(), kind, input.licensedSource?.trim() || null, staff.userId],
+      );
+      await client.query(
+        `INSERT INTO clinical.survey_version
+           (id, survey_id, version, state, definition, locales, content_hash, created_by)
+         VALUES ($1, $2, 1, 'draft', $3, $4, $5, $6)`,
+        [
+          versionId,
+          surveyId,
+          JSON.stringify(definition),
+          JSON.stringify(locales),
+          SurveysService.hashContent(definition, locales),
+          staff.userId,
+        ],
+      );
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.create',
+        resourceType: 'survey_template',
+        resourceId: surveyId,
+        patientId: null,
+      });
+      return { surveyId, versionId };
+    });
+  }
+
+  /** B4: the survey with its versions and per-locale completeness. */
+  async surveyDetail(staff: StaffPrincipal, surveyId: string): Promise<object> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const decision = this.decideTemplate(staff, 'view', surveyId);
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const { rows } = await client.query(
+        `SELECT id, name, kind, licensed_source FROM clinical.survey WHERE id = $1`,
+        [surveyId],
+      );
+      const survey = rows[0] as Record<string, unknown> | undefined;
+      if (!survey) throw new NotFoundException({ status: 'unknown_survey' });
+      const { rows: versions } = await client.query(
+        `SELECT id, version, state, definition, locales,
+                created_at, published_at
+           FROM clinical.survey_version WHERE survey_id = $1 ORDER BY version DESC`,
+        [surveyId],
+      );
+      return {
+        ...survey,
+        versions: (versions as Record<string, unknown>[]).map((row) => ({
+          id: row['id'],
+          version: row['version'],
+          state: row['state'],
+          createdAt: row['created_at'],
+          publishedAt: row['published_at'],
+          completeness: SurveysService.completeness(
+            row['definition'] as SurveyDefinition,
+            row['locales'] as LocaleBundle[],
+          ),
+          questionCount: allQuestionCount(row['definition'] as SurveyDefinition),
+        })),
+      };
+    });
+  }
+
+  /** The editor payload: the full version with its survey header. */
+  async versionDetail(staff: StaffPrincipal, versionId: string): Promise<object> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const decision = this.decideTemplate(staff, 'view', versionId);
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const { rows } = await client.query(
+        `SELECT v.id, v.survey_id, v.version, v.state, v.definition, v.locales,
+                s.name, s.kind, s.licensed_source
+           FROM clinical.survey_version v
+           JOIN clinical.survey s ON s.id = v.survey_id
+          WHERE v.id = $1`,
+        [versionId],
+      );
+      const row = rows[0] as Record<string, unknown> | undefined;
+      if (!row) throw new NotFoundException({ status: 'unknown_version' });
+      return {
+        ...row,
+        completeness: SurveysService.completeness(
+          row['definition'] as SurveyDefinition,
+          row['locales'] as LocaleBundle[],
+        ),
+      };
+    });
+  }
+
+  /** B2/B5/B6: update a DRAFT. A published version never comes back here -
+   * the service refuses and the storage trigger backstops it. Licensed
+   * instruments are locked from restructuring entirely (R11). */
+  async updateDraft(
+    staff: StaffPrincipal,
+    versionId: string,
+    input: { definition: SurveyDefinition; locales: LocaleBundle[] },
+  ): Promise<{ issues: object[] }> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const decision = this.decideTemplate(staff, 'update_draft', versionId);
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.update_draft',
+        resourceType: 'survey_template',
+        resourceId: versionId,
+        patientId: null,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const { rows } = await client.query<{ state: string; licensed_source: string | null }>(
+        `SELECT v.state, s.licensed_source
+           FROM clinical.survey_version v JOIN clinical.survey s ON s.id = v.survey_id
+          WHERE v.id = $1`,
+        [versionId],
+      );
+      const version = rows[0];
+      if (!version) throw new NotFoundException({ status: 'unknown_version' });
+      if (version.state !== 'draft') throw new BadRequestException({ status: 'not_a_draft' });
+      if (version.licensed_source !== null) {
+        throw new BadRequestException({ status: 'licensed_locked' });
+      }
+
+      const issues = validateDefinition(input.definition);
+      // an EMPTY page set is fine while drafting; every other issue blocks
+      const blocking = issues.filter((issue) => issue.code !== 'empty');
+      if (blocking.length > 0) {
+        throw new BadRequestException({ status: 'invalid_definition', issues: blocking });
+      }
+      const locales = normaliseLocales(input.locales);
+      await client.query(
+        `UPDATE clinical.survey_version
+            SET definition = $2, locales = $3, content_hash = $4 WHERE id = $1`,
+        [
+          versionId,
+          JSON.stringify(input.definition),
+          JSON.stringify(locales),
+          SurveysService.hashContent(input.definition, locales),
+        ],
+      );
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.update_draft',
+        resourceType: 'survey_template',
+        resourceId: versionId,
+        patientId: null,
+      });
+      return { issues };
+    });
+  }
+
+  /** B4: publish - immutable from this moment on. Requires a real
+   * definition and at least one COMPLETE locale (a variant with gaps is
+   * never offered to patients, so an all-gaps version cannot go live). */
+  async publishVersion(staff: StaffPrincipal, versionId: string): Promise<void> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const decision = this.decideTemplate(staff, 'publish', versionId);
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.publish',
+        resourceType: 'survey_template',
+        resourceId: versionId,
+        patientId: null,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const { rows } = await client.query<{
+        state: string;
+        definition: SurveyDefinition;
+        locales: LocaleBundle[];
+      }>(`SELECT state, definition, locales FROM clinical.survey_version WHERE id = $1`, [
+        versionId,
+      ]);
+      const version = rows[0];
+      if (!version) throw new NotFoundException({ status: 'unknown_version' });
+      if (version.state !== 'draft') throw new BadRequestException({ status: 'not_a_draft' });
+      const issues = validateDefinition(version.definition);
+      if (issues.length > 0) {
+        throw new BadRequestException({ status: 'invalid_definition', issues });
+      }
+      const completeness = SurveysService.completeness(version.definition, version.locales);
+      if (!Object.values(completeness).some((missing) => missing === 0)) {
+        throw new BadRequestException({ status: 'no_complete_locale', completeness });
+      }
+      await client.query(
+        `UPDATE clinical.survey_version
+            SET state = 'published', published_at = now() WHERE id = $1`,
+        [versionId],
+      );
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.publish',
+        resourceType: 'survey_template',
+        resourceId: versionId,
+        patientId: null,
+      });
+    });
+  }
+
+  async archiveVersion(staff: StaffPrincipal, versionId: string): Promise<void> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const decision = this.decideTemplate(staff, 'archive', versionId);
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.archive',
+        resourceType: 'survey_template',
+        resourceId: versionId,
+        patientId: null,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const result = await client.query(
+        `UPDATE clinical.survey_version SET state = 'archived'
+          WHERE id = $1 AND state IN ('draft', 'published')`,
+        [versionId],
+      );
+      if (result.rowCount === 0) throw new NotFoundException({ status: 'unknown_version' });
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.archive',
+        resourceType: 'survey_template',
+        resourceId: versionId,
+        patientId: null,
+      });
+    });
+  }
+
+  /** B4 "New draft from vN": any edit to a published version starts here. */
+  async newDraft(
+    staff: StaffPrincipal,
+    surveyId: string,
+  ): Promise<{ versionId: string; version: number }> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const decision = this.decideTemplate(staff, 'update_draft', surveyId);
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.update_draft',
+        resourceType: 'survey_template',
+        resourceId: surveyId,
+        patientId: null,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const { rows } = await client.query<{
+        id: string;
+        version: number;
+        state: string;
+        definition: SurveyDefinition;
+        locales: LocaleBundle[];
+        content_hash: string;
+        licensed_source: string | null;
+      }>(
+        `SELECT v.id, v.version, v.state, v.definition, v.locales, v.content_hash,
+                s.licensed_source
+           FROM clinical.survey_version v JOIN clinical.survey s ON s.id = v.survey_id
+          WHERE v.survey_id = $1 ORDER BY v.version DESC`,
+        [surveyId],
+      );
+      if (rows.length === 0) throw new NotFoundException({ status: 'unknown_survey' });
+      if (rows[0]!.licensed_source !== null) {
+        throw new BadRequestException({ status: 'licensed_locked' });
+      }
+      if (rows.some((row) => row.state === 'draft')) {
+        throw new BadRequestException({ status: 'draft_exists' });
+      }
+      const source = rows[0]!;
+      const versionId = randomUUID();
+      const version = source.version + 1;
+      await client.query(
+        `INSERT INTO clinical.survey_version
+           (id, survey_id, version, state, definition, locales, content_hash, created_by)
+         VALUES ($1, $2, $3, 'draft', $4, $5, $6, $7)`,
+        [
+          versionId,
+          surveyId,
+          version,
+          JSON.stringify(source.definition),
+          JSON.stringify(source.locales),
+          source.content_hash,
+          staff.userId,
+        ],
+      );
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.new_draft',
+        resourceType: 'survey_template',
+        resourceId: versionId,
+        patientId: null,
+        detail: { surveyId, fromVersion: source.version, version },
+      });
+      return { versionId, version };
+    });
+  }
+}
+
+function allQuestionCount(definition: SurveyDefinition): number {
+  let count = 0;
+  const visit = (questions: { followUps?: unknown[] }[]): void => {
+    for (const question of questions) {
+      count += 1;
+      if (question.followUps) visit(question.followUps as { followUps?: unknown[] }[]);
+    }
+  };
+  for (const page of definition.pages) visit(page.questions);
+  return count;
+}
+
+/** Keep exactly the three platform locales, shaped, in a stable order. */
+function normaliseLocales(input: LocaleBundle[]): LocaleBundle[] {
+  return (['en', 'fi', 'sv'] as const).map((locale) => {
+    const bundle = input.find((entry) => entry.locale === locale);
+    return {
+      locale,
+      title: typeof bundle?.title === 'string' ? bundle.title : '',
+      ...(bundle?.description !== undefined ? { description: bundle.description } : {}),
+      questions: bundle?.questions ?? {},
+    };
+  });
 }

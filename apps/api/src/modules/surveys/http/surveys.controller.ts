@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
-import type { Answers } from '@mio/survey-schema';
+import type { Answers, LocaleBundle, SurveyDefinition } from '@mio/survey-schema';
 import type { ScheduleSegment } from '@mio/schedule';
 import {
   CurrentPatient,
@@ -76,6 +76,60 @@ export class StaffSurveysController {
   @Get('surveys')
   catalog(@CurrentStaff() staff: StaffPrincipal) {
     return this.surveys.catalog(staff);
+  }
+
+  @Post('surveys')
+  @HttpCode(201)
+  createSurvey(
+    @CurrentStaff() staff: StaffPrincipal,
+    @Body() body: { name?: string; kind?: string; licensedSource?: string },
+  ) {
+    return this.surveys.createSurvey(staff, {
+      name: body.name ?? '',
+      ...(body.kind !== undefined ? { kind: body.kind } : {}),
+      ...(body.licensedSource !== undefined ? { licensedSource: body.licensedSource } : {}),
+    });
+  }
+
+  @Get('surveys/versions/:versionId')
+  version(@CurrentStaff() staff: StaffPrincipal, @Param('versionId') versionId: string) {
+    return this.surveys.versionDetail(staff, versionId);
+  }
+
+  @Post('surveys/versions/:versionId')
+  @HttpCode(200)
+  updateDraft(
+    @CurrentStaff() staff: StaffPrincipal,
+    @Param('versionId') versionId: string,
+    @Body() body: { definition?: SurveyDefinition; locales?: LocaleBundle[] },
+  ) {
+    return this.surveys.updateDraft(staff, versionId, {
+      definition: body.definition ?? { pages: [] },
+      locales: body.locales ?? [],
+    });
+  }
+
+  @Post('surveys/versions/:versionId/publish')
+  @HttpCode(200)
+  publish(@CurrentStaff() staff: StaffPrincipal, @Param('versionId') versionId: string) {
+    return this.surveys.publishVersion(staff, versionId);
+  }
+
+  @Post('surveys/versions/:versionId/archive')
+  @HttpCode(200)
+  archive(@CurrentStaff() staff: StaffPrincipal, @Param('versionId') versionId: string) {
+    return this.surveys.archiveVersion(staff, versionId);
+  }
+
+  @Get('surveys/:surveyId')
+  survey(@CurrentStaff() staff: StaffPrincipal, @Param('surveyId') surveyId: string) {
+    return this.surveys.surveyDetail(staff, surveyId);
+  }
+
+  @Post('surveys/:surveyId/draft')
+  @HttpCode(201)
+  newDraft(@CurrentStaff() staff: StaffPrincipal, @Param('surveyId') surveyId: string) {
+    return this.surveys.newDraft(staff, surveyId);
   }
 
   @Get('treatments/:treatmentId/surveys')

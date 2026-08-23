@@ -239,7 +239,7 @@ function FillFrame({
   );
 }
 
-function QuestionInput({
+export function QuestionInput({
   question,
   text,
   value,

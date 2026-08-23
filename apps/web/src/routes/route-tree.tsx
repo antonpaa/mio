@@ -21,6 +21,8 @@ import { MyTasksCard } from '../tasks/my-tasks-card.js';
 import { PatientSurveysPage } from '../surveys/patient-surveys.js';
 import { SurveyFillPage } from '../surveys/fill.js';
 import { SurveySubmittedPage } from '../surveys/submitted.js';
+import { SurveyCatalogPage } from '../surveys/builder/catalog.js';
+import { SurveyBuilderPage } from '../surveys/builder/builder-page.js';
 import { PatientProfilePage } from '../patients/profile.js';
 import { TreatmentCatalogPage } from '../treatments/catalog.js';
 import { TreatmentDetailPage } from '../treatments/detail.js';
@@ -222,16 +224,23 @@ const surveySubmittedRoute = createRoute({
   component: () => <ShellPage page={<SurveySubmittedPage />} />,
 });
 
-/** /surveys: the patient's fill list (WP-14); the staff catalog is WP-15. */
+/** /surveys: the patient's fill list (P3) or the staff catalog (B1). */
 function SurveysIndex(): ReactElement {
   const session = useSession();
   if (session.loading || !session.account) return <Splash />;
   return (
     <SignedInShell>
-      {session.realm === 'patient' ? <PatientSurveysPage /> : <PlaceholderHome />}
+      {session.realm === 'patient' ? <PatientSurveysPage /> : <SurveyCatalogPage />}
     </SignedInShell>
   );
 }
+
+const surveyBuilderRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/surveys/builder/$versionId',
+  beforeLoad: requireSession,
+  component: () => <ShellPage page={<SurveyBuilderPage />} />,
+});
 
 /** /calendar is the patient's consolidated view (P9); staff have no page
  * here yet - their day lives on the dashboard (C1, WP-13+). */
@@ -273,4 +282,5 @@ export const routeTree = rootRoute.addChildren([
   surveysRoute,
   surveyFillRoute,
   surveySubmittedRoute,
+  surveyBuilderRoute,
 ]);
