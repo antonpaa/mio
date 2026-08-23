@@ -141,6 +141,26 @@ beforeEach(() => {
       }
       if (url === '/api/patient/responses/r1/answers') return json({ progress: {} });
       if (url === '/api/patient/responses/r1/submit') return json({ status: 'submitted' });
+      if (url === '/api/patient/responses/r2' && (!init || init.method === undefined)) {
+        return json({
+          responseId: 'r2',
+          status: 'draft',
+          kind: 'symptom',
+          locale: 'en',
+          definition: {
+            kind: 'symptom',
+            pages: [{ id: 'p', questions: [{ id: 'skin-map', type: 'body_map', required: true }] }],
+          },
+          bundle: {
+            locale: 'en',
+            title: 'Chemotherapy symptom survey',
+            questions: { 'skin-map': { label: 'Mark where on the body' } },
+          },
+          answers: {},
+          progress: { answered: 0, total: 1 },
+        });
+      }
+      if (url === '/api/patient/responses/r2/answers') return json({ progress: {} });
       return new Response('{}', { status: 404 });
     }),
   );
@@ -189,6 +209,22 @@ describe('P4 fill frame', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await screen.findByText('Give the temperature like 38.5');
 
+    const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });
+    expect(results.violations.map((violation) => violation.id)).toEqual([]);
+  });
+});
+
+describe('P4 body map', () => {
+  it('the checkbox list and the summary carry the selection', async () => {
+    vi.mocked(api.whoami).mockResolvedValue(PATIENT);
+    const { container } = render(appAt('/surveys/fill/r2'));
+    await screen.findByText('Mark where on the body');
+    await screen.findByText('No areas selected');
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Chest' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Left forearm' }));
+    await screen.findByText('2 areas selected — Chest, Left forearm');
+    // progress counts the now-valid answer
+    await screen.findByText('1 of 1');
     const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });
     expect(results.violations.map((violation) => violation.id)).toEqual([]);
   });

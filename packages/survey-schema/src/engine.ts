@@ -1,3 +1,4 @@
+import { BODY_REGION_IDS } from './body-map.js';
 import { compileSafePattern, MAX_PATTERN_INPUT_LENGTH } from './safe-regex.js';
 import type {
   Answers,
@@ -82,7 +83,9 @@ export function visibleQuestions(definition: SurveyDefinition, answers: Answers)
 
 function isAnswered(question: Question, value: unknown): boolean {
   if (value === undefined || value === null || value === '') return false;
-  if (question.type === 'choice_multi') return Array.isArray(value) && value.length > 0;
+  if (question.type === 'choice_multi' || question.type === 'body_map') {
+    return Array.isArray(value) && value.length > 0;
+  }
   return true;
 }
 
@@ -143,6 +146,12 @@ export function validateAnswer(question: Question, value: unknown): AnswerErrorC
     }
     case 'date': {
       if (typeof value !== 'string' || !isRealDate(value)) return 'type';
+      return undefined;
+    }
+    case 'body_map': {
+      if (!Array.isArray(value) || value.some((entry) => typeof entry !== 'string')) return 'type';
+      if (value.some((entry) => !BODY_REGION_IDS.has(entry as string))) return 'option';
+      if (new Set(value).size !== value.length) return 'option';
       return undefined;
     }
     case 'text': {

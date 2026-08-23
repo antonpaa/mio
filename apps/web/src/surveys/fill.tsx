@@ -11,7 +11,8 @@ import {
   type Question,
   type SurveyDefinition,
 } from '@mio/survey-schema';
-import { Button, ErrorState, Skeleton } from '@mio/ui';
+import { BodyMap, Button, ErrorState, Skeleton } from '@mio/ui';
+import { BODY_REGIONS } from '@mio/survey-schema';
 
 /**
  * P4: one question per step. The SAME engine that the server validates
@@ -252,6 +253,8 @@ function QuestionInput({
   const inputClass =
     'w-full rounded-inner border border-border bg-surface px-3 py-2.5 text-sm text-ink';
   switch (question.type) {
+    case 'body_map':
+      return <BodyMapInput value={value} onChange={onChange} />;
     case 'choice_single':
       return (
         <div className="flex flex-col gap-2" role="radiogroup" aria-label={text?.label}>
@@ -380,4 +383,50 @@ function QuestionInput({
         />
       );
   }
+}
+
+function BodyMapInput({
+  value,
+  onChange,
+}: {
+  value: unknown;
+  onChange: (value: unknown) => void;
+}): ReactElement {
+  const intl = useIntl();
+  const selected = Array.isArray(value) ? (value as string[]) : [];
+  const labels = Object.fromEntries(
+    BODY_REGIONS.map((region) => [
+      region.id,
+      intl.formatMessage({ id: `bodymap.region.${region.id}` }),
+    ]),
+  );
+  const summary =
+    selected.length === 0
+      ? intl.formatMessage({ id: 'bodymap.none' })
+      : intl.formatMessage(
+          { id: 'bodymap.summary' },
+          {
+            count: selected.length,
+            list: selected.map((id) => labels[id] ?? id).join(', '),
+          },
+        );
+  return (
+    <BodyMap
+      selected={selected}
+      onToggle={(regionId) =>
+        onChange(
+          selected.includes(regionId)
+            ? selected.filter((entry) => entry !== regionId)
+            : [...selected, regionId],
+        )
+      }
+      labels={labels}
+      viewLabels={{
+        front: intl.formatMessage({ id: 'bodymap.front' }),
+        back: intl.formatMessage({ id: 'bodymap.back' }),
+      }}
+      legendLabel={intl.formatMessage({ id: 'bodymap.legend' })}
+      summary={summary}
+    />
+  );
 }

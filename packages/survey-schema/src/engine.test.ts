@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   missingTranslations,
   normaliseDraft,
+  patientView,
   progressOf,
   validateAnswer,
   validateDefinition,
@@ -238,5 +239,50 @@ describe('locale bundles', () => {
     expect(missing).toContain('weight');
     expect(missing).toContain('nausea-frequency');
     expect(missing).not.toContain('temperature');
+  });
+});
+
+describe('the body map (WP-16)', () => {
+  const withMap: SurveyDefinition = {
+    kind: 'symptom',
+    pages: [
+      {
+        id: 'p',
+        questions: [
+          {
+            id: 'skin-map',
+            type: 'body_map',
+            required: true,
+            criticalRegions: ['chest', 'neck'],
+          },
+        ],
+      },
+    ],
+  };
+
+  it('validates selections against the region catalogue', () => {
+    const question = withMap.pages[0]!.questions[0]!;
+    expect(validateAnswer(question, ['chest', 'forearm-left'])).toBeUndefined();
+    expect(validateAnswer(question, ['chest', 'chest'])).toBe('option');
+    expect(validateAnswer(question, ['elbow'])).toBe('option');
+    expect(validateAnswer(question, 'chest')).toBe('type');
+    expect(validateDefinition(withMap)).toEqual([]);
+    expect(
+      validateDefinition({
+        pages: [
+          { id: 'p', questions: [{ id: 'q-map', type: 'body_map', criticalRegions: ['elbow'] }] },
+        ],
+      }).map((issue) => issue.code),
+    ).toContain('unknown_region');
+  });
+
+  it('patientView strips criticality and NOTHING else', () => {
+    const stripped = patientView(withMap);
+    expect(JSON.stringify(stripped)).not.toContain('criticalRegions');
+    expect(stripped.pages[0]!.questions[0]!.id).toBe('skin-map');
+    // the original stays intact - the server keeps the full definition
+    expect(withMap.pages[0]!.questions[0]!.criticalRegions).toEqual(['chest', 'neck']);
+    const submission = validateSubmission(stripped, { 'skin-map': ['chest'] });
+    expect(submission.ok).toBe(true);
   });
 });

@@ -32,9 +32,17 @@ export {
   assertValidDefinition,
   canonicalJson,
   missingTranslations,
+  patientView,
   validateDefinition,
   type DefinitionIssue,
 } from './definition.js';
+export {
+  BODY_REGION_IDS,
+  BODY_REGIONS,
+  type BodyRegion,
+  type BodySide,
+  type BodyView,
+} from './body-map.js';
 export {
   assertSafePattern,
   compileSafePattern,

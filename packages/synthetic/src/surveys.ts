@@ -189,11 +189,13 @@ export const SYNTHETIC_SURVEYS: SyntheticSurvey[] = [
               options: [{ id: 'no' }, { id: 'yes' }],
               followUps: [
                 {
-                  id: 'skin-change-where',
-                  type: 'text',
+                  id: 'skin-change-map',
+                  type: 'body_map',
                   required: true,
                   condition: { questionId: 'skin-change', op: 'equals', value: 'yes' },
-                  validation: { maxLength: 200 },
+                  // template-critical areas per the canvas (B3): chest, neck.
+                  // Stripped from every patient-facing payload.
+                  criticalRegions: ['chest', 'neck'],
                 },
               ],
             },
@@ -221,11 +223,11 @@ export const SYNTHETIC_SURVEYS: SyntheticSurvey[] = [
             yes: { en: 'Yes', fi: 'Kyllä', sv: 'Ja' }[locale],
           },
         },
-        'skin-change-where': {
+        'skin-change-map': {
           label: {
-            en: 'Where on the body?',
-            fi: 'Missä kohtaa kehoa?',
-            sv: 'Var på kroppen?',
+            en: 'Mark where on the body',
+            fi: 'Merkitse mihin kohtaan kehoa',
+            sv: 'Markera var på kroppen',
           }[locale],
         },
       },

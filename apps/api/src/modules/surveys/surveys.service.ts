@@ -12,6 +12,7 @@ import { withUserContext, writeAccessEvent, writeChangeEvent } from '@mio/db';
 import {
   missingTranslations,
   normaliseDraft,
+  patientView,
   progressOf,
   validateSubmission,
   type Answers,
@@ -375,7 +376,8 @@ export class SurveysService {
           status: response.status,
           locale: response.locale,
           kind: version.definition.kind ?? 'generic',
-          definition: version.definition,
+          // criticality is clinician configuration - never patient-visible
+          definition: patientView(version.definition),
           bundle,
           answers: response.answers,
           progress: progressOf(version.definition, response.answers),

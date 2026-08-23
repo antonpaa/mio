@@ -1,5 +1,6 @@
 import { allQuestions } from './engine.js';
 import { isSafePattern } from './safe-regex.js';
+import { BODY_REGION_IDS } from './body-map.js';
 import { isQuestionId } from './ids.js';
 import type { LocaleBundle, Question, SurveyDefinition } from './types.js';
 
@@ -22,6 +23,7 @@ export interface DefinitionIssue {
     | 'unsafe_pattern'
     | 'forward_condition'
     | 'unknown_condition_target'
+    | 'unknown_region'
     | 'empty';
 }
 
@@ -88,6 +90,14 @@ function questionIssues(question: Question, earlier: Set<string>): DefinitionIss
       issues.push({ questionId: question.id, code: 'unsafe_pattern' });
     }
   }
+  if (question.criticalRegions !== undefined) {
+    if (
+      question.type !== 'body_map' ||
+      question.criticalRegions.some((region) => !BODY_REGION_IDS.has(region))
+    ) {
+      issues.push({ questionId: question.id, code: 'unknown_region' });
+    }
+  }
   if (question.condition) {
     // conditions may only look BACKWARDS in traversal order - `earlier`
     // already contains this question and everything before it
@@ -136,4 +146,26 @@ export function canonicalJson(value: unknown): string {
     .sort(([a], [b]) => (a < b ? -1 : 1))
     .map(([key, entry]) => `${JSON.stringify(key)}:${canonicalJson(entry)}`);
   return `{${entries.join(',')}}`;
+}
+
+/**
+ * The definition as PATIENTS may see it: template-critical body-map
+ * regions are clinician configuration ("the patient never sees severities
+ * or critical areas - only the map") and are stripped before a definition
+ * leaves the server on a patient-facing path.
+ */
+export function patientView(definition: SurveyDefinition): SurveyDefinition {
+  const strip = (question: Question): Question => {
+    const rest: Question = { ...question };
+    delete rest.criticalRegions;
+    if (question.followUps) rest.followUps = question.followUps.map(strip);
+    return rest;
+  };
+  return {
+    ...definition,
+    pages: definition.pages.map((page) => ({
+      ...page,
+      questions: page.questions.map(strip),
+    })),
+  };
 }

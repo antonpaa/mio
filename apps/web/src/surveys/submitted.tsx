@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import {
   visibleQuestions,
   type Answers,
@@ -22,20 +22,26 @@ interface SubmittedPayload {
 }
 
 function renderAnswer(
-  definition: SurveyDefinition,
   bundle: LocaleBundle,
   questionId: string,
   value: unknown,
+  regionLabel: (id: string) => string | undefined,
 ): string {
   const text = bundle.questions[questionId];
   if (Array.isArray(value)) {
-    return value.map((entry) => text?.options?.[entry as string] ?? String(entry)).join(', ');
+    return value
+      .map(
+        (entry) =>
+          text?.options?.[entry as string] ?? regionLabel(entry as string) ?? String(entry),
+      )
+      .join(', ');
   }
   if (typeof value === 'string' && text?.options?.[value]) return text.options[value]!;
   return String(value);
 }
 
 export function SurveySubmittedPage(): ReactElement {
+  const intl = useIntl();
   const { responseId } = useParams({ strict: false }) as { responseId: string };
   const payload = useQuery({
     queryKey: ['response', responseId, 'submitted'],
@@ -89,7 +95,11 @@ export function SurveySubmittedPage(): ReactElement {
             >
               <dt className="text-xs text-muted">{bundle.questions[question.id]?.label}</dt>
               <dd className="mt-0.5 text-sm text-ink">
-                {renderAnswer(definition, bundle, question.id, answers[question.id])}
+                {renderAnswer(bundle, question.id, answers[question.id], (id) =>
+                  question.type === 'body_map'
+                    ? intl.formatMessage({ id: `bodymap.region.${id}` })
+                    : undefined,
+                )}
                 {question.validation?.unit ? ` ${question.validation.unit}` : ''}
               </dd>
             </div>

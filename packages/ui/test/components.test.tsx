@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   AppShell,
   Avatar,
+  BodyMap,
   Button,
   Card,
   CardHeader,
@@ -138,6 +139,30 @@ describe('kit renders and is axe-clean', () => {
     fireEvent.click(toggle);
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
     expect(screen.getAllByRole('link', { name: /Users/ })).toHaveLength(2);
+    expect(await axeViolations(container)).toEqual([]);
+  });
+
+  it('body map: parallel checkbox group carries the same state', async () => {
+    const toggles: string[] = [];
+    const { container } = render(
+      <main>
+        <BodyMap
+          selected={['chest', 'forearm-left']}
+          onToggle={(id) => toggles.push(id)}
+          labels={{ chest: 'Chest', 'forearm-left': 'Left forearm', head: 'Head' }}
+          viewLabels={{ front: 'Front', back: 'Back' }}
+          legendLabel="Body areas"
+          summary="2 areas selected — chest, left forearm"
+        />
+      </main>,
+    );
+    expect(screen.getByText('2 areas selected — chest, left forearm')).toBeDefined();
+    const chest = screen.getByRole('checkbox', { name: 'Chest' }) as HTMLInputElement;
+    expect(chest.checked).toBe(true);
+    const head = screen.getByRole('checkbox', { name: 'Head' }) as HTMLInputElement;
+    expect(head.checked).toBe(false);
+    fireEvent.click(head);
+    expect(toggles).toEqual(['head']);
     expect(await axeViolations(container)).toEqual([]);
   });
 

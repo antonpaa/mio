@@ -7,7 +7,8 @@
  * reference a question that appears STRICTLY EARLIER in traversal order.
  */
 
-export type QuestionType = 'choice_single' | 'choice_multi' | 'scale' | 'number' | 'date' | 'text';
+export type QuestionType =
+  'choice_single' | 'choice_multi' | 'scale' | 'number' | 'date' | 'text' | 'body_map';
 
 export interface ChoiceOption {
   id: string;
@@ -43,6 +44,9 @@ export interface Question {
   /** scale: integer range, labels in the bundle */
   scale?: { min: number; max: number };
   validation?: AnswerValidation;
+  /** body_map: template-critical regions (B3). NEVER sent to patients -
+   * the fill payload runs through patientView() first. */
+  criticalRegions?: string[];
   /** visibility condition; omitted = always visible (within its parent) */
   condition?: Condition;
   /** nested follow-ups - each carries its own condition, usually on the parent */
