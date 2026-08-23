@@ -15,6 +15,8 @@ import { ForgotPage, ForgotSentPage, ResetPage } from '../auth/forgot.js';
 import { PlaceholderHome, SignedInShell } from '../app/shells.js';
 import { RosterPage } from '../patients/roster.js';
 import { PatientCalendarPage } from '../scheduling/calendar.js';
+import { TasksPage } from '../tasks/tasks-page.js';
+import { MyTasksCard } from '../tasks/my-tasks-card.js';
 import { PatientProfilePage } from '../patients/profile.js';
 import { TreatmentCatalogPage } from '../treatments/catalog.js';
 import { TreatmentDetailPage } from '../treatments/detail.js';
@@ -82,9 +84,17 @@ function AuthedIndex(): ReactElement {
   // lag one microtask behind the cache, so render the splash - never a
   // redirect - while it catches up.
   if (session.loading || !session.account) return <Splash />;
+  const clinician = session.realm === 'staff' && session.account.role !== 'administrator';
   return (
     <SignedInShell>
-      <PlaceholderHome />
+      {clinician ? (
+        // The dashboard's tasks slice (WP-13); the full C1 lands with WP-27.
+        <div className="mx-auto flex max-w-2xl flex-col gap-4">
+          <MyTasksCard />
+        </div>
+      ) : (
+        <PlaceholderHome />
+      )}
     </SignedInShell>
   );
 }
@@ -186,6 +196,21 @@ const calendarRoute = createRoute({
   beforeLoad: requireSession,
   component: CalendarIndex,
 });
+const tasksRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/tasks',
+  beforeLoad: requireSession,
+  component: TasksIndex,
+});
+
+/** /tasks is clinician-side (C5); patients have no tasks surface. */
+function TasksIndex(): ReactElement {
+  const session = useSession();
+  if (session.loading || !session.account) return <Splash />;
+  return (
+    <SignedInShell>{session.realm === 'staff' ? <TasksPage /> : <PlaceholderHome />}</SignedInShell>
+  );
+}
 
 /** /calendar is the patient's consolidated view (P9); staff have no page
  * here yet - their day lives on the dashboard (C1, WP-13+). */
@@ -223,4 +248,5 @@ export const routeTree = rootRoute.addChildren([
   treatmentsRoute,
   treatmentDetailRoute,
   calendarRoute,
+  tasksRoute,
 ]);

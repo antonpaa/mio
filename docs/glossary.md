@@ -52,6 +52,7 @@ interface and in translation.
 | Calendar | Kalenteri | Kalender | Patient-side consolidated view (P9) |
 | Task | Tehtävä | Uppgift | Clinician-side work item |
 | Claim (a task) | Ota tehtävä | Ta uppgift | ⚠️ |
+| Assign (a task) | Osoita tehtävä | Tilldela uppgift | Hand to a named team member |
 | Unclaimed | Ottamatta | Ej tagen | Team-queue state ⚠️ |
 | Team queue | Tiimin jono | Teamets kö | ⚠️ |
 
