@@ -12,6 +12,7 @@ pnpm lint / format / typecheck / test
 pnpm boundaries            # dependency-cruiser architecture rules
 python3 docs/authz/validate_matrix.py   # capability matrix invariants
 pnpm dev:services          # Postgres 17 + Mailpit (http://localhost:8025)
+pnpm migrate               # apply SQL migrations (DATABASE_URL, owner user)
 pnpm --filter @mio/api dev     # API on :3000
 pnpm --filter @mio/web dev     # SPA on :5173 (proxies /health, /api)
 pnpm --filter @mio/worker dev  # worker
@@ -23,9 +24,11 @@ pnpm --filter @mio/worker dev  # worker
 apps/api      NestJS on Fastify — modular monolith; modules under src/modules/<name>/,
               imported ONLY via their index.ts (dependency-cruiser enforces this)
 apps/web      Vite + React 19 + TanStack Router/Query; same-origin API
-apps/worker   async jobs (pg-boss from WP-02)
-packages/     contracts · survey-schema · authz · i18n · ui — shared, source-first,
-              pure TS; never import from apps
+apps/worker   async jobs — pg-boss consumer over @mio/db
+packages/     contracts · survey-schema · authz · i18n · ui · db — shared,
+              source-first; never import from apps. @mio/db owns migrations
+              (packages/db/migrations/*.sql, forward-only), role-carrying
+              pools, the RLS user context and the job bus
 docs/         ADRs, architecture, capability matrix, phasing, glossary
 design/       approved canvases — the visual source of truth
 ```
