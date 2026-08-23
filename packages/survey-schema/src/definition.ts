@@ -26,6 +26,7 @@ export interface DefinitionIssue {
     | 'unknown_condition_target'
     | 'unknown_region'
     | 'bad_rule'
+    | 'bad_symptom_map'
     | 'empty';
 }
 
@@ -223,6 +224,26 @@ function questionIssues(question: Question, earlier: Set<string>): DefinitionIss
       issues.push({ questionId: question.id, code: 'unknown_condition_target' });
     }
   }
+  if (question.symptomMap !== undefined) {
+    const map = question.symptomMap;
+    const grades = ['mild', 'moderate', 'severe'];
+    const mapBad =
+      typeof map.code !== 'string' ||
+      map.code.trim() === '' ||
+      (question.type !== 'choice_single' && question.type !== 'body_map') ||
+      (question.type === 'choice_single' &&
+        (map.severities === undefined ||
+          Object.keys(map.severities).length === 0 ||
+          Object.entries(map.severities).some(
+            ([optionId, grade]) =>
+              !grades.includes(grade) ||
+              !(question.options ?? []).some((option) => option.id === optionId),
+          ))) ||
+      (question.type === 'body_map' &&
+        map.severity !== undefined &&
+        !grades.includes(map.severity));
+    if (mapBad) issues.push({ questionId: question.id, code: 'bad_symptom_map' });
+  }
   if (question.rules !== undefined) {
     if (!Array.isArray(question.rules) || question.rules.length > MAX_RULES_PER_QUESTION) {
       issues.push({ questionId: question.id, code: 'bad_rule' });
@@ -284,6 +305,7 @@ export function patientView(definition: SurveyDefinition): SurveyDefinition {
     const rest: Question = { ...question };
     delete rest.criticalRegions;
     delete rest.rules;
+    delete rest.symptomMap;
     if (question.followUps) rest.followUps = question.followUps.map(strip);
     return rest;
   };

@@ -3,6 +3,7 @@ import pg from 'pg';
 import { hash } from '@node-rs/argon2';
 import {
   canonicalJson,
+  deriveObservations,
   evaluateResponse,
   validateSubmission,
   type Answers,
@@ -86,6 +87,10 @@ export async function seedWorld(
     await pool.query('BEGIN');
     // FK order: responses and occurrences first, then the catalog they
     // reference, then the treatment graph.
+    await pool.query('DELETE FROM clinical.symptom_observation');
+    await pool.query('DELETE FROM clinical.value_entry');
+    await pool.query('DELETE FROM clinical.template_value_series');
+    await pool.query('DELETE FROM clinical.value_series');
     await pool.query('DELETE FROM clinical.rule_notification');
     await pool.query('DELETE FROM clinical.rule_trigger');
     await pool.query('DELETE FROM clinical.alert_comment');
@@ -322,6 +327,32 @@ export async function seedWorld(
           entry.answeredAt,
         ],
       );
+      // WP-21: mapped answers land in the symptom register exactly as a
+      // live submission would write them - the REAL deriver decides
+      for (const [obsIndex, observation] of deriveObservations(
+        definition,
+        checked.answers,
+      ).entries()) {
+        await pool.query(
+          `INSERT INTO clinical.symptom_observation
+             (id, patient_id, treatment_id, symptom_id, severity, detail, observed_at,
+              source, survey_response_id, entered_by, on_behalf_of_patient)
+           SELECT $1, $2, $3, y.id, $5, $6, $7, 'survey', $8, $2, false
+             FROM clinical.symptom y WHERE y.code = $4`,
+          [
+            syntheticId('sobs', index * 8 + obsIndex),
+            entry.patientId,
+            entry.treatmentId,
+            observation.code,
+            observation.severity,
+            JSON.stringify(
+              observation.regions !== undefined ? { regions: observation.regions } : {},
+            ),
+            entry.answeredAt,
+            responseId,
+          ],
+        );
+      }
       const evaluation = evaluateResponse(definition, checked.answers);
       if (evaluation.fired.length === 0) continue;
       const alertId = evaluation.severity === null ? null : syntheticId('alrt', alertIndex);
@@ -413,6 +444,52 @@ export async function seedWorld(
       }
     }
     log(`responses: ${seedable.length} submitted, ${alertCount} alerts (graded by the evaluator)`);
+
+    // Value series (WP-21): the catalog rows the prostate templates bring
+    // with them, then the world's generated PSA/testosterone histories
+    // with provenance.
+    const seriesDefs = [
+      { key: 'psa', name: 'PSA value', unit: 'µg/l', kind: 'numeric' },
+      { key: 'testosterone', name: 'Testosterone', unit: 'nmol/l', kind: 'numeric' },
+      { key: 'psa-reporting', name: 'PSA reporting', unit: 'reported', kind: 'reported_marker' },
+    ];
+    const seriesIdByKey = new Map<string, string>();
+    for (const [index, def] of seriesDefs.entries()) {
+      const seriesId = syntheticId('vser', index);
+      seriesIdByKey.set(def.key, seriesId);
+      await pool.query(
+        `INSERT INTO clinical.value_series (id, key, name, unit, kind) VALUES ($1,$2,$3,$4,$5)`,
+        [seriesId, def.key, def.name, def.unit, def.kind],
+      );
+    }
+    for (const [templateIndex, template] of PROGRAM_TEMPLATES.entries()) {
+      if (template.key !== 'prostate-rt' && template.key !== 'prostate-docetaxel') continue;
+      for (const key of ['psa', 'testosterone', 'psa-reporting']) {
+        await pool.query(
+          `INSERT INTO clinical.template_value_series (template_id, series_id) VALUES ($1, $2)`,
+          [syntheticId('tmpl', templateIndex), seriesIdByKey.get(key)!],
+        );
+      }
+    }
+    for (const [index, value] of world.values.entries()) {
+      const seriesId = seriesIdByKey.get(value.series);
+      if (seriesId === undefined) continue;
+      await pool.query(
+        `INSERT INTO clinical.value_entry
+           (id, series_id, patient_id, value, measured_at, note, entered_by, on_behalf_of_patient)
+         VALUES ($1, $2, $3, $4, $5, '', $6, $7)`,
+        [
+          syntheticId('vent', index),
+          seriesId,
+          value.patientId,
+          value.value,
+          value.measuredAt,
+          value.onBehalfOfStaffId ?? value.patientId,
+          value.onBehalfOfStaffId !== undefined,
+        ],
+      );
+    }
+    log(`values: ${world.values.length} entries across ${seriesDefs.length} series`);
     await pool.query('COMMIT');
   } catch (error) {
     await pool.query('ROLLBACK').catch(() => {});

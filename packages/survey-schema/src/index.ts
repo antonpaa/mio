@@ -24,6 +24,7 @@ export type {
   Severity,
   SurveyDefinition,
   SurveyPage,
+  SymptomMap,
   TrendRule,
   TrendWhen,
 } from './types.js';
@@ -47,6 +48,7 @@ export {
   validateDefinition,
   type DefinitionIssue,
 } from './definition.js';
+export { deriveObservations, type DerivedObservation } from './observations.js';
 export {
   evaluateResponse,
   evaluateTrends,

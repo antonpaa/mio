@@ -17,6 +17,7 @@ import {
 } from '@mio/db';
 import {
   canonicalJson,
+  deriveObservations,
   evaluateResponse,
   evaluateTrends,
   maxSeverity,
@@ -580,6 +581,36 @@ export class SurveysService {
             severity: maxSeverity(singles.severity, trends.severity),
           },
         );
+        // WP-21: mapped answers land in the symptom register in the same
+        // transaction, source 'survey', provenance = the submitting patient
+        const derived = deriveObservations(version.definition, result.answers);
+        if (derived.length > 0) {
+          const { rows: symptomRows } = await client.query<{ id: string; code: string }>(
+            `SELECT id, code FROM clinical.symptom WHERE active AND code = ANY($1)`,
+            [derived.map((entry) => entry.code)],
+          );
+          const symptomByCode = new Map(symptomRows.map((row) => [row.code, row.id]));
+          for (const entry of derived) {
+            const symptomId = symptomByCode.get(entry.code);
+            if (symptomId === undefined) continue; // unmapped code: skip, never fail a submission
+            await client.query(
+              `INSERT INTO clinical.symptom_observation
+                 (id, patient_id, treatment_id, symptom_id, severity, detail, observed_at,
+                  source, survey_response_id, entered_by, on_behalf_of_patient)
+               VALUES ($1, $2, $3, $4, $5, $6, current_date, 'survey', $7, $8, false)`,
+              [
+                randomUUID(),
+                response.patient_id,
+                response.treatment_id,
+                symptomId,
+                entry.severity,
+                JSON.stringify(entry.regions !== undefined ? { regions: entry.regions } : {}),
+                responseId,
+                patient.userId,
+              ],
+            );
+          }
+        }
         await writeChangeEvent(client, {
           actorUserId: patient.userId,
           actorRealm: 'patient',

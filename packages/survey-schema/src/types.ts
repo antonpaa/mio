@@ -102,6 +102,23 @@ export interface QuestionRule {
   outcomes: RuleOutcome[];
 }
 
+/**
+ * Maps a question's answer into the symptom register (WP-21,
+ * docs/architecture/observations.md): submitting a response writes a
+ * taxonomy-coded observation. Versions with the survey like everything
+ * in the definition. choice questions grade per option (unmapped
+ * options record nothing); body maps record the marked regions at a
+ * fixed grade.
+ */
+export interface SymptomMap {
+  /** taxonomy code, e.g. 'nausea' */
+  code: string;
+  /** choice_single: option id -> observation severity */
+  severities?: Record<string, 'mild' | 'moderate' | 'severe'>;
+  /** body_map: the grade recorded when any region is marked */
+  severity?: 'mild' | 'moderate' | 'severe';
+}
+
 export interface Question {
   id: string;
   type: QuestionType;
@@ -119,6 +136,9 @@ export interface Question {
   /** single-response rules on this question's answer (B2/B3). Clinician
    * configuration - stripped by patientView() like criticalRegions. */
   rules?: QuestionRule[];
+  /** symptom-register mapping (WP-21). Clinician configuration -
+   * stripped by patientView(). */
+  symptomMap?: SymptomMap;
   /** nested follow-ups - each carries its own condition, usually on the parent */
   followUps?: Question[];
 }

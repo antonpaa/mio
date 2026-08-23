@@ -195,6 +195,7 @@ instrument, not a symptom — it lives in the survey catalog (register R11).
 | Tihentynyt virtsaamisen tarve | Urinary frequency | Täta urinträngningar |
 | Ummetus | Constipation | Förstoppning |
 | Verivirtsaisuus | Hematuria | Blod i urinen |
+| Väsymys | Fatigue | Trötthet |
 | Virtsan karkailu | Urinary incontinence | Urininkontinens |
 | Virtsapakko | Urinary urgency | Urinträngningar |
 | Virtsaumpi | Urinary retention | Urinstämma |

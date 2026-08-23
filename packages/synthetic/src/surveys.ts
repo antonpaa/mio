@@ -27,6 +27,8 @@ const SYMPTOM_CORE: SurveyDefinition = {
           type: 'choice_single',
           required: true,
           options: [{ id: 'none' }, { id: 'mild' }, { id: 'severe' }],
+          // WP-21: the answer lands in the symptom register, graded
+          symptomMap: { code: 'nausea', severities: { mild: 'mild', severe: 'severe' } },
           // WP-18 single-response rules straight off the canvas: severe
           // nausea alerts high, "2 times or more" moderate, heavy impact
           // moderate; considerable fatigue is RECORD-ONLY - stored for
@@ -80,6 +82,10 @@ const SYMPTOM_CORE: SurveyDefinition = {
           type: 'choice_single',
           required: true,
           options: [{ id: 'none' }, { id: 'slight' }, { id: 'moderate' }, { id: 'considerable' }],
+          symptomMap: {
+            code: 'fatigue',
+            severities: { slight: 'mild', moderate: 'moderate', considerable: 'severe' },
+          },
           rules: [
             {
               id: 'r-fatigue-considerable',
@@ -228,6 +234,7 @@ export const SYNTHETIC_SURVEYS: SyntheticSurvey[] = [
                   // template-critical areas per the canvas (B3): chest, neck.
                   // Stripped from every patient-facing payload.
                   criticalRegions: ['chest', 'neck'],
+                  symptomMap: { code: 'skin_change', severity: 'moderate' },
                   // B3's three rule kinds: critical area, any other area,
                   // count threshold ("3 or more areas")
                   rules: [
@@ -415,6 +422,7 @@ export const SYNTHETIC_SURVEYS: SyntheticSurvey[] = [
               type: 'choice_single',
               required: true,
               options: [{ id: 'none' }, { id: 'mild' }, { id: 'severe' }],
+              symptomMap: { code: 'neuropathy', severities: { mild: 'mild', severe: 'severe' } },
               followUps: [
                 {
                   id: 'numbness-areas',
