@@ -5,6 +5,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts', 'test/**/*.test.ts'],
+    setupFiles: ['./test/setup.ts'],
   },
   plugins: [
     // NestJS needs decorator metadata, which esbuild (vitest's default
