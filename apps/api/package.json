@@ -15,6 +15,7 @@
     "@mio/contracts": "workspace:*",
     "@mio/db": "workspace:*",
     "@mio/schedule": "workspace:*",
+    "@mio/survey-schema": "workspace:*",
     "@nestjs/common": "^11.2.1",
     "@nestjs/core": "^11.2.1",
     "@nestjs/platform-fastify": "^11.2.1",

@@ -1,7 +1,10 @@
+import { createHash } from 'node:crypto';
 import pg from 'pg';
 import { hash } from '@node-rs/argon2';
+import { canonicalJson } from '@mio/survey-schema';
 import { PROGRAM_TEMPLATES } from './pools.js';
 import { syntheticId } from './random.js';
+import { SYNTHETIC_SURVEYS } from './surveys.js';
 import type { SyntheticWorld } from './world.js';
 
 /**
@@ -39,6 +42,10 @@ export async function seedWorld(
     });
 
     await pool.query('BEGIN');
+    await pool.query('DELETE FROM clinical.survey_response');
+    await pool.query('DELETE FROM clinical.treatment_survey');
+    await pool.query('DELETE FROM clinical.survey_version');
+    await pool.query('DELETE FROM clinical.survey');
     await pool.query('DELETE FROM clinical.task');
     await pool.query('DELETE FROM clinical.activity');
     await pool.query('DELETE FROM clinical.schedule');
@@ -171,6 +178,48 @@ export async function seedWorld(
       await pool.query(`SELECT app.sync_care_relationships($1)`, [treatment.id]);
     }
     log(`treatments: ${world.treatments.length} (care graph synced per treatment)`);
+
+    // The survey catalog: one published v1 per instrument, attached to
+    // treatments via the world's surveyKeys (WP-14).
+    const surveyByKey = new Map<string, string>();
+    for (const [index, survey] of SYNTHETIC_SURVEYS.entries()) {
+      const surveyId = syntheticId('srvy', index);
+      const versionId = syntheticId('srvv', index);
+      surveyByKey.set(survey.key, surveyId);
+      await pool.query(
+        `INSERT INTO clinical.survey (id, name, kind, licensed_source, created_by)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [surveyId, survey.name, survey.kind, survey.licensedSource ?? null, someLead!.id],
+      );
+      const contentHash = createHash('sha256')
+        .update(canonicalJson({ definition: survey.definition, locales: survey.locales }))
+        .digest('hex');
+      await pool.query(
+        `INSERT INTO clinical.survey_version
+           (id, survey_id, version, state, definition, locales, content_hash, created_by, published_at)
+         VALUES ($1, $2, 1, 'published', $3, $4, $5, $6, now())`,
+        [
+          versionId,
+          surveyId,
+          JSON.stringify(survey.definition),
+          JSON.stringify(survey.locales),
+          contentHash,
+          someLead!.id,
+        ],
+      );
+    }
+    for (const treatment of world.treatments) {
+      for (const key of treatment.surveyKeys) {
+        const surveyId = surveyByKey.get(key);
+        if (!surveyId) continue;
+        await pool.query(
+          `INSERT INTO clinical.treatment_survey (treatment_id, survey_id, added_by)
+           VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
+          [treatment.id, surveyId, someLead!.id],
+        );
+      }
+    }
+    log(`surveys: ${SYNTHETIC_SURVEYS.length} (published v1, attached via surveyKeys)`);
     await pool.query('COMMIT');
   } catch (error) {
     await pool.query('ROLLBACK').catch(() => {});

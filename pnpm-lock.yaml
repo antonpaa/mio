@@ -53,6 +53,9 @@ importers:
       '@mio/schedule':
         specifier: workspace:*
         version: link:../../packages/schedule
+      '@mio/survey-schema':
+        specifier: workspace:*
+        version: link:../../packages/survey-schema
       '@nestjs/common':
         specifier: ^11.2.1
         version: 11.2.1(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -120,6 +123,9 @@ importers:
       '@mio/schedule':
         specifier: workspace:*
         version: link:../../packages/schedule
+      '@mio/survey-schema':
+        specifier: workspace:*
+        version: link:../../packages/survey-schema
       '@mio/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -250,6 +256,9 @@ importers:
       '@mio/authz':
         specifier: workspace:*
         version: link:../authz
+      '@mio/survey-schema':
+        specifier: workspace:*
+        version: link:../survey-schema
       '@swc-node/register':
         specifier: ^1.12.1
         version: 1.12.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(@swc/types@0.1.28)(typescript@6.0.3)

@@ -5,6 +5,7 @@ import { PatientsModule } from './modules/patients/index.js';
 import { TreatmentsModule } from './modules/treatments/index.js';
 import { SchedulingModule } from './modules/scheduling/index.js';
 import { TasksModule } from './modules/tasks/index.js';
+import { SurveysModule } from './modules/surveys/index.js';
 
 /**
  * The modular monolith root (ADR-0002). Every domain module registers here
@@ -19,6 +20,7 @@ import { TasksModule } from './modules/tasks/index.js';
     TreatmentsModule,
     SchedulingModule,
     TasksModule,
+    SurveysModule,
   ],
 })
 export class AppModule {}

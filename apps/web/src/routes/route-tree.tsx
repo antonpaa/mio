@@ -1,6 +1,6 @@
 import { createRootRouteWithContext, createRoute, Outlet, redirect } from '@tanstack/react-router';
 import type { QueryClient } from '@tanstack/react-query';
-import { createContext, useContext, useEffect, useMemo, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { IntlProvider } from 'react-intl';
 import type { Locale } from '@mio/i18n';
 import { Splash } from '@mio/ui';
@@ -13,27 +13,18 @@ import { VerifyPage } from '../auth/verify.js';
 import { WelcomePage } from '../auth/welcome.js';
 import { ForgotPage, ForgotSentPage, ResetPage } from '../auth/forgot.js';
 import { PlaceholderHome, SignedInShell } from '../app/shells.js';
+import { LocaleContext, useLocaleControls, type LocaleControls } from '../app/locale-context.js';
 import { RosterPage } from '../patients/roster.js';
 import { PatientCalendarPage } from '../scheduling/calendar.js';
 import { TasksPage } from '../tasks/tasks-page.js';
 import { MyTasksCard } from '../tasks/my-tasks-card.js';
+import { PatientSurveysPage } from '../surveys/patient-surveys.js';
+import { SurveyFillPage } from '../surveys/fill.js';
+import { SurveySubmittedPage } from '../surveys/submitted.js';
 import { PatientProfilePage } from '../patients/profile.js';
 import { TreatmentCatalogPage } from '../treatments/catalog.js';
 import { TreatmentDetailPage } from '../treatments/detail.js';
 import { PatientTreatmentsPage } from '../treatments/patient-treatments.js';
-
-interface LocaleControls {
-  locale: Locale;
-  setLocale: (locale: Locale) => void;
-}
-
-const LocaleContext = createContext<LocaleControls | null>(null);
-
-export function useLocaleControls(): LocaleControls {
-  const value = useContext(LocaleContext);
-  if (!value) throw new Error('locale context missing');
-  return value;
-}
 
 function Root(): ReactElement {
   const [locale, setLocaleState] = useState<Locale>(() => detectLocale());
@@ -212,6 +203,36 @@ function TasksIndex(): ReactElement {
   );
 }
 
+const surveysRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/surveys',
+  beforeLoad: requireSession,
+  component: SurveysIndex,
+});
+const surveyFillRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/surveys/fill/$responseId',
+  beforeLoad: requireSession,
+  component: () => <ShellPage page={<SurveyFillPage />} />,
+});
+const surveySubmittedRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/surveys/done/$responseId',
+  beforeLoad: requireSession,
+  component: () => <ShellPage page={<SurveySubmittedPage />} />,
+});
+
+/** /surveys: the patient's fill list (WP-14); the staff catalog is WP-15. */
+function SurveysIndex(): ReactElement {
+  const session = useSession();
+  if (session.loading || !session.account) return <Splash />;
+  return (
+    <SignedInShell>
+      {session.realm === 'patient' ? <PatientSurveysPage /> : <PlaceholderHome />}
+    </SignedInShell>
+  );
+}
+
 /** /calendar is the patient's consolidated view (P9); staff have no page
  * here yet - their day lives on the dashboard (C1, WP-13+). */
 function CalendarIndex(): ReactElement {
@@ -249,4 +270,7 @@ export const routeTree = rootRoute.addChildren([
   treatmentDetailRoute,
   calendarRoute,
   tasksRoute,
+  surveysRoute,
+  surveyFillRoute,
+  surveySubmittedRoute,
 ]);
