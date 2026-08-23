@@ -11,6 +11,7 @@ import { authorize } from '@mio/authz/engine';
 import { withUserContext, writeAccessEvent, writeChangeEvent } from '@mio/db';
 import {
   canonicalJson,
+  evaluateResponse,
   missingTranslations,
   normaliseDraft,
   patientView,
@@ -464,6 +465,53 @@ export class SurveysService {
           // the patient realm holds no UPDATE on clinical.activity
           await client.query(`SELECT app.complete_survey_occurrence($1)`, [response.activity_id]);
         }
+        // WP-18: the deterministic evaluator runs in the SAME transaction
+        // as the submission - triggers, alert and outbox commit with the
+        // answers or not at all. The patient's reply stays the designed
+        // P12 copy; nothing rule-shaped is returned here.
+        const evaluation = evaluateResponse(version.definition, result.answers);
+        const alertId = evaluation.severity === null ? null : randomUUID();
+        if (alertId !== null && evaluation.severity !== null) {
+          await client.query(
+            `INSERT INTO clinical.alert (id, treatment_id, patient_id, survey_response_id, severity)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [alertId, response.treatment_id, response.patient_id, responseId, evaluation.severity],
+          );
+          await client.query(
+            `INSERT INTO clinical.notification_outbox (id, kind, treatment_id, patient_id, payload)
+             VALUES ($1, 'alert.raised', $2, $3, $4)`,
+            [
+              randomUUID(),
+              response.treatment_id,
+              response.patient_id,
+              JSON.stringify({
+                alertId,
+                severity: evaluation.severity,
+                surveyResponseId: responseId,
+              }),
+            ],
+          );
+        }
+        for (const fired of evaluation.fired) {
+          await client.query(
+            `INSERT INTO clinical.rule_trigger
+               (id, alert_id, treatment_id, patient_id, survey_response_id,
+                survey_version_id, rule_id, question_id, severity, trace)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+            [
+              randomUUID(),
+              fired.severity === null ? null : alertId,
+              response.treatment_id,
+              response.patient_id,
+              responseId,
+              response.survey_version_id,
+              fired.ruleId,
+              fired.questionId,
+              fired.severity,
+              JSON.stringify(fired.trace),
+            ],
+          );
+        }
         await writeChangeEvent(client, {
           actorUserId: patient.userId,
           actorRealm: 'patient',
@@ -473,6 +521,24 @@ export class SurveysService {
           patientId: response.patient_id,
           detail: { surveyVersionId: response.survey_version_id },
         });
+        if (alertId !== null) {
+          // the PP6 timeline's "raised by rule" entry - the actor is the
+          // submission that caused it, the why lives in the trigger traces
+          await writeChangeEvent(client, {
+            actorUserId: patient.userId,
+            actorRealm: 'patient',
+            action: 'alert.raise',
+            resourceType: 'alert',
+            resourceId: alertId,
+            patientId: response.patient_id,
+            detail: {
+              severity: evaluation.severity,
+              ruleIds: evaluation.fired
+                .filter((fired) => fired.severity !== null)
+                .map((fired) => fired.ruleId),
+            },
+          });
+        }
         return { status: 'submitted' };
       },
     );

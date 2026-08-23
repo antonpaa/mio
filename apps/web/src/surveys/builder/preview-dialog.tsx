@@ -1,19 +1,21 @@
 import { useState, type ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import {
+  evaluateResponse,
   progressOf,
   visibleQuestions,
   type Answers,
   type LocaleBundle,
   type SurveyDefinition,
 } from '@mio/survey-schema';
-import { Button } from '@mio/ui';
+import { Button, SeverityChip } from '@mio/ui';
 import { QuestionInput } from '../fill.js';
 
 /**
  * Builder preview: the ACTUAL fill inputs driven by the ACTUAL engine -
- * answering reveals follow-ups exactly as the patient will see them,
- * because it is the same implementation, not a mock.
+ * answering reveals follow-ups exactly as the patient will see them, and
+ * the verdict strip runs the SAME rule evaluator the server runs on
+ * submit. Staff surface only: patients never see rules or severities.
  */
 export function PreviewDialog({
   definition,
@@ -28,6 +30,7 @@ export function PreviewDialog({
   const [answers, setAnswers] = useState<Answers>({});
   const visible = visibleQuestions(definition, answers);
   const progress = progressOf(definition, answers);
+  const evaluation = evaluateResponse(definition, answers);
 
   return (
     <div
@@ -85,7 +88,34 @@ export function PreviewDialog({
             })
           )}
         </div>
-        <footer className="flex justify-end border-t border-hairline px-6 py-4">
+        <footer className="flex items-center justify-between gap-3 border-t border-hairline px-6 py-4">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            {evaluation.severity !== null ? (
+              <>
+                <SeverityChip
+                  severity={evaluation.severity}
+                  label={intl.formatMessage({ id: `severity.${evaluation.severity}` })}
+                />
+                <span className="text-secondary">
+                  <FormattedMessage
+                    id="builder.previewWouldAlert"
+                    values={{ count: evaluation.fired.length }}
+                  />
+                </span>
+              </>
+            ) : evaluation.fired.length > 0 ? (
+              <span className="text-secondary">
+                <FormattedMessage
+                  id="builder.previewRecorded"
+                  values={{ count: evaluation.fired.length }}
+                />
+              </span>
+            ) : (
+              <span className="text-muted">
+                <FormattedMessage id="builder.previewNoRules" />
+              </span>
+            )}
+          </div>
           <Button variant="quiet" onPress={onClose}>
             <FormattedMessage id="builder.closePreview" />
           </Button>

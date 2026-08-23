@@ -50,6 +50,13 @@ const VERSION = {
             type: 'choice_single',
             required: true,
             options: [{ id: 'o-1' }, { id: 'o-2' }],
+            rules: [
+              {
+                id: 'r-1',
+                when: { kind: 'option', optionId: 'o-2' },
+                outcomes: [{ kind: 'alert', severity: 'high' }],
+              },
+            ],
             followUps: [
               {
                 id: 'q-2',
@@ -165,16 +172,47 @@ describe('B2/B4/B5 builder', () => {
     await screen.findByText('q-3');
 
     // the preview runs the REAL engine: the follow-up is hidden until the
-    // gating option is chosen
+    // gating option is chosen - and the verdict strip runs the REAL rule
+    // evaluator: choosing the graded option announces the alert it would raise
     await userEvent.click(screen.getByRole('button', { name: 'Preview' }));
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).queryByText('For how many days?')).toBeNull();
+    expect(within(dialog).getByText('No rule would fire')).toBeTruthy();
     await userEvent.click(within(dialog).getByRole('radio', { name: 'Reduced' }));
     await within(dialog).findByText('For how many days?');
+    expect(within(dialog).getByText(/would raise an alert/)).toBeTruthy();
+    expect(within(dialog).getByText('High')).toBeTruthy();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Close preview' }));
 
     const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });
     expect(results.violations.map((violation) => violation.id)).toEqual([]);
+  });
+
+  it('the B2 rules panel edits conditions and outcomes, minting survey-unique ids', async () => {
+    vi.mocked(api.whoami).mockResolvedValue(LEAD);
+    render(appAt('/surveys/builder/v1'));
+    await screen.findByRole('heading', { name: 'Appetite check' });
+
+    // the existing rule renders with its condition and outcome
+    expect(screen.getByLabelText('Condition of rule r-1')).toHaveProperty('value', 'o-2');
+    expect(screen.getByLabelText('Outcome of rule r-1')).toHaveProperty('value', 'high');
+    expect(
+      screen.getAllByText('Patients never see rules or severities.', { exact: false }).length,
+    ).toBeGreaterThan(0);
+
+    // adding a rule on the number follow-up mints the next free id (r-2)
+    // and defaults to a threshold condition with a moderate alert
+    const addButtons = screen.getAllByRole('button', { name: '+ Add rule' });
+    await userEvent.click(addButtons[addButtons.length - 1]!);
+    expect(await screen.findByLabelText('Comparison of rule r-2')).toHaveProperty(
+      'value',
+      'at_least',
+    );
+    expect(screen.getByLabelText('Outcome of rule r-2')).toHaveProperty('value', 'moderate');
+
+    // record-only is a first-class outcome
+    await userEvent.selectOptions(screen.getByLabelText('Outcome of rule r-2'), 'record');
+    expect(screen.getByLabelText('Outcome of rule r-2')).toHaveProperty('value', 'record');
   });
 
   it('publish asks for confirmation and states immutability', async () => {

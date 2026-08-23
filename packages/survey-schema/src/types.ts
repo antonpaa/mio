@@ -35,6 +35,42 @@ export interface AnswerValidation {
   maxLength?: number;
 }
 
+/** Alert severity grading (docs/architecture/surveys-and-alerts.md). */
+export type Severity = 'low' | 'moderate' | 'high';
+
+/**
+ * A single-response rule condition, evaluated against THIS question's
+ * answer (B2/B3). Trend and missed-response conditions arrive with WP-20
+ * and span occurrences; these never do.
+ */
+export type RuleWhen =
+  /** choice: the option is the answer (single) or among it (multi) */
+  | { kind: 'option'; optionId: string }
+  /** number / scale: answer >= value */
+  | { kind: 'at_least'; value: number }
+  /** number / scale: answer <= value */
+  | { kind: 'at_most'; value: number }
+  /** body_map: any template-critical region marked */
+  | { kind: 'critical_region' }
+  /** body_map: any region OUTSIDE the critical set marked */
+  | { kind: 'other_region' }
+  /** body_map: at least `value` regions marked */
+  | { kind: 'region_count'; value: number };
+
+/** WP-18 raises alerts; WP-20 adds notifications and tasks to this union. */
+export type RuleOutcome = { kind: 'alert'; severity: Severity };
+
+/**
+ * Declarative JSON, never authored code. An empty outcome list is the
+ * designed "record only" mode: the firing is stored and visible in
+ * trends, and nothing is raised.
+ */
+export interface QuestionRule {
+  id: string;
+  when: RuleWhen;
+  outcomes: RuleOutcome[];
+}
+
 export interface Question {
   id: string;
   type: QuestionType;
@@ -49,6 +85,9 @@ export interface Question {
   criticalRegions?: string[];
   /** visibility condition; omitted = always visible (within its parent) */
   condition?: Condition;
+  /** single-response rules on this question's answer (B2/B3). Clinician
+   * configuration - stripped by patientView() like criticalRegions. */
+  rules?: QuestionRule[];
   /** nested follow-ups - each carries its own condition, usually on the parent */
   followUps?: Question[];
 }

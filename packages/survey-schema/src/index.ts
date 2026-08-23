@@ -16,7 +16,11 @@ export type {
   Condition,
   LocaleBundle,
   Question,
+  QuestionRule,
   QuestionType,
+  RuleOutcome,
+  RuleWhen,
+  Severity,
   SurveyDefinition,
   SurveyPage,
 } from './types.js';
@@ -31,11 +35,20 @@ export {
 export {
   assertValidDefinition,
   canonicalJson,
+  MAX_RULES_PER_QUESTION,
   missingTranslations,
   patientView,
   validateDefinition,
   type DefinitionIssue,
 } from './definition.js';
+export {
+  evaluateResponse,
+  maxSeverity,
+  SEVERITIES,
+  type Evaluation,
+  type FiredRule,
+  type RuleTrace,
+} from './rules.js';
 export {
   BODY_REGION_IDS,
   BODY_REGIONS,

@@ -27,6 +27,17 @@ const SYMPTOM_CORE: SurveyDefinition = {
           type: 'choice_single',
           required: true,
           options: [{ id: 'none' }, { id: 'mild' }, { id: 'severe' }],
+          // WP-18 single-response rules straight off the canvas: severe
+          // nausea alerts high, "2 times or more" moderate, heavy impact
+          // moderate; considerable fatigue is RECORD-ONLY - stored for
+          // trends, nothing raised.
+          rules: [
+            {
+              id: 'r-nausea-severe',
+              when: { kind: 'option', optionId: 'severe' },
+              outcomes: [{ kind: 'alert', severity: 'high' }],
+            },
+          ],
           followUps: [
             {
               id: 'nausea-frequency',
@@ -34,6 +45,13 @@ const SYMPTOM_CORE: SurveyDefinition = {
               required: true,
               condition: { questionId: 'nausea', op: 'in', value: ['mild', 'severe'] },
               options: [{ id: 'once' }, { id: 'twice-or-more' }],
+              rules: [
+                {
+                  id: 'r-nausea-frequent',
+                  when: { kind: 'option', optionId: 'twice-or-more' },
+                  outcomes: [{ kind: 'alert', severity: 'moderate' }],
+                },
+              ],
               followUps: [
                 {
                   id: 'nausea-impact',
@@ -45,6 +63,13 @@ const SYMPTOM_CORE: SurveyDefinition = {
                     op: 'equals',
                     value: 'twice-or-more',
                   },
+                  rules: [
+                    {
+                      id: 'r-nausea-impact',
+                      when: { kind: 'at_least', value: 7 },
+                      outcomes: [{ kind: 'alert', severity: 'moderate' }],
+                    },
+                  ],
                 },
               ],
             },
@@ -55,6 +80,13 @@ const SYMPTOM_CORE: SurveyDefinition = {
           type: 'choice_single',
           required: true,
           options: [{ id: 'none' }, { id: 'slight' }, { id: 'moderate' }, { id: 'considerable' }],
+          rules: [
+            {
+              id: 'r-fatigue-considerable',
+              when: { kind: 'option', optionId: 'considerable' },
+              outcomes: [],
+            },
+          ],
         },
         {
           id: 'temperature',
@@ -196,6 +228,25 @@ export const SYNTHETIC_SURVEYS: SyntheticSurvey[] = [
                   // template-critical areas per the canvas (B3): chest, neck.
                   // Stripped from every patient-facing payload.
                   criticalRegions: ['chest', 'neck'],
+                  // B3's three rule kinds: critical area, any other area,
+                  // count threshold ("3 or more areas")
+                  rules: [
+                    {
+                      id: 'r-skin-critical',
+                      when: { kind: 'critical_region' },
+                      outcomes: [{ kind: 'alert', severity: 'high' }],
+                    },
+                    {
+                      id: 'r-skin-other',
+                      when: { kind: 'other_region' },
+                      outcomes: [{ kind: 'alert', severity: 'low' }],
+                    },
+                    {
+                      id: 'r-skin-spread',
+                      when: { kind: 'region_count', value: 3 },
+                      outcomes: [{ kind: 'alert', severity: 'moderate' }],
+                    },
+                  ],
                 },
               ],
             },
@@ -374,7 +425,19 @@ export const SYNTHETIC_SURVEYS: SyntheticSurvey[] = [
                 },
               ],
             },
-            { id: 'pain', type: 'scale', required: true, scale: { min: 0, max: 10 } },
+            {
+              id: 'pain',
+              type: 'scale',
+              required: true,
+              scale: { min: 0, max: 10 },
+              rules: [
+                {
+                  id: 'r-pain-severe',
+                  when: { kind: 'at_least', value: 8 },
+                  outcomes: [{ kind: 'alert', severity: 'moderate' }],
+                },
+              ],
+            },
           ],
         },
       ],

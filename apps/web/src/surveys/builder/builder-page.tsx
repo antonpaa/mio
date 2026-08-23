@@ -153,6 +153,16 @@ function BuilderFrame({
     while (ids.has(`q-${n}`)) n += 1;
     return `q-${n}`;
   };
+  // rule ids are unique across the WHOLE survey, so a trace names its rule
+  // unambiguously
+  const nextRuleId = (): string => {
+    const ids = new Set(
+      ordered.flatMap((question) => (question.rules ?? []).map((rule) => rule.id)),
+    );
+    let n = 1;
+    while (ids.has(`r-${n}`)) n += 1;
+    return `r-${n}`;
+  };
 
   const renderTree = (questions: Question[], depth: number): ReactElement[] =>
     questions.flatMap((question) => {
@@ -167,6 +177,7 @@ function BuilderFrame({
           earlierTextOf={(id) => bundle.questions[id]}
           depth={depth}
           nextId={nextId}
+          nextRuleId={nextRuleId}
           onChange={(next) =>
             patchDefinition({
               ...definition,

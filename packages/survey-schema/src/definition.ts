@@ -2,7 +2,8 @@ import { allQuestions } from './engine.js';
 import { isSafePattern } from './safe-regex.js';
 import { BODY_REGION_IDS } from './body-map.js';
 import { isQuestionId } from './ids.js';
-import type { LocaleBundle, Question, SurveyDefinition } from './types.js';
+import { SEVERITIES } from './rules.js';
+import type { LocaleBundle, Question, QuestionRule, SurveyDefinition } from './types.js';
 
 /**
  * Structural validation of a definition - what the builder enforces by
@@ -24,8 +25,12 @@ export interface DefinitionIssue {
     | 'forward_condition'
     | 'unknown_condition_target'
     | 'unknown_region'
+    | 'bad_rule'
     | 'empty';
 }
+
+/** B2 keeps rule lists short; the server refuses hand-crafted excess. */
+export const MAX_RULES_PER_QUESTION = 10;
 
 export function validateDefinition(definition: SurveyDefinition): DefinitionIssue[] {
   const issues: DefinitionIssue[] = [];
@@ -35,13 +40,51 @@ export function validateDefinition(definition: SurveyDefinition): DefinitionIssu
     return issues;
   }
   const seen = new Set<string>();
+  const ruleIds = new Set<string>();
   for (const question of questions) {
     if (!isQuestionId(question.id)) issues.push({ questionId: question.id, code: 'bad_id' });
     if (seen.has(question.id)) issues.push({ questionId: question.id, code: 'duplicate_id' });
     seen.add(question.id);
     issues.push(...questionIssues(question, seen));
+    for (const rule of question.rules ?? []) {
+      if (ruleIds.has(rule.id)) issues.push({ questionId: question.id, code: 'bad_rule' });
+      ruleIds.add(rule.id);
+    }
   }
   return issues;
+}
+
+/** A rule's condition must fit the question it sits on; declarative JSON
+ * only - anything shape-invalid is one refusal, not a runtime surprise. */
+function ruleIssue(question: Question, rule: QuestionRule): boolean {
+  if (!isQuestionId(rule.id)) return true;
+  if (!Array.isArray(rule.outcomes) || rule.outcomes.length > 3) return true;
+  for (const outcome of rule.outcomes) {
+    if (outcome.kind !== 'alert' || !SEVERITIES.includes(outcome.severity)) return true;
+  }
+  const when = rule.when;
+  switch (when.kind) {
+    case 'option':
+      return (
+        (question.type !== 'choice_single' && question.type !== 'choice_multi') ||
+        !(question.options ?? []).some((option) => option.id === when.optionId)
+      );
+    case 'at_least':
+    case 'at_most':
+      return (
+        (question.type !== 'number' && question.type !== 'scale') ||
+        typeof when.value !== 'number' ||
+        !Number.isFinite(when.value)
+      );
+    case 'critical_region':
+      return question.type !== 'body_map' || (question.criticalRegions ?? []).length === 0;
+    case 'other_region':
+      return question.type !== 'body_map';
+    case 'region_count':
+      return question.type !== 'body_map' || !Number.isInteger(when.value) || when.value < 1;
+    default:
+      return true;
+  }
 }
 
 function questionIssues(question: Question, earlier: Set<string>): DefinitionIssue[] {
@@ -108,6 +151,15 @@ function questionIssues(question: Question, earlier: Set<string>): DefinitionIss
       issues.push({ questionId: question.id, code: 'unknown_condition_target' });
     }
   }
+  if (question.rules !== undefined) {
+    if (!Array.isArray(question.rules) || question.rules.length > MAX_RULES_PER_QUESTION) {
+      issues.push({ questionId: question.id, code: 'bad_rule' });
+    } else {
+      for (const rule of question.rules) {
+        if (ruleIssue(question, rule)) issues.push({ questionId: question.id, code: 'bad_rule' });
+      }
+    }
+  }
   return issues;
 }
 
@@ -150,14 +202,16 @@ export function canonicalJson(value: unknown): string {
 
 /**
  * The definition as PATIENTS may see it: template-critical body-map
- * regions are clinician configuration ("the patient never sees severities
- * or critical areas - only the map") and are stripped before a definition
- * leaves the server on a patient-facing path.
+ * regions and the rules that grade answers are clinician configuration
+ * ("the patient never sees severities or critical areas - only the map")
+ * and are stripped before a definition leaves the server on a
+ * patient-facing path.
  */
 export function patientView(definition: SurveyDefinition): SurveyDefinition {
   const strip = (question: Question): Question => {
     const rest: Question = { ...question };
     delete rest.criticalRegions;
+    delete rest.rules;
     if (question.followUps) rest.followUps = question.followUps.map(strip);
     return rest;
   };

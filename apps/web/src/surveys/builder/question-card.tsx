@@ -6,13 +6,16 @@ import {
   type Condition,
   type LocaleBundle,
   type Question,
+  type QuestionRule,
+  type RuleWhen,
 } from '@mio/survey-schema';
 import { Button } from '@mio/ui';
 
 /**
  * One question in the editor (B2), with validation config (B6), the
- * visibility condition (B5) and nested follow-ups. The card mutates a
- * DRAFT copy through the callbacks; the page owns state and saving.
+ * visibility condition (B5), single-response rules (B2/B3) and nested
+ * follow-ups. The card mutates a DRAFT copy through the callbacks; the
+ * page owns state and saving.
  */
 
 export type QuestionText = NonNullable<LocaleBundle['questions'][string]>;
@@ -39,6 +42,7 @@ export function QuestionCard({
   earlierTextOf,
   depth,
   nextId,
+  nextRuleId,
   onChange,
   onChangeText,
   onRemove,
@@ -52,6 +56,8 @@ export function QuestionCard({
   depth: number;
   /** mints a fresh unique question id */
   nextId: () => string;
+  /** mints a fresh rule id, unique across the whole survey */
+  nextRuleId: () => string;
   onChange: (next: Question) => void;
   onChangeText: (next: QuestionText) => void;
   onRemove: () => void;
@@ -98,6 +104,8 @@ export function QuestionCard({
               if (type === 'scale') next.scale = question.scale ?? { min: 0, max: 10 };
               else delete next.scale;
               if (type !== 'body_map') delete next.criticalRegions;
+              // rules are typed against the answer - a changed type starts clean
+              if (type !== question.type) delete next.rules;
               onChange(next);
             }}
           >
@@ -181,7 +189,16 @@ export function QuestionCard({
                 variant="quiet"
                 size="sm"
                 isDisabled={options.length <= 1}
-                onPress={() => patch({ options: options.filter((_, i) => i !== index) })}
+                onPress={() => {
+                  // rules referencing the removed option go with it
+                  const rules = (question.rules ?? []).filter(
+                    (rule) => !(rule.when.kind === 'option' && rule.when.optionId === option.id),
+                  );
+                  patch({
+                    options: options.filter((_, i) => i !== index),
+                    rules: rules.length > 0 ? rules : undefined,
+                  });
+                }}
               >
                 <FormattedMessage id="schedule.removePhase" />
               </Button>
@@ -386,7 +403,15 @@ export function QuestionCard({
                       const next = critical
                         ? current.filter((entry) => entry !== region.id)
                         : [...current, region.id];
-                      patch({ criticalRegions: next.length > 0 ? next : undefined });
+                      // no critical set left -> critical-area rules are moot
+                      const rules =
+                        next.length > 0
+                          ? question.rules
+                          : question.rules?.filter((rule) => rule.when.kind !== 'critical_region');
+                      patch({
+                        criticalRegions: next.length > 0 ? next : undefined,
+                        rules: rules && rules.length > 0 ? rules : undefined,
+                      });
                     }}
                   />
                   {intl.formatMessage({ id: `bodymap.region.${region.id}` })}
@@ -395,6 +420,19 @@ export function QuestionCard({
             })}
           </div>
         </fieldset>
+      ) : null}
+
+      {question.type === 'choice_single' ||
+      question.type === 'choice_multi' ||
+      question.type === 'number' ||
+      question.type === 'scale' ||
+      question.type === 'body_map' ? (
+        <RulesPanel
+          question={question}
+          text={text}
+          nextRuleId={nextRuleId}
+          onChange={(rules) => patch({ rules: rules.length > 0 ? rules : undefined })}
+        />
       ) : null}
 
       {earlier.length > 0 ? (
@@ -488,6 +526,233 @@ export function QuestionCard({
           ) : null}
         </div>
       ) : null}
+    </div>
+  );
+}
+
+const OUTCOME_CHOICES = ['high', 'moderate', 'low', 'record'] as const;
+type OutcomeChoice = (typeof OUTCOME_CHOICES)[number];
+
+function outcomeChoiceOf(rule: QuestionRule): OutcomeChoice {
+  const alert = rule.outcomes.find((outcome) => outcome.kind === 'alert');
+  return alert ? alert.severity : 'record';
+}
+
+function outcomesFor(choice: OutcomeChoice): QuestionRule['outcomes'] {
+  return choice === 'record' ? [] : [{ kind: 'alert', severity: choice }];
+}
+
+/**
+ * The B2/B3 rules panel: single-response conditions on THIS question's
+ * answer, graded High / Moderate / Low - or "Record only", which stores
+ * the firing for trends and raises nothing. Patients never see any of
+ * this; the note says so where rules are authored.
+ */
+function RulesPanel({
+  question,
+  text,
+  nextRuleId,
+  onChange,
+}: {
+  question: Question;
+  text: QuestionText | undefined;
+  nextRuleId: () => string;
+  onChange: (rules: QuestionRule[]) => void;
+}): ReactElement {
+  const intl = useIntl();
+  const rules = question.rules ?? [];
+  const selectClass = 'rounded-inner border border-border bg-surface px-2 py-1 text-sm text-ink';
+
+  const patchRule = (index: number, when: RuleWhen | null, choice?: OutcomeChoice): void => {
+    onChange(
+      rules.map((rule, i) =>
+        i === index
+          ? {
+              ...rule,
+              when: when ?? rule.when,
+              outcomes: choice === undefined ? rule.outcomes : outcomesFor(choice),
+            }
+          : rule,
+      ),
+    );
+  };
+
+  const defaultWhen = (): RuleWhen => {
+    if (question.type === 'choice_single' || question.type === 'choice_multi') {
+      return { kind: 'option', optionId: question.options?.[0]?.id ?? 'o-1' };
+    }
+    if (question.type === 'scale') {
+      return { kind: 'at_least', value: question.scale?.max ?? 10 };
+    }
+    if (question.type === 'number') return { kind: 'at_least', value: 1 };
+    return (question.criticalRegions?.length ?? 0) > 0
+      ? { kind: 'critical_region' }
+      : { kind: 'region_count', value: 3 };
+  };
+
+  return (
+    <div className="mt-3 border-t border-hairline pt-3">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted">
+        <FormattedMessage id="builder.rules" />
+      </p>
+      <p className="mt-0.5 text-xs text-muted">
+        <FormattedMessage id="builder.rulesNote" />
+      </p>
+      <div className="mt-1.5 flex flex-col gap-1.5">
+        {rules.map((rule, index) => (
+          <div key={rule.id} className="flex flex-wrap items-center gap-2">
+            <span className="max-w-32 truncate font-mono text-xs text-muted" title={rule.id}>
+              {rule.id}
+            </span>
+            {rule.when.kind === 'option' ? (
+              <>
+                <span className="text-sm text-secondary">
+                  <FormattedMessage id="builder.whenAnswer" />
+                </span>
+                <select
+                  className={selectClass}
+                  aria-label={intl.formatMessage(
+                    { id: 'builder.ruleConditionLabel' },
+                    { id: rule.id },
+                  )}
+                  value={rule.when.optionId}
+                  onChange={(event) =>
+                    patchRule(index, { kind: 'option', optionId: event.currentTarget.value })
+                  }
+                >
+                  {(question.options ?? []).map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {text?.options?.[option.id] || option.id}
+                    </option>
+                  ))}
+                </select>
+              </>
+            ) : null}
+            {rule.when.kind === 'at_least' || rule.when.kind === 'at_most' ? (
+              <>
+                <span className="text-sm text-secondary">
+                  <FormattedMessage id="builder.whenValue" />
+                </span>
+                <select
+                  className={selectClass}
+                  aria-label={intl.formatMessage({ id: 'builder.ruleOpLabel' }, { id: rule.id })}
+                  value={rule.when.kind}
+                  onChange={(event) =>
+                    patchRule(index, {
+                      kind: event.currentTarget.value as 'at_least' | 'at_most',
+                      value: (rule.when as { value: number }).value,
+                    })
+                  }
+                >
+                  <option value="at_least">{intl.formatMessage({ id: 'builder.op.gte' })}</option>
+                  <option value="at_most">{intl.formatMessage({ id: 'builder.op.lte' })}</option>
+                </select>
+                <input
+                  type="number"
+                  className={`${selectClass} w-20`}
+                  aria-label={intl.formatMessage({ id: 'builder.ruleValueLabel' }, { id: rule.id })}
+                  value={rule.when.value}
+                  onChange={(event) =>
+                    patchRule(index, {
+                      kind: rule.when.kind as 'at_least' | 'at_most',
+                      value: Number(event.currentTarget.value),
+                    })
+                  }
+                />
+              </>
+            ) : null}
+            {rule.when.kind === 'critical_region' ||
+            rule.when.kind === 'other_region' ||
+            rule.when.kind === 'region_count' ? (
+              <>
+                <select
+                  className={selectClass}
+                  aria-label={intl.formatMessage(
+                    { id: 'builder.ruleConditionLabel' },
+                    { id: rule.id },
+                  )}
+                  value={rule.when.kind}
+                  onChange={(event) => {
+                    const kind = event.currentTarget.value as
+                      'critical_region' | 'other_region' | 'region_count';
+                    patchRule(index, kind === 'region_count' ? { kind, value: 3 } : { kind });
+                  }}
+                >
+                  <option value="critical_region">
+                    {intl.formatMessage({ id: 'builder.bodyRule.critical_region' })}
+                  </option>
+                  <option value="other_region">
+                    {intl.formatMessage({ id: 'builder.bodyRule.other_region' })}
+                  </option>
+                  <option value="region_count">
+                    {intl.formatMessage({ id: 'builder.bodyRule.region_count' })}
+                  </option>
+                </select>
+                {rule.when.kind === 'region_count' ? (
+                  <input
+                    type="number"
+                    min={1}
+                    className={`${selectClass} w-20`}
+                    aria-label={intl.formatMessage(
+                      { id: 'builder.ruleValueLabel' },
+                      { id: rule.id },
+                    )}
+                    value={rule.when.value}
+                    onChange={(event) =>
+                      patchRule(index, {
+                        kind: 'region_count',
+                        value: Number(event.currentTarget.value),
+                      })
+                    }
+                  />
+                ) : null}
+              </>
+            ) : null}
+            <span aria-hidden className="text-muted">
+              →
+            </span>
+            <select
+              className={selectClass}
+              aria-label={intl.formatMessage({ id: 'builder.ruleOutcomeLabel' }, { id: rule.id })}
+              value={outcomeChoiceOf(rule)}
+              onChange={(event) =>
+                patchRule(index, null, event.currentTarget.value as OutcomeChoice)
+              }
+            >
+              {OUTCOME_CHOICES.map((choice) => (
+                <option key={choice} value={choice}>
+                  {intl.formatMessage({ id: `builder.ruleOutcome.${choice}` })}
+                </option>
+              ))}
+            </select>
+            <Button
+              variant="quiet"
+              size="sm"
+              onPress={() => onChange(rules.filter((_, i) => i !== index))}
+            >
+              <FormattedMessage id="schedule.removePhase" />
+            </Button>
+          </div>
+        ))}
+      </div>
+      <div className="mt-1.5">
+        <Button
+          variant="quiet"
+          size="sm"
+          onPress={() =>
+            onChange([
+              ...rules,
+              {
+                id: nextRuleId(),
+                when: defaultWhen(),
+                outcomes: [{ kind: 'alert', severity: 'moderate' }],
+              },
+            ])
+          }
+        >
+          <FormattedMessage id="builder.addRule" />
+        </Button>
+      </div>
     </div>
   );
 }
