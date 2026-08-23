@@ -10,11 +10,17 @@
   "scripts": {
     "generate": "node --import @swc-node/register/esm-register src/cli.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "seed": "node --import @swc-node/register/esm-register src/seed-cli.ts"
   },
   "devDependencies": {
     "@mio/authz": "workspace:*",
     "@swc-node/register": "^1.12.1",
-    "@types/node": "^26.2.0"
+    "@types/node": "^26.2.0",
+    "@types/pg": "^8.23.1"
+  },
+  "dependencies": {
+    "@node-rs/argon2": "^2.1.0",
+    "pg": "^8.23.0"
   }
 }
