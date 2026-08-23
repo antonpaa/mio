@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button, EmptyState, Skeleton, StatusChip } from '@mio/ui';
+import { Button, ConfirmDialog, EmptyState, Skeleton, StatusChip } from '@mio/ui';
 import { ScheduleDialog } from './schedule-dialog.js';
 
 /** T1 activities: what the treatment has planned, with human status. */
@@ -53,6 +53,7 @@ export function ActivitiesSection({ treatmentId }: { treatmentId: string }): Rea
   const intl = useIntl();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState<ActivityRow | null>(null);
   const activities = useQuery({
     queryKey: ['activities', treatmentId],
     queryFn: async () => {
@@ -139,7 +140,11 @@ export function ActivitiesSection({ treatmentId }: { treatmentId: string }): Rea
                     variant={to === 'cancelled' ? 'danger' : 'quiet'}
                     size="sm"
                     isDisabled={changeStatus.isPending}
-                    onPress={() => void changeStatus.mutate({ id: activity.id, to })}
+                    onPress={() =>
+                      to === 'cancelled'
+                        ? setConfirmCancel(activity)
+                        : void changeStatus.mutate({ id: activity.id, to })
+                    }
                   >
                     {intl.formatMessage({ id: `activity.to.${to}` })}
                   </Button>
@@ -158,6 +163,28 @@ export function ActivitiesSection({ treatmentId }: { treatmentId: string }): Rea
             void queryClient.invalidateQueries({ queryKey: ['activities', treatmentId] })
           }
         />
+      ) : null}
+
+      {confirmCancel !== null ? (
+        <ConfirmDialog
+          title={intl.formatMessage({ id: 'activity.cancelConfirmTitle' })}
+          cancelLabel={intl.formatMessage({ id: 'confirm.keep' })}
+          confirmLabel={intl.formatMessage({ id: 'activity.cancelConfirmAction' })}
+          danger
+          busy={changeStatus.isPending}
+          onCancel={() => setConfirmCancel(null)}
+          onConfirm={() => {
+            changeStatus.mutate(
+              { id: confirmCancel.id, to: 'cancelled' },
+              { onSettled: () => setConfirmCancel(null) },
+            );
+          }}
+        >
+          <FormattedMessage
+            id="activity.cancelConfirmBody"
+            values={{ title: confirmCancel.title }}
+          />
+        </ConfirmDialog>
       ) : null}
     </section>
   );

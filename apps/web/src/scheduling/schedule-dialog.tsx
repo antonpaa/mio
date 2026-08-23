@@ -146,6 +146,9 @@ export function ScheduleDialog({
       aria-modal="true"
       aria-labelledby="schedule-dialog-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/30 p-4"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') onClose();
+      }}
     >
       <div className="max-h-full w-full max-w-lg overflow-y-auto rounded-card bg-surface p-6 shadow-raised">
         <h2 id="schedule-dialog-title" className="font-display text-lg italic text-ink">
@@ -168,10 +171,10 @@ export function ScheduleDialog({
                 role="radio"
                 aria-checked={mode === option}
                 onClick={() => setMode(option)}
-                className={`rounded-full border px-3.5 py-1.5 text-sm ${
+                className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
                   mode === option
                     ? 'border-teal bg-teal-tint font-medium text-teal'
-                    : 'border-border bg-surface text-secondary'
+                    : 'border-border bg-surface text-secondary hover:bg-surface-sunken hover:text-ink'
                 }`}
               >
                 {intl.formatMessage({ id: `schedule.mode.${option}` })}
@@ -236,19 +239,19 @@ export function ScheduleDialog({
             {(mode === 'phased' ? phases : phases.slice(0, 1)).map((phase, index) => (
               <div
                 key={index}
-                className="flex flex-wrap items-end gap-2 rounded-inner border border-hairline bg-paper px-3 py-2.5"
+                className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-inner border border-hairline bg-paper px-3.5 py-2.5"
               >
                 {mode === 'phased' ? (
-                  <span className="pb-2.5 text-xs font-medium uppercase tracking-wide text-muted">
+                  <span className="text-xs font-medium uppercase tracking-wide text-muted">
                     <FormattedMessage id="schedule.phase" values={{ n: index + 1 }} />
                   </span>
                 ) : null}
-                <label className="block text-xs font-medium text-secondary">
+                <label className="flex items-center gap-2 text-xs font-medium text-secondary">
                   <FormattedMessage id="schedule.every" />
                   <input
                     type="number"
                     min={1}
-                    className="mt-1 w-16 rounded-inner border border-border bg-surface px-2 py-1.5 text-sm text-ink"
+                    className="w-16 rounded-inner border border-border bg-surface px-2 py-1.5 text-sm text-ink"
                     value={phase.interval}
                     onChange={(event) => {
                       const next = [...phases];
@@ -258,12 +261,12 @@ export function ScheduleDialog({
                   />
                 </label>
                 {mode === 'phased' ? (
-                  <label className="block text-xs font-medium text-secondary">
+                  <label className="flex items-center text-xs font-medium text-secondary">
                     <span className="sr-only">
                       <FormattedMessage id="schedule.unit" />
                     </span>
                     <select
-                      className="mt-1 rounded-inner border border-border bg-surface px-2 py-1.5 text-sm text-ink"
+                      className="rounded-inner border border-border bg-surface px-2 py-1.5 text-sm text-ink"
                       value={phase.freq}
                       onChange={(event) => {
                         const next = [...phases];
@@ -282,18 +285,18 @@ export function ScheduleDialog({
                     </select>
                   </label>
                 ) : (
-                  <span className="pb-2.5 text-sm text-secondary">
+                  <span className="text-sm text-secondary">
                     <FormattedMessage
                       id={mode === 'weekly' ? 'schedule.weeks' : 'schedule.months'}
                     />
                   </span>
                 )}
-                <label className="block text-xs font-medium text-secondary">
+                <label className="flex items-center gap-2 text-xs font-medium text-secondary">
                   <FormattedMessage id="schedule.timesLabel" />
                   <input
                     type="number"
                     min={1}
-                    className="mt-1 w-16 rounded-inner border border-border bg-surface px-2 py-1.5 text-sm text-ink"
+                    className="w-16 rounded-inner border border-border bg-surface px-2 py-1.5 text-sm text-ink"
                     value={phase.count}
                     onChange={(event) => {
                       const next = [...phases];

@@ -6,6 +6,7 @@
 export { AppShell, CountBadge, type AppShellProps, type NavItem } from './components/app-shell.js';
 export { Button, type ButtonProps, type ButtonVariant } from './components/button.js';
 export { Card, CardHeader } from './components/card.js';
+export { ConfirmDialog, type ConfirmDialogProps } from './components/confirm-dialog.js';
 export { SeverityChip, StatusChip, type ChipTone, type Severity } from './components/chips.js';
 export { LanguageSwitcher, type LanguageSwitcherProps } from './components/language-switcher.js';
 export { Avatar, ListRow } from './components/list-row.js';

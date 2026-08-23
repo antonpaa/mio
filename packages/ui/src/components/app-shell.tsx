@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react';
+import { useState, type ReactElement, type ReactNode } from 'react';
 import { MioMark } from './logo.js';
 
 export interface NavItem {
@@ -19,13 +19,17 @@ export interface AppShellProps {
   renderLink: (item: NavItem, className: string) => ReactNode;
   /** Localized "main navigation" label. */
   navLabel: string;
+  /** Localized toggle label for the mobile menu button. */
+  menuLabel: string;
   children: ReactNode;
 }
 
 /**
  * The shared shell (docs/design/screen-inventory.md): brand left, PRIMARY
  * NAVIGATION ON TOP, CENTERED (a brief-level requirement), end slot right.
- * Dumb on purpose - routing, badges and menus belong to the apps.
+ * Below md the nav collapses behind a menu button - the design's mobile
+ * menu, which also hosts the end slot (avatar, sign out). Dumb on purpose:
+ * routing, badges and menus belong to the apps.
  */
 export function AppShell({
   variant,
@@ -33,8 +37,20 @@ export function AppShell({
   end,
   renderLink,
   navLabel,
+  menuLabel,
   children,
 }: AppShellProps): ReactElement {
+  const [open, setOpen] = useState(false);
+
+  const linkClass = (item: NavItem, block: boolean): string =>
+    (block
+      ? 'flex items-center gap-1.5 rounded-inner px-3.5 py-2.5 text-sm '
+      : 'inline-flex items-center gap-1.5 rounded-pill px-3.5 py-1.5 text-sm ') +
+    'transition-colors hover:bg-teal-tint ' +
+    (item.active === true
+      ? 'bg-teal-tint font-semibold text-teal'
+      : 'font-medium text-ink-strong-secondary');
+
   return (
     <div className="flex min-h-dvh flex-col bg-paper">
       <header className="border-b border-hairline bg-surface">
@@ -45,23 +61,58 @@ export function AppShell({
               <span className="text-sm font-medium text-ink-strong-secondary">Administration</span>
             ) : null}
           </span>
-          <nav aria-label={navLabel} className="flex-1">
+          <nav aria-label={navLabel} className="hidden flex-1 md:block">
             <ul className="flex items-center justify-center gap-1">
               {items.map((item) => (
-                <li key={item.href}>
-                  {renderLink(
-                    item,
-                    'inline-flex items-center gap-1.5 rounded-pill px-3.5 py-1.5 text-sm ' +
-                      'transition-colors hover:bg-teal-tint ' +
-                      (item.active === true
-                        ? 'bg-teal-tint font-semibold text-teal'
-                        : 'font-medium text-ink-strong-secondary'),
-                  )}
-                </li>
+                <li key={item.href}>{renderLink(item, linkClass(item, false))}</li>
               ))}
             </ul>
           </nav>
-          <div className="flex items-center gap-2">{end}</div>
+          <div className="hidden items-center gap-2 md:flex">{end}</div>
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls="mio-mobile-menu"
+            onClick={() => setOpen((current) => !current)}
+            className="ml-auto inline-flex h-9 w-9 items-center justify-center rounded-inner border border-border text-ink transition-colors hover:bg-teal-tint md:hidden"
+          >
+            <span className="sr-only">{menuLabel}</span>
+            <svg viewBox="0 0 20 20" aria-hidden width={18} height={18} fill="none">
+              {open ? (
+                <path
+                  d="m5 5 10 10M15 5 5 15"
+                  stroke="currentColor"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                />
+              ) : (
+                <path
+                  d="M3 5.5h14M3 10h14M3 14.5h14"
+                  stroke="currentColor"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                />
+              )}
+            </svg>
+          </button>
+        </div>
+        <div
+          id="mio-mobile-menu"
+          hidden={!open}
+          className="border-t border-hairline px-4 pb-4 pt-2 md:hidden"
+        >
+          {/* Its own landmark name - two nav landmarks may share the tree
+              (CSS hides one), and landmarks must stay uniquely labelled. */}
+          <nav aria-label={menuLabel}>
+            <ul className="flex flex-col gap-0.5" onClick={() => setOpen(false)}>
+              {items.map((item) => (
+                <li key={item.href}>{renderLink(item, linkClass(item, true))}</li>
+              ))}
+            </ul>
+          </nav>
+          <div className="mt-3 flex items-center justify-between gap-2 border-t border-hairline pt-3">
+            {end}
+          </div>
         </div>
       </header>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>

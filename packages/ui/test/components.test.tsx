@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import {
   AppShell,
@@ -6,6 +6,7 @@ import {
   Button,
   Card,
   CardHeader,
+  ConfirmDialog,
   CountBadge,
   EmptyState,
   ErrorState,
@@ -110,6 +111,7 @@ describe('kit renders and is axe-clean', () => {
       <AppShell
         variant="admin"
         navLabel="Main navigation"
+        menuLabel="Menu"
         items={[
           { label: 'Users', href: '/admin/users', active: true },
           { label: 'Audit log', href: '/admin/audit', badge: 2 },
@@ -130,6 +132,30 @@ describe('kit renders and is axe-clean', () => {
     expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeDefined();
     expect(screen.getByText('Administration')).toBeDefined();
     expect(screen.getByRole('link', { name: /Users/ })).toBeDefined();
+    // the mobile menu panel stays out of the accessibility tree until opened
+    const toggle = screen.getByRole('button', { name: 'Menu' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getAllByRole('link', { name: /Users/ })).toHaveLength(2);
+    expect(await axeViolations(container)).toEqual([]);
+  });
+
+  it('confirm dialog: alertdialog with safe default focus', async () => {
+    const { container } = render(
+      <ConfirmDialog
+        title="Discontinue this treatment?"
+        cancelLabel="Go back"
+        confirmLabel="Discontinue"
+        danger
+        onCancel={() => {}}
+        onConfirm={() => {}}
+      >
+        <p>This cannot be undone.</p>
+      </ConfirmDialog>,
+    );
+    expect(screen.getByRole('alertdialog', { name: 'Discontinue this treatment?' })).toBeDefined();
+    expect(document.activeElement?.textContent).toBe('Go back');
     expect(await axeViolations(container)).toEqual([]);
   });
 });

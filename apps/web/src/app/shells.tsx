@@ -76,6 +76,7 @@ export function SignedInShell({ children }: { children: ReactNode }): ReactEleme
     <AppShell
       variant={variant}
       navLabel={intl.formatMessage({ id: 'nav.label' })}
+      menuLabel={intl.formatMessage({ id: 'nav.menu' })}
       items={navItems}
       renderLink={(item, className) => (
         <Link to={item.href} className={className} aria-current={item.active ? 'page' : undefined}>

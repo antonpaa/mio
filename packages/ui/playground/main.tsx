@@ -47,6 +47,7 @@ function Gallery(): ReactElement {
     <AppShell
       variant="clinician"
       navLabel="Main navigation"
+      menuLabel="Menu"
       items={[
         { label: 'Dashboard', href: '#', active: true },
         { label: 'Patients', href: '#' },
