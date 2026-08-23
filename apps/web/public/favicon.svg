@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44">
+  <!-- The Mio mark, favicon variant (S5): wordmark dropped, radii enlarged,
+       solid two-tone teal so it reads at 16px where the app-bar mark's low
+       opacities would vanish. Light circle low-left, dark high-right - the
+       tilt is the identity and never rotates. Dark tabs get the on-dark
+       tint per S5. -->
+  <style>
+    .lo { fill: #7FB5AE; }
+    .hi { fill: #115E59; }
+    @media (prefers-color-scheme: dark) {
+      .lo { fill: #47736D; }
+      .hi { fill: #7FB5AE; }
+    }
+  </style>
+  <circle class="lo" cx="15" cy="27" r="14" />
+  <circle class="hi" cx="28" cy="17" r="14" />
+</svg>

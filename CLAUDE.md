@@ -16,6 +16,7 @@ pnpm migrate               # apply SQL migrations (DATABASE_URL, owner user)
 pnpm --filter @mio/api dev     # API on :3000
 pnpm --filter @mio/web dev     # SPA on :5173 (proxies /health, /api)
 pnpm --filter @mio/worker dev  # worker
+pnpm --filter @mio/ui dev      # component workbench on :5199
 ```
 
 ## Layout

@@ -12,18 +12,21 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@mio/contracts": "workspace:*",
+    "@mio/ui": "workspace:*",
     "@tanstack/react-query": "^5.102.1",
     "@tanstack/react-router": "^1.170.32",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "@mio/contracts": "workspace:*"
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.0",
     "happy-dom": "^20.11.6",
+    "tailwindcss": "^4.3.3",
     "vite": "^8.2.2"
   }
 }
