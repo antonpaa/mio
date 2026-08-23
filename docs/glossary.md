@@ -107,6 +107,8 @@ Used for both survey and treatment templates.
 | New | Uusi | Ny | |
 | Acknowledged | Kuitattu | Kvitterad | ⚠️ |
 | Resolved | Ratkaistu | Åtgärdad | ⚠️ |
+| Triage queue | Triagejono | Triagekö | The dashboard's open-alert queue (C1) ⚠️ |
+| Record only | Vain kirjaus | Endast registrering | Rule with all outcomes off — stored, nothing raised |
 | Trend rule | Trendisääntö | Trendregel | Condition across consecutive responses ⚠️ |
 | Custom notification | Mukautettu ilmoitus | Anpassad avisering | Rule outcome with authored text ⚠️ |
 | Expected in this program | Odotettu tässä ohjelmassa | Förväntat i detta program | Response-detail standing ⚠️ |

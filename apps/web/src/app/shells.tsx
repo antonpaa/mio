@@ -3,6 +3,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import { ROLE_CAPABILITIES, type Role } from '@mio/authz';
 import { AppShell, Avatar, Button, EmptyState, type NavItem } from '@mio/ui';
+import { AlertBell } from '../alerts/bell.js';
 import { useSession } from '../session/session.js';
 
 /**
@@ -85,6 +86,7 @@ export function SignedInShell({ children }: { children: ReactNode }): ReactEleme
       )}
       end={
         <div className="flex items-center gap-3">
+          {variant === 'clinician' && capabilities.has('alert.view') ? <AlertBell /> : null}
           <Avatar
             initials={initials}
             label={`${session.account?.givenName ?? ''} ${session.account?.familyName ?? ''}`}

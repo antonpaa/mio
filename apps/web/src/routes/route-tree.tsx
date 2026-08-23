@@ -18,6 +18,8 @@ import { RosterPage } from '../patients/roster.js';
 import { PatientCalendarPage } from '../scheduling/calendar.js';
 import { TasksPage } from '../tasks/tasks-page.js';
 import { MyTasksCard } from '../tasks/my-tasks-card.js';
+import { TriageCard } from '../alerts/triage-card.js';
+import { AlertPage } from '../alerts/alert-page.js';
 import { PatientSurveysPage } from '../surveys/patient-surveys.js';
 import { SurveyFillPage } from '../surveys/fill.js';
 import { SurveySubmittedPage } from '../surveys/submitted.js';
@@ -81,8 +83,10 @@ function AuthedIndex(): ReactElement {
   return (
     <SignedInShell>
       {clinician ? (
-        // The dashboard's tasks slice (WP-13); the full C1 lands with WP-27.
+        // C1 slices so far: the triage queue (WP-19) over the tasks card
+        // (WP-13); the full dashboard lands with WP-27.
         <div className="mx-auto flex max-w-2xl flex-col gap-4">
+          <TriageCard />
           <MyTasksCard />
         </div>
       ) : (
@@ -242,6 +246,13 @@ const surveyBuilderRoute = createRoute({
   component: () => <ShellPage page={<SurveyBuilderPage />} />,
 });
 
+const alertRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/alerts/$alertId',
+  beforeLoad: requireSession,
+  component: () => <ShellPage page={<AlertPage />} />,
+});
+
 /** /calendar is the patient's consolidated view (P9); staff have no page
  * here yet - their day lives on the dashboard (C1, WP-13+). */
 function CalendarIndex(): ReactElement {
@@ -283,4 +294,5 @@ export const routeTree = rootRoute.addChildren([
   surveyFillRoute,
   surveySubmittedRoute,
   surveyBuilderRoute,
+  alertRoute,
 ]);

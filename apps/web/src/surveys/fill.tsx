@@ -312,9 +312,38 @@ export function QuestionInput({
     case 'scale': {
       const { min, max } = question.scale ?? { min: 0, max: 10 };
       const values = Array.from({ length: max - min + 1 }, (_, index) => min + index);
+      // one continuous segmented bar (the clinical NRS look): equal cells
+      // that COMPRESS on narrow screens instead of wrapping "10" onto its
+      // own row. Wide ranges would make cells unreadable, so they fall
+      // back to a select.
+      if (values.length > 12) {
+        return (
+          <select
+            aria-label={text?.label}
+            className={`${inputClass} block max-w-40`}
+            value={typeof value === 'number' ? String(value) : ''}
+            onChange={(event) =>
+              onChange(
+                event.currentTarget.value === '' ? undefined : Number(event.currentTarget.value),
+              )
+            }
+          >
+            <option value="" />
+            {values.map((entry) => (
+              <option key={entry} value={String(entry)}>
+                {entry}
+              </option>
+            ))}
+          </select>
+        );
+      }
       return (
         <div>
-          <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={text?.label}>
+          <div
+            className="flex w-full max-w-md overflow-hidden rounded-inner border border-border"
+            role="radiogroup"
+            aria-label={text?.label}
+          >
             {values.map((entry) => (
               <button
                 key={entry}
@@ -322,17 +351,17 @@ export function QuestionInput({
                 role="radio"
                 aria-checked={value === entry}
                 onClick={() => onChange(entry)}
-                className={`h-10 w-10 rounded-inner border text-sm transition-colors ${
+                className={`h-10 min-w-0 flex-1 border-l border-border text-sm tabular-nums transition-colors first:border-l-0 ${
                   value === entry
-                    ? 'border-teal bg-teal font-semibold text-surface'
-                    : 'border-border bg-surface text-ink hover:bg-surface-sunken'
+                    ? 'bg-teal font-semibold text-surface'
+                    : 'bg-surface text-ink hover:bg-surface-sunken'
                 }`}
               >
                 {entry}
               </button>
             ))}
           </div>
-          <div className="mt-1.5 flex justify-between text-xs text-muted">
+          <div className="mt-1.5 flex max-w-md justify-between text-xs text-muted">
             <span>{text?.scaleMinLabel}</span>
             <span>{text?.scaleMaxLabel}</span>
           </div>

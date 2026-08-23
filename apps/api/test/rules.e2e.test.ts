@@ -271,14 +271,29 @@ describe('evaluation on submit', () => {
 
 describe('the alert boundary', () => {
   it('care staff read the alert; outsiders and patients read NOTHING', async () => {
+    // scoped to THIS alert: the synthetic world seeds alerts for other
+    // patients, which an unrelated staff member may legitimately care for
     const count = async (userId: string, realm: 'staff' | 'patient'): Promise<number> =>
       withUserContext(appPool, { userId, realm }, async (client) => {
-        const { rows } = await client.query(`SELECT count(*)::int AS n FROM clinical.alert`);
+        const { rows } = await client.query(
+          `SELECT count(*)::int AS n FROM clinical.alert WHERE id = $1`,
+          [alertId],
+        );
         return (rows[0] as { n: number }).n;
       });
-    expect(await count(lead.id, 'staff')).toBeGreaterThan(0);
+    expect(await count(lead.id, 'staff')).toBe(1);
     expect(await count(outsider.id, 'staff')).toBe(0);
     expect(await count(patient.id, 'patient')).toBe(0);
+    // and the patient realm sees NO alert at all, ever
+    const patientTotal = await withUserContext(
+      appPool,
+      { userId: patient.id, realm: 'patient' },
+      async (client) => {
+        const { rows } = await client.query(`SELECT count(*)::int AS n FROM clinical.alert`);
+        return (rows[0] as { n: number }).n;
+      },
+    );
+    expect(patientTotal).toBe(0);
   });
 
   it('traces are evidence: the application cannot rewrite or delete them', async () => {
