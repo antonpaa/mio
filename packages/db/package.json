@@ -1,0 +1,25 @@
+{
+  "name": "@mio/db",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Everything Postgres: migrations, role-carrying pools, RLS context, the job bus (ADR-0002, ADR-0007, ADR-0008)",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "migrate": "node --import @swc-node/register/esm-register src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "pg": "^8.23.0",
+    "pg-boss": "^12.27.0"
+  },
+  "devDependencies": {
+    "@swc-node/register": "^1.12.1",
+    "@testcontainers/postgresql": "^12.1.0",
+    "@types/node": "^26.2.0",
+    "@types/pg": "^8.23.1"
+  }
+}
