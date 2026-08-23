@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import pg from 'pg';
 import { hash } from '@node-rs/argon2';
+import { docFromText } from '@mio/contracts';
 import {
   canonicalJson,
   deriveObservations,
@@ -12,6 +13,13 @@ import { PROGRAM_TEMPLATES } from './pools.js';
 import { syntheticId } from './random.js';
 import { SYNTHETIC_SURVEYS } from './surveys.js';
 import type { Severity, SyntheticWorld } from './world.js';
+
+/** Fixed anchor for seeded conversation timestamps - determinism over
+ * realism, like every other synthetic date. Anchored well before the
+ * other fixture dates so the spread (index * 7h across ~46 treatments)
+ * can never reach "now" - a seeded message stamped in the future would
+ * sit above every read watermark and count as unread forever. */
+const MESSAGE_EPOCH = Date.parse('2026-07-01T08:30:00Z');
 
 /** Concrete answers whose evaluation lands on the target severity - the
  * evaluator grades, the template only steers. Benign sets stay benign. */
@@ -87,6 +95,10 @@ export async function seedWorld(
     await pool.query('BEGIN');
     // FK order: responses and occurrences first, then the catalog they
     // reference, then the treatment graph.
+    await pool.query('DELETE FROM clinical.thread_read');
+    await pool.query('DELETE FROM clinical.internal_note');
+    await pool.query('DELETE FROM clinical.message');
+    await pool.query('DELETE FROM clinical.message_thread');
     await pool.query('DELETE FROM clinical.symptom_observation');
     await pool.query('DELETE FROM clinical.value_entry');
     await pool.query('DELETE FROM clinical.template_value_series');
@@ -490,6 +502,88 @@ export async function seedWorld(
       );
     }
     log(`values: ${world.values.length} entries across ${seriesDefs.length} series`);
+
+    // WP-23: one thread per programme with a small conversation in the
+    // patient's own language, and an internal note the patient must
+    // never see. Bodies are structured documents built by the same
+    // helper the app uses - synthetic content only, deterministic.
+    const CONVERSATION: Record<string, { opener: string; reply: string; thanks: string }> = {
+      fi: {
+        opener: 'Pahoinvointi on pahentunut viikonlopun aikana. Mitä minun kannattaisi tehdä?',
+        reply:
+          'Kiitos viestistä. Ottakaa pahoinvointilääke jo aamulla — seuraamme tilannetta. Soittakaa, jos vointi heikkenee.',
+        thanks: 'Kiitos, kokeilen tätä.',
+      },
+      sv: {
+        opener: 'Illamåendet har blivit värre under helgen. Vad borde jag göra?',
+        reply:
+          'Tack för ditt meddelande. Ta medicinen mot illamående redan på morgonen — vi följer läget. Ring om du mår sämre.',
+        thanks: 'Tack, jag provar det.',
+      },
+      en: {
+        opener: 'The nausea has gotten worse over the weekend. What should I do?',
+        reply:
+          'Thank you for your message. Take the anti-nausea medication in the morning — we are keeping an eye on this. Call us if you feel worse.',
+        thanks: 'Thank you, I will try that.',
+      },
+    };
+    let messageCount = 0;
+    let noteCount = 0;
+    for (const [index, treatment] of world.treatments.entries()) {
+      const treatmentTeam = world.teams.find((candidate) => candidate.id === treatment.teamId);
+      const leadId = treatmentTeam?.leadIds[0];
+      if (leadId === undefined) continue;
+      const treatmentPatient = world.patients.find((p) => p.id === treatment.patientId)!;
+      const texts = CONVERSATION[treatmentPatient.locale] ?? CONVERSATION['en']!;
+      const threadId = syntheticId('mthr', index);
+      await pool.query(
+        `INSERT INTO clinical.message_thread (id, treatment_id, patient_id, created_at) VALUES ($1,$2,$3,$4)`,
+        [
+          threadId,
+          treatment.id,
+          treatment.patientId,
+          new Date(MESSAGE_EPOCH + index * 7 * 3_600_000).toISOString(),
+        ],
+      );
+      const turns: { author: string; realm: 'patient' | 'staff'; text: string; offset: number }[] =
+        [
+          { author: treatment.patientId, realm: 'patient', text: texts.opener, offset: 0 },
+          { author: leadId, realm: 'staff', text: texts.reply, offset: 2 },
+          { author: treatment.patientId, realm: 'patient', text: texts.thanks, offset: 5 },
+        ];
+      for (const [turnIndex, turn] of turns.entries()) {
+        await pool.query(
+          `INSERT INTO clinical.message (id, thread_id, patient_id, author_id, author_realm, body, created_at)
+           VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+          [
+            syntheticId('mesg', index * 4 + turnIndex),
+            threadId,
+            treatment.patientId,
+            turn.author,
+            turn.realm,
+            JSON.stringify(docFromText(turn.text)),
+            new Date(MESSAGE_EPOCH + index * 7 * 3_600_000 + turn.offset * 3_600_000).toISOString(),
+          ],
+        );
+        messageCount += 1;
+      }
+      await pool.query(
+        `INSERT INTO clinical.internal_note (id, thread_id, patient_id, author_id, body, created_at)
+         VALUES ($1,$2,$3,$4,$5,$6)`,
+        [
+          syntheticId('note', index),
+          threadId,
+          treatment.patientId,
+          leadId,
+          JSON.stringify(
+            docFromText('Tarkistetaan pahoinvointilääkityksen annostus seuraavalla käynnillä.'),
+          ),
+          new Date(MESSAGE_EPOCH + index * 7 * 3_600_000 + 3 * 3_600_000).toISOString(),
+        ],
+      );
+      noteCount += 1;
+    }
+    log(`messages: ${messageCount} across threads, ${noteCount} internal notes`);
     await pool.query('COMMIT');
   } catch (error) {
     await pool.query('ROLLBACK').catch(() => {});

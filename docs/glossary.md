@@ -120,6 +120,7 @@ Used for both survey and treatment templates.
 | English | Finnish | Swedish | Note |
 |---|---|---|---|
 | Message | Viesti | Meddelande | |
+| Conversation | Keskustelu | Samtal | One thread per treatment programme (WP-23) |
 | Internal note | Sisäinen muistiinpano | Intern anteckning | Never patient-visible |
 | Attachment | Liite | Bilaga | |
 

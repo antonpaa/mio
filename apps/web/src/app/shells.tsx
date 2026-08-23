@@ -1,11 +1,13 @@
 import type { ReactElement, ReactNode } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import { ROLE_CAPABILITIES, type Role } from '@mio/authz';
 import {
   AppShell,
   Avatar,
   Button,
+  CountBadge,
   EmptyState,
   IconAudit,
   IconCalendar,
@@ -24,6 +26,7 @@ import {
   type NavItem,
 } from '@mio/ui';
 import { AlertBell } from '../alerts/bell.js';
+import { threadsQuery } from '../messages/model.js';
 import { useSession } from '../session/session.js';
 
 /**
@@ -101,6 +104,14 @@ export function SignedInShell({ children }: { children: ReactNode }): ReactEleme
   const capabilities = new Set(ROLE_CAPABILITIES[role]);
   const { variant, items } = shellFor(role);
 
+  // the same audited disclosure the messages page makes - shared cache,
+  // one query key per realm (the WP-19 bell precedent)
+  const threads = useQuery({
+    ...threadsQuery(session.realm === 'patient' ? 'patient' : 'staff'),
+    enabled: capabilities.has('message_thread.view'),
+  });
+  const unread = (threads.data ?? []).reduce((sum, row) => sum + row.unread, 0);
+
   const navItems: NavItem[] = items
     .filter((item) => item.capability === undefined || capabilities.has(item.capability))
     .map((item) => {
@@ -110,6 +121,7 @@ export function SignedInShell({ children }: { children: ReactNode }): ReactEleme
         href: item.href,
         active: pathname === item.href,
         ...(Icon !== undefined ? { icon: <Icon size={17} /> } : {}),
+        ...(item.labelId === 'nav.messages' && unread > 0 ? { badge: unread } : {}),
       };
     });
 
@@ -125,6 +137,12 @@ export function SignedInShell({ children }: { children: ReactNode }): ReactEleme
         <Link to={item.href} className={className} aria-current={item.active ? 'page' : undefined}>
           {item.icon}
           {item.label}
+          {item.badge !== undefined ? (
+            <CountBadge
+              count={item.badge}
+              label={intl.formatMessage({ id: 'messages.unread' }, { count: item.badge })}
+            />
+          ) : null}
         </Link>
       )}
       end={
