@@ -11,6 +11,7 @@ records the decisions the system will be built on and the questions still open.
 | | |
 |---|---|
 | [`architecture/overview.md`](architecture/overview.md) | The system, in one document |
+| [`phasing.md`](phasing.md) | The work-package delivery plan |
 | [`design/README.md`](design/README.md) | The approved design package, analyzed |
 | [`adr/`](adr/) | Why it is built this way |
 | [`authz/capability-matrix.yaml`](authz/capability-matrix.yaml) | Who can do what — the source of truth |
@@ -84,10 +85,11 @@ Four properties are guaranteed structurally rather than by review discipline:
 
 ## Status
 
-Documentation and the approved design package. No implementation yet; phasing
-is next, now that the design fixes the application's extent.
+Documentation, the approved design package, and the delivery plan
+([`phasing.md`](phasing.md)): 33 work packages across 8 phases, 5 milestones,
+9 decision gates. Implementation starts with WP-01.
 
 The highest-priority open item remains
-[R1: MDR classification](compliance/register.md) — the design's rule engine
-(graded alerts, notifications and tasks initiated from clinical conditions)
-deepens Rule 11 exposure, and the item has external lead time.
+[R1: MDR classification](compliance/register.md) — engagement starts now
+(gate D7), is revisited at milestone M3 when the rule engine exists to be
+demonstrated, and gates release.

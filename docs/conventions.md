@@ -6,10 +6,12 @@ Work happens on **work-package branches cut from `main`**.
 
 ```
 main
- ├── wp/01-authentication
- ├── wp/02-capability-matrix-enforcement
- └── wp/03-survey-versioning
+ ├── wp/01-scaffold
+ ├── wp/02-database
+ └── wp/03-ui-foundation
 ```
+
+Work-package numbering and scope come from [`phasing.md`](phasing.md).
 
 - Branch from `main`, never from another work-package branch.
 - One work package per branch, one pull request per branch.

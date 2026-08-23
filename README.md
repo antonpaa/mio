@@ -10,11 +10,11 @@ Swedish.
 
 ## Status
 
-**Documentation and design phase.** No implementation yet.
-
-The architecture is decided and recorded, and the approved design package is
-in the repo (`design/handoff-2026-08-21/`, analyzed in
-[`docs/design/`](docs/design/README.md)). Delivery phasing is next.
+**Ready to build.** Architecture decided ([`docs/adr/`](docs/adr/)), design
+approved (`design/handoff-2026-08-21/`, analyzed in
+[`docs/design/`](docs/design/README.md)), delivery planned
+([`docs/phasing.md`](docs/phasing.md) — 33 work packages, 5 milestones).
+Implementation starts with `wp/01-scaffold`.
 
 ## Documentation
 
