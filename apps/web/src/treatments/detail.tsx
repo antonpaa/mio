@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { ROLE_CAPABILITIES, type Role } from '@mio/authz';
 import { Avatar, Button, ErrorState, ListRow, Skeleton, StatusChip } from '@mio/ui';
+import { ActivitiesSection } from '../scheduling/activities-section.js';
 import { useSession } from '../session/session.js';
 
 interface TeamEntry {
@@ -123,6 +124,8 @@ export function TreatmentDetailPage(): ReactElement {
           </div>
         ) : null}
       </header>
+
+      <ActivitiesSection treatmentId={treatmentId} />
 
       <section className="rounded-card border border-black/5 bg-surface px-5 py-4 shadow-resting">
         <h2 className="mb-2 text-sm font-semibold text-ink">

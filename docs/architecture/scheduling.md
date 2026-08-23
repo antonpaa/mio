@@ -17,11 +17,19 @@ Segment 2   FREQ=MONTHLY;INTERVAL=3
 ```
 
 That is the brief's example, exactly, in a standard notation. Segments run in
-sequence; each begins when the previous one ends. Arbitrary phasing follows.
+sequence. The handoff rule: a segment's first occurrence falls one of **its
+own** intervals after the previous segment's last (monthly ×6 from 15 Sep,
+then every 3 months → 15 Feb is the sixth, 15 May opens the next phase).
+Arbitrary phasing follows.
 
-Library: `rrule.js`. RFC 5545 also means the semantics are specified by someone
-other than us, and the edge cases — "the 31st in a 30-day month", "the last
-Friday" — already have defined answers.
+Implementation (decided in WP-12): the RFC 5545 **subset** we actually use —
+DAILY/WEEKLY/MONTHLY, INTERVAL, COUNT/UNTIL, BYDAY, RDATE/EXDATE — lives in
+`@mio/schedule`, ~200 lines of date-level arithmetic shared verbatim by the
+builder preview, the API and the worker. `rrule.js` was considered and
+dropped per ADR-0009: it is time-of-day-based (DST shifts leak into dates),
+and we need none of the exotic clauses. Monthly steps clamp per occurrence
+anchored on the segment start (31 Aug → 30 Sep → **31 Oct**), which RFC 5545
+itself leaves to the implementation.
 
 ## Materialise occurrences
 

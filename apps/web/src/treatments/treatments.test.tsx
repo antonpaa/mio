@@ -130,6 +130,7 @@ beforeEach(() => {
       }
       if (url === '/api/staff/patients') return json([]);
       if (url === '/api/staff/treatments/t1') return json(DETAIL);
+      if (url === '/api/staff/treatments/t1/activities') return json([]);
       if (url === '/api/patient/treatments') {
         return json([
           {

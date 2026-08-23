@@ -14,6 +14,7 @@ import { WelcomePage } from '../auth/welcome.js';
 import { ForgotPage, ForgotSentPage, ResetPage } from '../auth/forgot.js';
 import { PlaceholderHome, SignedInShell } from '../app/shells.js';
 import { RosterPage } from '../patients/roster.js';
+import { PatientCalendarPage } from '../scheduling/calendar.js';
 import { PatientProfilePage } from '../patients/profile.js';
 import { TreatmentCatalogPage } from '../treatments/catalog.js';
 import { TreatmentDetailPage } from '../treatments/detail.js';
@@ -179,6 +180,24 @@ const treatmentDetailRoute = createRoute({
   beforeLoad: requireSession,
   component: () => <ShellPage page={<TreatmentDetailPage />} />,
 });
+const calendarRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/calendar',
+  beforeLoad: requireSession,
+  component: CalendarIndex,
+});
+
+/** /calendar is the patient's consolidated view (P9); staff have no page
+ * here yet - their day lives on the dashboard (C1, WP-13+). */
+function CalendarIndex(): ReactElement {
+  const session = useSession();
+  if (session.loading || !session.account) return <Splash />;
+  return (
+    <SignedInShell>
+      {session.realm === 'patient' ? <PatientCalendarPage /> : <PlaceholderHome />}
+    </SignedInShell>
+  );
+}
 
 /** /treatments serves both realms: catalog for staff, own list for patients. */
 function TreatmentsIndex(): ReactElement {
@@ -203,4 +222,5 @@ export const routeTree = rootRoute.addChildren([
   patientProfileRoute,
   treatmentsRoute,
   treatmentDetailRoute,
+  calendarRoute,
 ]);

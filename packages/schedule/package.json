@@ -1,0 +1,14 @@
+{
+  "name": "@mio/schedule",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Phased recurrence engine (docs/architecture/scheduling.md): RFC 5545-shaped segments, date-level expansion in the patient's timezone, one implementation for builder preview and worker materialisation",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  }
+}

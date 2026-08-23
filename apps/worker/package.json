@@ -11,9 +11,12 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@types/node": "^26.2.0"
+    "@types/node": "^26.2.0",
+    "@types/pg": "^8.23.1"
   },
   "dependencies": {
-    "@mio/db": "workspace:*"
+    "@mio/db": "workspace:*",
+    "@mio/schedule": "workspace:*",
+    "pg": "^8.23.0"
   }
 }

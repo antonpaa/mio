@@ -39,6 +39,8 @@ export async function seedWorld(
     });
 
     await pool.query('BEGIN');
+    await pool.query('DELETE FROM clinical.activity');
+    await pool.query('DELETE FROM clinical.schedule');
     await pool.query('DELETE FROM clinical.care_relationship');
     await pool.query('DELETE FROM clinical.treatment_care_team');
     await pool.query('DELETE FROM clinical.treatment');
