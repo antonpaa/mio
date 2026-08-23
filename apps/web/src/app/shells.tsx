@@ -17,6 +17,7 @@ import {
   IconPatients,
   IconReporting,
   IconRoles,
+  IconSettings,
   IconSurveys,
   IconTasks,
   IconTeams,
@@ -26,6 +27,7 @@ import {
   type NavItem,
 } from '@mio/ui';
 import { AlertBell } from '../alerts/bell.js';
+import { NotificationBell } from '../notifications/bell.js';
 import { threadsQuery } from '../messages/model.js';
 import { useSession } from '../session/session.js';
 
@@ -148,6 +150,18 @@ export function SignedInShell({ children }: { children: ReactNode }): ReactEleme
       end={
         <div className="flex items-center gap-3">
           {variant === 'clinician' && capabilities.has('alert.view') ? <AlertBell /> : null}
+          {variant === 'patient' && capabilities.has('notification.view') ? (
+            <NotificationBell />
+          ) : null}
+          {variant === 'patient' && capabilities.has('own_settings.update') ? (
+            <Link
+              to="/settings"
+              aria-label={intl.formatMessage({ id: 'nav.settings' })}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-pill text-secondary transition-colors hover:bg-surface-sunken hover:text-ink"
+            >
+              <IconSettings size={20} />
+            </Link>
+          ) : null}
           <Avatar
             initials={initials}
             label={`${session.account?.givenName ?? ''} ${session.account?.familyName ?? ''}`}

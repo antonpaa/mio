@@ -19,6 +19,7 @@ export {
   IconPatients,
   IconReporting,
   IconRoles,
+  IconSettings,
   IconSurveys,
   IconSymptoms,
   IconTasks,
@@ -32,4 +33,5 @@ export { LanguageSwitcher, type LanguageSwitcherProps } from './components/langu
 export { Avatar, ListRow } from './components/list-row.js';
 export { MioLockup, MioMark } from './components/logo.js';
 export { EmptyState, ErrorState, Skeleton, Splash } from './components/states.js';
+export { Switch } from './components/switch.js';
 export { TextField, type TextFieldProps } from './components/text-field.js';

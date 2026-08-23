@@ -95,6 +95,7 @@ export async function seedWorld(
     await pool.query('BEGIN');
     // FK order: responses and occurrences first, then the catalog they
     // reference, then the treatment graph.
+    await pool.query('DELETE FROM clinical.notification');
     await pool.query('DELETE FROM clinical.thread_read');
     await pool.query('DELETE FROM clinical.internal_note');
     await pool.query('DELETE FROM clinical.message');
@@ -309,6 +310,7 @@ export async function seedWorld(
       .slice(0, 36);
     let alertCount = 0;
     let alertIndex = 0;
+    let notifyCount = 0;
     const commentBodies = [
       'Soitettu potilaalle, vointi vakaa. Seurataan.',
       'Sovittu ylimääräisestä kontrollista ensi viikolle.',
@@ -433,14 +435,16 @@ export async function seedWorld(
         alertCount += 1;
         alertIndex += 1;
       }
+      const instrument = SYNTHETIC_SURVEYS.find((s) => s.key === entry.surveyKey)!;
       for (const [firedIndex, fired] of evaluation.fired.entries()) {
+        const triggerId = syntheticId('trig', index * 8 + firedIndex);
         await pool.query(
           `INSERT INTO clinical.rule_trigger
              (id, alert_id, treatment_id, patient_id, survey_response_id,
               survey_version_id, rule_id, question_id, severity, trace, fired_at)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
           [
-            syntheticId('trig', index * 8 + firedIndex),
+            triggerId,
             fired.severity === null ? null : alertId,
             entry.treatmentId,
             entry.patientId,
@@ -453,9 +457,36 @@ export async function seedWorld(
             entry.answeredAt,
           ],
         );
+        // WP-20 notify outcomes: the authored per-locale text, exactly as
+        // persistEvaluation writes it - WP-25's dispatch delivers these
+        for (const outcome of fired.outcomes) {
+          if (outcome.kind !== 'notify') continue;
+          const body = Object.fromEntries(
+            instrument.locales
+              .map((bundle) => [bundle.locale, bundle.rules?.[fired.ruleId]?.notifyText])
+              .filter(([, text]) => typeof text === 'string' && text.length > 0),
+          );
+          await pool.query(
+            `INSERT INTO clinical.rule_notification
+               (id, treatment_id, patient_id, trigger_id, recipients, body, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            [
+              syntheticId('rnot', index * 8 + firedIndex),
+              entry.treatmentId,
+              entry.patientId,
+              triggerId,
+              outcome.recipients,
+              JSON.stringify(body),
+              entry.answeredAt,
+            ],
+          );
+          notifyCount += 1;
+        }
       }
     }
-    log(`responses: ${seedable.length} submitted, ${alertCount} alerts (graded by the evaluator)`);
+    log(
+      `responses: ${seedable.length} submitted, ${alertCount} alerts, ${notifyCount} rule notifications (graded by the evaluator)`,
+    );
 
     // Value series (WP-21): the catalog rows the prostate templates bring
     // with them, then the world's generated PSA/testosterone histories

@@ -205,6 +205,17 @@ export function IconAudit(props: IconProps): ReactElement {
   );
 }
 
+export function IconSettings(props: IconProps): ReactElement {
+  return (
+    <IconBase {...props}>
+      <path d="M4.5 7h3M11.75 7h7.75M4.5 12h8.25M17.25 12h2.25M4.5 17h1M9.75 17h9.75" />
+      <circle cx="9.5" cy="7" r="2.1" />
+      <circle cx="15" cy="12" r="2.1" />
+      <circle cx="7.5" cy="17" r="2.1" />
+    </IconBase>
+  );
+}
+
 export function IconReporting(props: IconProps): ReactElement {
   return (
     <IconBase {...props}>

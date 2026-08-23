@@ -19,6 +19,9 @@ export const QUEUES = {
   scheduleExtend: 'schedule-extend',
   /** Daily survey-occurrence sweep: reminders + missed marking (WP-17). */
   surveySweep: 'survey-sweep',
+  /** Outbox + rule-notification fan-out into the in-app centre and
+   * contentless email (WP-25). */
+  notificationDispatch: 'notification-dispatch',
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

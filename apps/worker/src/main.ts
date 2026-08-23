@@ -10,6 +10,8 @@ import {
 import type pg from 'pg';
 import { createLifecycle } from './lifecycle.js';
 import { createReminderSender } from './reminder-mail.js';
+import { dispatchNotifications } from './notification-dispatch.js';
+import { createNotificationSender } from './notification-mail.js';
 import { sweepSurveyOccurrences } from './survey-sweep.js';
 
 const lifecycle = createLifecycle();
@@ -97,6 +99,20 @@ async function main(): Promise<void> {
   });
   await boss.schedule(QUEUES.surveySweep, '40 3 * * *');
   await boss.send(QUEUES.surveySweep, {});
+
+  // WP-25: outbox + rule notifications into the in-app centre and the
+  // contentless email nudge. Frequent - a notification is only useful
+  // near its moment.
+  const sendNotification = createNotificationSender();
+  await boss.createQueue(QUEUES.notificationDispatch);
+  await boss.work(QUEUES.notificationDispatch, async () => {
+    const result = await dispatchNotifications(pool, sendNotification);
+    if (result.outboxProcessed > 0 || result.rulesDispatched > 0) {
+      log('info', 'notifications dispatched', { ...result });
+    }
+  });
+  await boss.schedule(QUEUES.notificationDispatch, '*/5 * * * *');
+  await boss.send(QUEUES.notificationDispatch, {});
 
   log('info', 'mio worker started, job bus running');
 }

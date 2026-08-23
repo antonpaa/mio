@@ -217,7 +217,10 @@ describe('evaluation on submit', () => {
       condition: { kind: 'option', optionId: 'severe' },
       source: 'template',
       observed: 'severe',
-      outcomes: [{ kind: 'alert', severity: 'high' }],
+      outcomes: [
+        { kind: 'alert', severity: 'high' },
+        { kind: 'notify', recipients: ['patient', 'lead'] },
+      ],
     });
   });
 

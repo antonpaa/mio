@@ -37,7 +37,12 @@ const SYMPTOM_CORE: SurveyDefinition = {
             {
               id: 'r-nausea-severe',
               when: { kind: 'option', optionId: 'severe' },
-              outcomes: [{ kind: 'alert', severity: 'high' }],
+              // the WP-20 authored patient note (P4's calm copy) rides the
+              // alert - WP-25 delivers it into the notification centre
+              outcomes: [
+                { kind: 'alert', severity: 'high' },
+                { kind: 'notify', recipients: ['patient', 'lead'] },
+              ],
             },
           ],
           followUps: [
@@ -189,11 +194,18 @@ const SYMPTOM_CORE_TEXT = {
   },
 } as const;
 
+const NAUSEA_NOTIFY_TEXT = {
+  en: 'Because nausea has increased, your care team has been notified. They will be in touch if anything needs to change.',
+  fi: 'Koska pahoinvointi on lisääntynyt, hoitotiimillesi on ilmoitettu. He ottavat yhteyttä, jos jotakin pitää muuttaa.',
+  sv: 'Eftersom illamåendet har ökat har ditt vårdteam meddelats. De hör av sig om något behöver ändras.',
+} as const;
+
 function symptomLocales(titles: { en: string; fi: string; sv: string }): LocaleBundle[] {
   return (['en', 'fi', 'sv'] as const).map((locale) => ({
     locale,
     title: titles[locale],
     questions: { ...SYMPTOM_CORE_TEXT[locale] },
+    rules: { 'r-nausea-severe': { notifyText: NAUSEA_NOTIFY_TEXT[locale] } },
   }));
 }
 

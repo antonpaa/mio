@@ -587,6 +587,35 @@ resources:
           treatment_lead: team_member
           administrator: deny
 
+  - id: notification
+    schema: clinical
+    patient_scoped: true
+    description: >-
+      A row in someone's in-app notification centre (WP-25). Addressed to
+      ONE recipient - the decision subject is the recipient, so every
+      grant is 'self'; a patient's row may carry clinical content (the
+      in-app layer is the content-bearing layer), which is exactly why
+      nobody but the recipient reads it. Written only by the system
+      dispatch from the outbox and rule notifications.
+    actions:
+      - id: view
+        audit: always
+        grants:
+          patient: self
+          treatment_member: self
+          treatment_lead: self
+          administrator: deny
+      - id: mark_read
+        audit: never
+        grants:
+          patient: self
+          treatment_member: self
+          treatment_lead: self
+          administrator: deny
+        notes: >-
+          Recording attention, not disclosing content - the view that
+          preceded it is the audited disclosure.
+
   - id: attachment
     schema: clinical
     patient_scoped: true

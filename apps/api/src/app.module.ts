@@ -9,6 +9,7 @@ import { SurveysModule } from './modules/surveys/index.js';
 import { AlertsModule } from './modules/alerts/index.js';
 import { ObservationsModule } from './modules/observations/index.js';
 import { MessagesModule } from './modules/messages/index.js';
+import { NotificationsModule } from './modules/notifications/index.js';
 
 /**
  * The modular monolith root (ADR-0002). Every domain module registers here
@@ -27,6 +28,7 @@ import { MessagesModule } from './modules/messages/index.js';
     AlertsModule,
     ObservationsModule,
     MessagesModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}

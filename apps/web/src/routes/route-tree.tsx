@@ -23,6 +23,8 @@ import { AlertPage } from '../alerts/alert-page.js';
 import { ResponseDetailPage } from '../surveys/response-detail.js';
 import { MessagesPage } from '../messages/messages-page.js';
 import { MessageThreadPage } from '../messages/thread-page.js';
+import { NotificationsPage } from '../notifications/notifications-page.js';
+import { SettingsPage } from '../notifications/settings-page.js';
 import { PatientSurveysPage } from '../surveys/patient-surveys.js';
 import { SurveyFillPage } from '../surveys/fill.js';
 import { SurveySubmittedPage } from '../surveys/submitted.js';
@@ -277,6 +279,42 @@ const messageThreadRoute = createRoute({
   component: () => <ShellPage page={<MessageThreadPage />} />,
 });
 
+/** P11 and the P8 slice are patient surfaces; staff land on the shared
+ * placeholder until WP-27 gives them a centre of their own. */
+function NotificationsIndex(): ReactElement {
+  const session = useSession();
+  if (session.loading || !session.account) return <Splash />;
+  return (
+    <SignedInShell>
+      {session.realm === 'patient' ? <NotificationsPage /> : <PlaceholderHome />}
+    </SignedInShell>
+  );
+}
+
+function SettingsIndex(): ReactElement {
+  const session = useSession();
+  if (session.loading || !session.account) return <Splash />;
+  return (
+    <SignedInShell>
+      {session.realm === 'patient' ? <SettingsPage /> : <PlaceholderHome />}
+    </SignedInShell>
+  );
+}
+
+const notificationsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/notifications',
+  beforeLoad: requireSession,
+  component: NotificationsIndex,
+});
+
+const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings',
+  beforeLoad: requireSession,
+  component: SettingsIndex,
+});
+
 /** /calendar is the patient's consolidated view (P9); staff have no page
  * here yet - their day lives on the dashboard (C1, WP-13+). */
 function CalendarIndex(): ReactElement {
@@ -322,4 +360,6 @@ export const routeTree = rootRoute.addChildren([
   responseDetailRoute,
   messagesRoute,
   messageThreadRoute,
+  notificationsRoute,
+  settingsRoute,
 ]);
