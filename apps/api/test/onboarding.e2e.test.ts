@@ -48,8 +48,9 @@ beforeAll(async () => {
   owner = new pg.Pool({ connectionString: db.connectionString, max: 2 });
   await owner.query(`TRUNCATE identity.patient_session, identity.staff_session,
     identity.credential_token, identity.terms_acceptance`);
-  await owner.query(`DELETE FROM identity.patient_account`);
-  await owner.query(`DELETE FROM identity.staff_account`);
+  // CASCADE: later suites seed dependents (team memberships, sessions);
+  // fixture reset must not depend on suite order.
+  await owner.query(`TRUNCATE identity.patient_account, identity.staff_account CASCADE`);
 
   process.env['MIO_DATABASE_URL'] = db.connectionString;
   process.env['MIO_OTP_PEPPER'] = 'test-pepper-not-for-production';

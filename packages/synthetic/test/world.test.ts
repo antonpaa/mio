@@ -34,7 +34,7 @@ describe('demo world sanity', () => {
       expect(treatmentsByPatient.get(patient.id) ?? 0).toBeGreaterThan(0);
       const expected = new Set<string>();
       for (const treatment of world.treatments) {
-        if (treatment.patientId !== patient.id || treatment.state !== 'active') continue;
+        if (treatment.patientId !== patient.id) continue;
         for (const memberId of teamById.get(treatment.teamId)?.memberIds ?? []) {
           expected.add(memberId);
         }

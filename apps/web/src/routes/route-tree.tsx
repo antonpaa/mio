@@ -15,6 +15,9 @@ import { ForgotPage, ForgotSentPage, ResetPage } from '../auth/forgot.js';
 import { PlaceholderHome, SignedInShell } from '../app/shells.js';
 import { RosterPage } from '../patients/roster.js';
 import { PatientProfilePage } from '../patients/profile.js';
+import { TreatmentCatalogPage } from '../treatments/catalog.js';
+import { TreatmentDetailPage } from '../treatments/detail.js';
+import { PatientTreatmentsPage } from '../treatments/patient-treatments.js';
 
 interface LocaleControls {
   locale: Locale;
@@ -164,6 +167,29 @@ const patientProfileRoute = createRoute({
   beforeLoad: requireSession,
   component: () => <ShellPage page={<PatientProfilePage />} />,
 });
+const treatmentsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/treatments',
+  beforeLoad: requireSession,
+  component: TreatmentsIndex,
+});
+const treatmentDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/treatments/$treatmentId',
+  beforeLoad: requireSession,
+  component: () => <ShellPage page={<TreatmentDetailPage />} />,
+});
+
+/** /treatments serves both realms: catalog for staff, own list for patients. */
+function TreatmentsIndex(): ReactElement {
+  const session = useSession();
+  if (session.loading || !session.account) return <Splash />;
+  return (
+    <SignedInShell>
+      {session.realm === 'patient' ? <PatientTreatmentsPage /> : <TreatmentCatalogPage />}
+    </SignedInShell>
+  );
+}
 
 export const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -175,4 +201,6 @@ export const routeTree = rootRoute.addChildren([
   resetRoute,
   patientsRoute,
   patientProfileRoute,
+  treatmentsRoute,
+  treatmentDetailRoute,
 ]);
