@@ -4,15 +4,22 @@ import type { ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { ErrorState, IconBell, SeverityChip, Skeleton, StatusChip } from '@mio/ui';
 import { ALERT_STATUS_TONE, TRIAGE_QUERY } from './alert-model.js';
+import { useSession } from '../session/session.js';
 
 /**
  * C1: the dashboard triage queue - open alerts across the clinician's
  * care patients, new before acknowledged, high before moderate. Each row
  * opens the PP6 detail.
  */
-export function TriageCard(): ReactElement {
+export function TriageCard({ filter = 'all' }: { filter?: 'all' | 'mine' }): ReactElement {
   const intl = useIntl();
+  const session = useSession();
   const triage = useQuery(TRIAGE_QUERY);
+  // WP-27: the C1 segmented filter narrows the worklist to alerts
+  // assigned to the caller; the disclosure is the same audited query
+  const rows = (triage.data ?? []).filter(
+    (row) => filter === 'all' || row.assignee_id === (session.account?.id ?? ''),
+  );
 
   return (
     <section
@@ -31,7 +38,7 @@ export function TriageCard(): ReactElement {
         </h2>
         {triage.data ? (
           <p className="text-xs text-muted">
-            <FormattedMessage id="alerts.openCount" values={{ count: triage.data.length }} />
+            <FormattedMessage id="alerts.openCount" values={{ count: rows.length }} />
           </p>
         ) : null}
       </header>
@@ -44,13 +51,13 @@ export function TriageCard(): ReactElement {
         <div className="p-5">
           <ErrorState onRetry={() => void triage.refetch()} />
         </div>
-      ) : triage.data.length === 0 ? (
+      ) : rows.length === 0 ? (
         <p className="px-5 py-6 text-sm text-muted">
           <FormattedMessage id="alerts.empty" />
         </p>
       ) : (
         <ul className="divide-y divide-hairline">
-          {triage.data.map((row) => (
+          {rows.map((row) => (
             <li key={row.id}>
               <Link
                 to="/alerts/$alertId"

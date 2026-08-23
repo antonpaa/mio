@@ -1,7 +1,7 @@
 import { createRootRouteWithContext, createRoute, Outlet, redirect } from '@tanstack/react-router';
 import type { QueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
-import { IntlProvider } from 'react-intl';
+import { IntlProvider, useIntl } from 'react-intl';
 import type { Locale } from '@mio/i18n';
 import { Splash } from '@mio/ui';
 import { MESSAGES } from '../i18n/messages.js';
@@ -26,6 +26,7 @@ import { MessageThreadPage } from '../messages/thread-page.js';
 import { NotificationsPage } from '../notifications/notifications-page.js';
 import { SettingsPage } from '../notifications/settings-page.js';
 import { PatientHomePage } from '../home/patient-home.js';
+import { AgendaCard, OverdueCard, UnreadConversationsCard } from '../dashboard/cards.js';
 import { PatientSurveysPage } from '../surveys/patient-surveys.js';
 import { SurveyFillPage } from '../surveys/fill.js';
 import { SurveySubmittedPage } from '../surveys/submitted.js';
@@ -89,12 +90,7 @@ function AuthedIndex(): ReactElement {
   return (
     <SignedInShell>
       {clinician ? (
-        // C1 slices so far: the triage queue (WP-19) over the tasks card
-        // (WP-13); the full dashboard lands with WP-27.
-        <div className="mx-auto flex max-w-2xl flex-col gap-4">
-          <TriageCard />
-          <MyTasksCard />
-        </div>
+        <ClinicianDashboard />
       ) : session.realm === 'patient' ? (
         // P1/P7 (WP-26): the patient landing widgets
         <PatientHomePage />
@@ -102,6 +98,46 @@ function AuthedIndex(): ReactElement {
         <PlaceholderHome />
       )}
     </SignedInShell>
+  );
+}
+
+/** C1 complete (WP-27): triage over tasks in the main column, the
+ * worklists beside them, and the segmented filter narrowing the queue
+ * to the caller's assignments. */
+function ClinicianDashboard(): ReactElement {
+  const intl = useIntl();
+  const [filter, setFilter] = useState<'all' | 'mine'>('all');
+  return (
+    <div className="mx-auto flex max-w-5xl flex-col gap-4">
+      <div className="flex gap-1.5">
+        {(['all', 'mine'] as const).map((option) => (
+          <button
+            key={option}
+            type="button"
+            aria-pressed={filter === option}
+            onClick={() => setFilter(option)}
+            className={`rounded-pill border px-3.5 py-1.5 text-sm transition-colors ${
+              filter === option
+                ? 'border-teal bg-teal-tint font-medium text-teal'
+                : 'border-border bg-surface text-secondary hover:bg-surface-sunken hover:text-ink'
+            }`}
+          >
+            {intl.formatMessage({ id: `dashboard.filter.${option}` })}
+          </button>
+        ))}
+      </div>
+      <div className="grid items-start gap-4 lg:grid-cols-5">
+        <div className="flex flex-col gap-4 lg:col-span-3">
+          <TriageCard filter={filter} />
+          <MyTasksCard />
+        </div>
+        <div className="flex flex-col gap-4 lg:col-span-2">
+          <OverdueCard />
+          <AgendaCard />
+          <UnreadConversationsCard />
+        </div>
+      </div>
+    </div>
   );
 }
 

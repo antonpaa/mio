@@ -5,7 +5,8 @@
  * keeps development honest meanwhile.
  */
 
-export type MailKind = 'welcome_invite' | 'login_code' | 'password_reset' | 'login_reset_by_admin';
+export type MailKind =
+  'welcome_invite' | 'login_code' | 'password_reset' | 'login_reset_by_admin' | 'survey_reminder';
 
 export interface ContentlessMail {
   recipient: string;

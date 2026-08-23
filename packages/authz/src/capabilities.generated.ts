@@ -48,6 +48,7 @@ export const ROLE_CAPABILITIES: Record<Role, readonly string[]> = {
     "activity.view",
     "activity.create",
     "activity.update",
+    "activity.remind",
     "activity.cancel",
     "task.view",
     "task.create",
@@ -116,6 +117,7 @@ export const ROLE_CAPABILITIES: Record<Role, readonly string[]> = {
     "activity.view",
     "activity.create",
     "activity.update",
+    "activity.remind",
     "activity.cancel",
     "task.view",
     "task.create",
@@ -381,6 +383,10 @@ export const ACTION_GROUPS: Record<string, readonly string[]> = {
     "grp:treatment_lead:team_member"
   ],
   "activity.update": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
+  "activity.remind": [
     "grp:treatment_member:team_member",
     "grp:treatment_lead:team_member"
   ],
@@ -727,6 +733,10 @@ export const ACTION_METADATA: Record<string, { audit: 'always' | 'never'; patien
     "patientScoped": true
   },
   "activity.update": {
+    "audit": "always",
+    "patientScoped": true
+  },
+  "activity.remind": {
     "audit": "always",
     "patientScoped": true
   },

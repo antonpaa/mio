@@ -288,6 +288,18 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+      - id: remind
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: team_member
+          treatment_lead: team_member
+          administrator: deny
+        notes: >-
+          The C1 "send reminder" control (WP-27): a clinician nudges an
+          overdue survey occurrence by hand. Sends only the contentless
+          email and honours the patient's P8 toggle; the worker's
+          scheduled reminder is the automatic twin.
       - id: cancel
         audit: always
         grants:

@@ -63,6 +63,29 @@ export class ActivityController {
   ) {
     return this.scheduling.changeActivityStatus(staff, id, body.to ?? '');
   }
+
+  @Post(':id/remind')
+  @HttpCode(200)
+  remind(@CurrentStaff() staff: StaffPrincipal, @Param('id') id: string) {
+    return this.scheduling.remindActivity(staff, id);
+  }
+}
+
+/** C1's worklists (WP-27): overdue occurrences and the week's agenda. */
+@Controller('api/staff/dashboard')
+@UseGuards(StaffSessionGuard)
+export class StaffDashboardController {
+  constructor(private readonly scheduling: SchedulingService) {}
+
+  @Get('overdue')
+  overdue(@CurrentStaff() staff: StaffPrincipal) {
+    return this.scheduling.staffOverdue(staff);
+  }
+
+  @Get('agenda')
+  agenda(@CurrentStaff() staff: StaffPrincipal) {
+    return this.scheduling.staffAgenda(staff);
+  }
 }
 
 @Controller('api/staff/schedules')
