@@ -115,9 +115,12 @@ discovered in production.
 
 ## Policy change control
 
-Cedar policies live in the repository and are reviewed as code. A change to
-authorization requires a matching change to the capability matrix, and CI fails
-if either moves without the other.
+Cedar policies live in the repository and are reviewed as code
+(`packages/authz/src/policies.cedar`; the toolchain is described in
+[`../authz/README.md`](../authz/README.md)). A change to authorization requires
+a matching change to the capability matrix, and CI fails if either moves
+without the other — the generated artifacts are drift-checked and the
+exhaustive grant suite runs on every push.
 
 Under [ADR-0009](../adr/0009-iec-62304-shaped-development.md) this gives a
 traceable link from an access rule to the reason it exists — which is what an

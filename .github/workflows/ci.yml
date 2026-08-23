@@ -59,10 +59,8 @@ jobs:
       - name: Architecture boundaries
         run: pnpm boundaries
 
-      - name: Capability matrix invariants
-        run: |
-          python3 -c "import yaml" 2>/dev/null || python3 -m pip install --quiet pyyaml
-          python3 docs/authz/validate_matrix.py
+      - name: Capability matrix - generated artifacts fresh
+        run: pnpm --filter @mio/authz generate:check
 
       - name: Web build
         run: pnpm --filter @mio/web build

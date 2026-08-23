@@ -22,15 +22,34 @@ worth having precisely because humans read it. What is generated is the
 *exhaustive test suite* proving those policies match the agreed matrix. Editing a
 policy without editing the matrix fails CI, and vice versa.
 
-## Validating
+## Toolchain (packages/authz)
+
+The generator and validator live in `packages/authz` — the standalone Python
+script this README once pointed at is retired, as planned.
 
 ```
-python3 docs/authz/validate_matrix.py
+pnpm --filter @mio/authz generate    # regenerate the three artifacts below
+pnpm --filter @mio/authz test        # invariants + exhaustive grant suite
 ```
 
-Checks the six invariants the matrix declares. This runs in CI. When the
-application codebase exists, this logic moves into the Cedar test generator and
-the standalone script is retired.
+Generated, checked in, and drift-checked by CI (`generate:check` plus a
+freshness test):
+
+| Artifact | Purpose |
+|---|---|
+| `packages/authz/src/cedar-schema.generated.ts` | Cedar entity types, actions, and role:scope action groups |
+| `packages/authz/src/capabilities.generated.ts` | UI capability flags + audit metadata + slice attribute lists |
+| [`matrix.generated.md`](matrix.generated.md) | The human-readable matrix for the compliance pack |
+
+The factoring: what a scope MEANS (the condition over entities) is
+hand-written, reviewed Cedar in `packages/authz/src/policies.cedar` — about
+one pattern policy per role x scope, stable as the product grows. WHICH
+actions carry which (role, scope) pair is generated into the schema as
+action-group membership. The exhaustive test suite proves policies, schema
+and matrix agree on every grant: satisfying slice allows, near-miss denies,
+and a deny grant stays denied even with every relation satisfied at once.
+
+The six invariants run inside the test suite (`src/matrix.ts`).
 
 ## Reading a row
 
