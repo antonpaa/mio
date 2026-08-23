@@ -57,8 +57,39 @@ export type RuleWhen =
   /** body_map: at least `value` regions marked */
   | { kind: 'region_count'; value: number };
 
-/** WP-18 raises alerts; WP-20 adds notifications and tasks to this union. */
-export type RuleOutcome = { kind: 'alert'; severity: Severity };
+/** Custom-notification audiences (B7). "Care coordinator" waits for the
+ * role to exist in the role system. */
+export type NotifyRecipient = 'team' | 'lead' | 'patient';
+
+/**
+ * Rule outcomes - each optional, in any combination (B7). The authored
+ * texts (notification body, task title) are human-readable content and
+ * live in the locale bundles under the rule id, never here.
+ */
+export type RuleOutcome =
+  | { kind: 'alert'; severity: Severity }
+  | { kind: 'notify'; recipients: NotifyRecipient[] }
+  | { kind: 'task' };
+
+/**
+ * Conditions across CONSECUTIVE occurrences of the same survey in the
+ * same treatment (WP-20). `times` counts occurrences: repeat = the match
+ * holds on each of the last N submitted responses; decreasing/increasing
+ * = the last N submitted numeric answers are strictly monotone; missed =
+ * the last N occurrences all closed unanswered. An occurrence that is
+ * still open breaks every streak.
+ */
+export type TrendWhen =
+  | { kind: 'repeat'; questionId: string; match: RuleWhen; times: number }
+  | { kind: 'decreasing'; questionId: string; times: number }
+  | { kind: 'increasing'; questionId: string; times: number }
+  | { kind: 'missed'; times: number };
+
+export interface TrendRule {
+  id: string;
+  when: TrendWhen;
+  outcomes: RuleOutcome[];
+}
 
 /**
  * Declarative JSON, never authored code. An empty outcome list is the
@@ -101,6 +132,9 @@ export interface SurveyDefinition {
   /** 'symptom' surveys render the clinic escape hatch (P4) */
   kind?: 'symptom' | 'generic';
   pages: SurveyPage[];
+  /** survey-level rules over consecutive occurrences (B7, WP-20).
+   * Clinician configuration - stripped by patientView(). */
+  trendRules?: TrendRule[];
 }
 
 /** Per-locale text for one definition; same ids, comparable across languages. */
@@ -119,6 +153,16 @@ export interface LocaleBundle {
       scaleMaxLabel?: string;
       /** authored error message shown when `pattern` rejects */
       patternMessage?: string;
+    }
+  >;
+  /** rule id -> authored outcome texts: the custom-notification body
+   * delivered AS WRITTEN, and the created task's title. Clinician
+   * configuration - stripped from every patient-facing payload. */
+  rules?: Record<
+    string,
+    {
+      notifyText?: string;
+      taskTitle?: string;
     }
   >;
 }

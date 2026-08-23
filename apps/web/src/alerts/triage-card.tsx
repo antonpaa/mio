@@ -51,10 +51,14 @@ export function TriageCard(): ReactElement {
                 params={{ alertId: row.id }}
                 className="flex flex-wrap items-center gap-x-3 gap-y-1 px-5 py-3 transition-colors hover:bg-surface-sunken"
               >
-                <SeverityChip
-                  severity={row.severity}
-                  label={intl.formatMessage({ id: `severity.${row.severity}` })}
-                />
+                {/* fixed-width chip column so the text column starts aligned
+                    whatever the severity label's length */}
+                <span className="flex w-28 shrink-0">
+                  <SeverityChip
+                    severity={row.severity}
+                    label={intl.formatMessage({ id: `severity.${row.severity}` })}
+                  />
+                </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium text-ink">
                     {row.patient_given} {row.patient_family}

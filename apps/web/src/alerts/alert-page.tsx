@@ -241,16 +241,18 @@ export function AlertPage(): ReactElement {
         <ul className="mt-2 flex flex-col gap-2">
           {triggers.map((trigger) => (
             <li key={trigger.id} className="flex flex-wrap items-center gap-2 text-sm text-ink">
-              {trigger.severity !== null ? (
-                <SeverityChip
-                  severity={trigger.severity}
-                  label={intl.formatMessage({ id: `severity.${trigger.severity}` })}
-                />
-              ) : (
-                <StatusChip tone="neutral">
-                  {intl.formatMessage({ id: 'alerts.recordOnly' })}
-                </StatusChip>
-              )}
+              <span className="flex min-w-28 shrink-0">
+                {trigger.severity !== null ? (
+                  <SeverityChip
+                    severity={trigger.severity}
+                    label={intl.formatMessage({ id: `severity.${trigger.severity}` })}
+                  />
+                ) : (
+                  <StatusChip tone="neutral">
+                    {intl.formatMessage({ id: 'alerts.recordOnly' })}
+                  </StatusChip>
+                )}
+              </span>
               <span>{citationText(intl, trigger.citation)}</span>
             </li>
           ))}

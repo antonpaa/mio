@@ -86,6 +86,7 @@ export async function seedWorld(
     await pool.query('BEGIN');
     // FK order: responses and occurrences first, then the catalog they
     // reference, then the treatment graph.
+    await pool.query('DELETE FROM clinical.rule_notification');
     await pool.query('DELETE FROM clinical.rule_trigger');
     await pool.query('DELETE FROM clinical.alert_comment');
     await pool.query('DELETE FROM clinical.alert');

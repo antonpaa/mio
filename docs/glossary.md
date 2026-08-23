@@ -107,7 +107,7 @@ Used for both survey and treatment templates.
 | New | Uusi | Ny | |
 | Acknowledged | Kuitattu | Kvitterad | ⚠️ |
 | Resolved | Ratkaistu | Åtgärdad | ⚠️ |
-| Triage queue | Triagejono | Triagekö | The dashboard's open-alert queue (C1) ⚠️ |
+| Triage queue | Hälytysjono | Larmkö | The dashboard's open-alert queue (C1). FI/SV avoid the loanword "triage" - plain "alert queue" reads better (product decision 2026-08) |
 | Record only | Vain kirjaus | Endast registrering | Rule with all outcomes off — stored, nothing raised |
 | Trend rule | Trendisääntö | Trendregel | Condition across consecutive responses ⚠️ |
 | Custom notification | Mukautettu ilmoitus | Anpassad avisering | Rule outcome with authored text ⚠️ |

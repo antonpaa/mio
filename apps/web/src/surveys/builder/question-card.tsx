@@ -577,19 +577,6 @@ function RulesPanel({
     );
   };
 
-  const defaultWhen = (): RuleWhen => {
-    if (question.type === 'choice_single' || question.type === 'choice_multi') {
-      return { kind: 'option', optionId: question.options?.[0]?.id ?? 'o-1' };
-    }
-    if (question.type === 'scale') {
-      return { kind: 'at_least', value: question.scale?.max ?? 10 };
-    }
-    if (question.type === 'number') return { kind: 'at_least', value: 1 };
-    return (question.criticalRegions?.length ?? 0) > 0
-      ? { kind: 'critical_region' }
-      : { kind: 'region_count', value: 3 };
-  };
-
   return (
     <div className="mt-3 border-t border-hairline pt-3">
       <p className="text-xs font-medium uppercase tracking-wide text-muted">
@@ -604,110 +591,13 @@ function RulesPanel({
             <span className="max-w-32 truncate font-mono text-xs text-muted" title={rule.id}>
               {rule.id}
             </span>
-            {rule.when.kind === 'option' ? (
-              <>
-                <span className="text-sm text-secondary">
-                  <FormattedMessage id="builder.whenAnswer" />
-                </span>
-                <select
-                  className={selectClass}
-                  aria-label={intl.formatMessage(
-                    { id: 'builder.ruleConditionLabel' },
-                    { id: rule.id },
-                  )}
-                  value={rule.when.optionId}
-                  onChange={(event) =>
-                    patchRule(index, { kind: 'option', optionId: event.currentTarget.value })
-                  }
-                >
-                  {(question.options ?? []).map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {text?.options?.[option.id] || option.id}
-                    </option>
-                  ))}
-                </select>
-              </>
-            ) : null}
-            {rule.when.kind === 'at_least' || rule.when.kind === 'at_most' ? (
-              <>
-                <span className="text-sm text-secondary">
-                  <FormattedMessage id="builder.whenValue" />
-                </span>
-                <select
-                  className={selectClass}
-                  aria-label={intl.formatMessage({ id: 'builder.ruleOpLabel' }, { id: rule.id })}
-                  value={rule.when.kind}
-                  onChange={(event) =>
-                    patchRule(index, {
-                      kind: event.currentTarget.value as 'at_least' | 'at_most',
-                      value: (rule.when as { value: number }).value,
-                    })
-                  }
-                >
-                  <option value="at_least">{intl.formatMessage({ id: 'builder.op.gte' })}</option>
-                  <option value="at_most">{intl.formatMessage({ id: 'builder.op.lte' })}</option>
-                </select>
-                <input
-                  type="number"
-                  className={`${selectClass} w-20`}
-                  aria-label={intl.formatMessage({ id: 'builder.ruleValueLabel' }, { id: rule.id })}
-                  value={rule.when.value}
-                  onChange={(event) =>
-                    patchRule(index, {
-                      kind: rule.when.kind as 'at_least' | 'at_most',
-                      value: Number(event.currentTarget.value),
-                    })
-                  }
-                />
-              </>
-            ) : null}
-            {rule.when.kind === 'critical_region' ||
-            rule.when.kind === 'other_region' ||
-            rule.when.kind === 'region_count' ? (
-              <>
-                <select
-                  className={selectClass}
-                  aria-label={intl.formatMessage(
-                    { id: 'builder.ruleConditionLabel' },
-                    { id: rule.id },
-                  )}
-                  value={rule.when.kind}
-                  onChange={(event) => {
-                    const kind = event.currentTarget.value as
-                      'critical_region' | 'other_region' | 'region_count';
-                    patchRule(index, kind === 'region_count' ? { kind, value: 3 } : { kind });
-                  }}
-                >
-                  <option value="critical_region">
-                    {intl.formatMessage({ id: 'builder.bodyRule.critical_region' })}
-                  </option>
-                  <option value="other_region">
-                    {intl.formatMessage({ id: 'builder.bodyRule.other_region' })}
-                  </option>
-                  <option value="region_count">
-                    {intl.formatMessage({ id: 'builder.bodyRule.region_count' })}
-                  </option>
-                </select>
-                {rule.when.kind === 'region_count' ? (
-                  <input
-                    type="number"
-                    min={1}
-                    className={`${selectClass} w-20`}
-                    aria-label={intl.formatMessage(
-                      { id: 'builder.ruleValueLabel' },
-                      { id: rule.id },
-                    )}
-                    value={rule.when.value}
-                    onChange={(event) =>
-                      patchRule(index, {
-                        kind: 'region_count',
-                        value: Number(event.currentTarget.value),
-                      })
-                    }
-                  />
-                ) : null}
-              </>
-            ) : null}
+            <WhenEditor
+              question={question}
+              text={text}
+              ruleId={rule.id}
+              when={rule.when}
+              onChange={(when) => patchRule(index, when)}
+            />
             <span aria-hidden className="text-muted">
               →
             </span>
@@ -744,7 +634,7 @@ function RulesPanel({
               ...rules,
               {
                 id: nextRuleId(),
-                when: defaultWhen(),
+                when: defaultWhenFor(question),
                 outcomes: [{ kind: 'alert', severity: 'moderate' }],
               },
             ])
@@ -755,4 +645,136 @@ function RulesPanel({
       </div>
     </div>
   );
+}
+
+/** A sensible starting condition per question type. */
+export function defaultWhenFor(question: Question): RuleWhen {
+  if (question.type === 'choice_single' || question.type === 'choice_multi') {
+    return { kind: 'option', optionId: question.options?.[0]?.id ?? 'o-1' };
+  }
+  if (question.type === 'scale') {
+    return { kind: 'at_least', value: question.scale?.max ?? 10 };
+  }
+  if (question.type === 'number') return { kind: 'at_least', value: 1 };
+  return (question.criticalRegions?.length ?? 0) > 0
+    ? { kind: 'critical_region' }
+    : { kind: 'region_count', value: 3 };
+}
+
+/**
+ * The single-response condition editor, typed to its question - shared
+ * by the per-question rules panel (B2/B3) and the trend rules' repeat
+ * match (B7).
+ */
+export function WhenEditor({
+  question,
+  text,
+  ruleId,
+  when,
+  onChange,
+}: {
+  question: Question;
+  text: QuestionText | undefined;
+  ruleId: string;
+  when: RuleWhen;
+  onChange: (when: RuleWhen) => void;
+}): ReactElement | null {
+  const intl = useIntl();
+  const selectClass = 'rounded-inner border border-border bg-surface px-2 py-1 text-sm text-ink';
+  if (when.kind === 'option') {
+    return (
+      <>
+        <span className="text-sm text-secondary">
+          <FormattedMessage id="builder.whenAnswer" />
+        </span>
+        <select
+          className={selectClass}
+          aria-label={intl.formatMessage({ id: 'builder.ruleConditionLabel' }, { id: ruleId })}
+          value={when.optionId}
+          onChange={(event) => onChange({ kind: 'option', optionId: event.currentTarget.value })}
+        >
+          {(question.options ?? []).map((option) => (
+            <option key={option.id} value={option.id}>
+              {text?.options?.[option.id] || option.id}
+            </option>
+          ))}
+        </select>
+      </>
+    );
+  }
+  if (when.kind === 'at_least' || when.kind === 'at_most') {
+    return (
+      <>
+        <span className="text-sm text-secondary">
+          <FormattedMessage id="builder.whenValue" />
+        </span>
+        <select
+          className={selectClass}
+          aria-label={intl.formatMessage({ id: 'builder.ruleOpLabel' }, { id: ruleId })}
+          value={when.kind}
+          onChange={(event) =>
+            onChange({
+              kind: event.currentTarget.value as 'at_least' | 'at_most',
+              value: when.value,
+            })
+          }
+        >
+          <option value="at_least">{intl.formatMessage({ id: 'builder.op.gte' })}</option>
+          <option value="at_most">{intl.formatMessage({ id: 'builder.op.lte' })}</option>
+        </select>
+        <input
+          type="number"
+          className={`${selectClass} w-20`}
+          aria-label={intl.formatMessage({ id: 'builder.ruleValueLabel' }, { id: ruleId })}
+          value={when.value}
+          onChange={(event) =>
+            onChange({ kind: when.kind, value: Number(event.currentTarget.value) })
+          }
+        />
+      </>
+    );
+  }
+  if (
+    when.kind === 'critical_region' ||
+    when.kind === 'other_region' ||
+    when.kind === 'region_count'
+  ) {
+    return (
+      <>
+        <select
+          className={selectClass}
+          aria-label={intl.formatMessage({ id: 'builder.ruleConditionLabel' }, { id: ruleId })}
+          value={when.kind}
+          onChange={(event) => {
+            const kind = event.currentTarget.value as
+              'critical_region' | 'other_region' | 'region_count';
+            onChange(kind === 'region_count' ? { kind, value: 3 } : { kind });
+          }}
+        >
+          <option value="critical_region">
+            {intl.formatMessage({ id: 'builder.bodyRule.critical_region' })}
+          </option>
+          <option value="other_region">
+            {intl.formatMessage({ id: 'builder.bodyRule.other_region' })}
+          </option>
+          <option value="region_count">
+            {intl.formatMessage({ id: 'builder.bodyRule.region_count' })}
+          </option>
+        </select>
+        {when.kind === 'region_count' ? (
+          <input
+            type="number"
+            min={1}
+            className={`${selectClass} w-20`}
+            aria-label={intl.formatMessage({ id: 'builder.ruleValueLabel' }, { id: ruleId })}
+            value={when.value}
+            onChange={(event) =>
+              onChange({ kind: 'region_count', value: Number(event.currentTarget.value) })
+            }
+          />
+        ) : null}
+      </>
+    );
+  }
+  return null;
 }

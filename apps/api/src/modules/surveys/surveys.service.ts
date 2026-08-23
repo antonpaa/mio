@@ -8,12 +8,21 @@ import {
 } from '@nestjs/common';
 import type pg from 'pg';
 import { authorize } from '@mio/authz/engine';
-import { withUserContext, writeAccessEvent, writeChangeEvent } from '@mio/db';
+import {
+  persistEvaluation,
+  ruleTextsFromBundles,
+  withUserContext,
+  writeAccessEvent,
+  writeChangeEvent,
+} from '@mio/db';
 import {
   canonicalJson,
   evaluateResponse,
+  evaluateTrends,
+  maxSeverity,
   missingTranslations,
   normaliseDraft,
+  patientBundleView,
   patientView,
   progressOf,
   validateDefinition,
@@ -21,6 +30,7 @@ import {
   type Answers,
   type LocaleBundle,
   type SurveyDefinition,
+  type TrendEntry,
 } from '@mio/survey-schema';
 import {
   addDays,
@@ -316,6 +326,80 @@ export class SurveysService {
     );
   }
 
+  /**
+   * The consecutive-occurrence history for trend evaluation: every
+   * occurrence of the SAME survey in the SAME treatment up to the
+   * anchoring one, oldest first. An occurrence neither submitted nor
+   * missed is 'open' and breaks every streak. The just-submitted
+   * response is spliced in because its row-status update and this read
+   * share a transaction.
+   */
+  private async occurrenceHistory(
+    client: pg.ClientBase,
+    activityId: string,
+    current: { responseId: string; answers: Answers },
+  ): Promise<TrendEntry[]> {
+    const { rows: anchorRows } = await client.query<{
+      survey_id: string;
+      treatment_id: string;
+      occurrence_date: string;
+    }>(
+      `SELECT COALESCE(a.survey_id, sch.survey_id) AS survey_id, a.treatment_id,
+              a.occurrence_date::text AS occurrence_date
+         FROM clinical.activity a
+         LEFT JOIN clinical.schedule sch ON sch.id = a.schedule_id
+        WHERE a.id = $1`,
+      [activityId],
+    );
+    const anchorRow = anchorRows[0];
+    if (!anchorRow || anchorRow.survey_id === null) return [];
+    const { rows } = await client.query<{
+      activity_id: string;
+      date: string;
+      status: string;
+      response_id: string | null;
+      answers: Answers | null;
+    }>(
+      `SELECT a.id AS activity_id, a.occurrence_date::text AS date, a.status,
+              r.id AS response_id, r.answers
+         FROM clinical.activity a
+         LEFT JOIN clinical.schedule sch ON sch.id = a.schedule_id
+         LEFT JOIN clinical.survey_response r
+                ON r.activity_id = a.id AND r.status = 'submitted'
+        WHERE a.treatment_id = $1 AND a.kind = 'survey'
+          AND COALESCE(a.survey_id, sch.survey_id) = $2
+          AND a.occurrence_date <= $3
+        ORDER BY a.occurrence_date DESC, a.id DESC
+        LIMIT 24`,
+      [anchorRow.treatment_id, anchorRow.survey_id, anchorRow.occurrence_date],
+    );
+    return rows.reverse().map((row): TrendEntry => {
+      if (row.activity_id === activityId) {
+        return {
+          date: row.date,
+          status: 'submitted',
+          responseId: current.responseId,
+          activityId: row.activity_id,
+          answers: current.answers,
+        };
+      }
+      if (row.response_id !== null) {
+        return {
+          date: row.date,
+          status: 'submitted',
+          responseId: row.response_id,
+          activityId: row.activity_id,
+          answers: row.answers ?? {},
+        };
+      }
+      return {
+        date: row.date,
+        status: row.status === 'missed' ? 'missed' : 'open',
+        activityId: row.activity_id,
+      };
+    });
+  }
+
   private async loadResponse(
     client: pg.ClientBase,
     responseId: string,
@@ -381,7 +465,7 @@ export class SurveysService {
           kind: version.definition.kind ?? 'generic',
           // criticality is clinician configuration - never patient-visible
           definition: patientView(version.definition),
-          bundle,
+          bundle: patientBundleView(bundle),
           answers: response.answers,
           progress: progressOf(version.definition, response.answers),
           submittedAt: response.submitted_at,
@@ -465,53 +549,37 @@ export class SurveysService {
           // the patient realm holds no UPDATE on clinical.activity
           await client.query(`SELECT app.complete_survey_occurrence($1)`, [response.activity_id]);
         }
-        // WP-18: the deterministic evaluator runs in the SAME transaction
-        // as the submission - triggers, alert and outbox commit with the
-        // answers or not at all. The patient's reply stays the designed
-        // P12 copy; nothing rule-shaped is returned here.
-        const evaluation = evaluateResponse(version.definition, result.answers);
-        const alertId = evaluation.severity === null ? null : randomUUID();
-        if (alertId !== null && evaluation.severity !== null) {
-          await client.query(
-            `INSERT INTO clinical.alert (id, treatment_id, patient_id, survey_response_id, severity)
-             VALUES ($1, $2, $3, $4, $5)`,
-            [alertId, response.treatment_id, response.patient_id, responseId, evaluation.severity],
-          );
-          await client.query(
-            `INSERT INTO clinical.notification_outbox (id, kind, treatment_id, patient_id, payload)
-             VALUES ($1, 'alert.raised', $2, $3, $4)`,
-            [
-              randomUUID(),
-              response.treatment_id,
-              response.patient_id,
-              JSON.stringify({
-                alertId,
-                severity: evaluation.severity,
-                surveyResponseId: responseId,
-              }),
-            ],
-          );
-        }
-        for (const fired of evaluation.fired) {
-          await client.query(
-            `INSERT INTO clinical.rule_trigger
-               (id, alert_id, treatment_id, patient_id, survey_response_id,
-                survey_version_id, rule_id, question_id, severity, trace)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-            [
-              randomUUID(),
-              fired.severity === null ? null : alertId,
-              response.treatment_id,
-              response.patient_id,
-              responseId,
-              response.survey_version_id,
-              fired.ruleId,
-              fired.questionId,
-              fired.severity,
-              JSON.stringify(fired.trace),
-            ],
-          );
-        }
+        // WP-18/20: single-response AND trend evaluation run in the SAME
+        // transaction as the submission - triggers, alert, notifications
+        // and rule-created tasks commit with the answers or not at all.
+        // The patient's reply stays the designed P12 copy; nothing
+        // rule-shaped is returned here.
+        const singles = evaluateResponse(version.definition, result.answers);
+        const trends =
+          response.activity_id === null
+            ? { fired: [], severity: null }
+            : evaluateTrends(
+                version.definition,
+                await this.occurrenceHistory(client, response.activity_id, {
+                  responseId,
+                  answers: result.answers,
+                }),
+              );
+        const persisted = await persistEvaluation(
+          client,
+          {
+            treatmentId: response.treatment_id,
+            patientId: response.patient_id,
+            surveyVersionId: response.survey_version_id,
+            surveyResponseId: responseId,
+            activityId: response.activity_id,
+            ruleTexts: ruleTextsFromBundles(version.locales),
+          },
+          {
+            fired: [...singles.fired, ...trends.fired],
+            severity: maxSeverity(singles.severity, trends.severity),
+          },
+        );
         await writeChangeEvent(client, {
           actorUserId: patient.userId,
           actorRealm: 'patient',
@@ -521,7 +589,7 @@ export class SurveysService {
           patientId: response.patient_id,
           detail: { surveyVersionId: response.survey_version_id },
         });
-        if (alertId !== null) {
+        if (persisted.alertId !== null) {
           // the PP6 timeline's "raised by rule" entry - the actor is the
           // submission that caused it, the why lives in the trigger traces
           await writeChangeEvent(client, {
@@ -529,11 +597,11 @@ export class SurveysService {
             actorRealm: 'patient',
             action: 'alert.raise',
             resourceType: 'alert',
-            resourceId: alertId,
+            resourceId: persisted.alertId,
             patientId: response.patient_id,
             detail: {
-              severity: evaluation.severity,
-              ruleIds: evaluation.fired
+              severity: maxSeverity(singles.severity, trends.severity),
+              ruleIds: [...singles.fired, ...trends.fired]
                 .filter((fired) => fired.severity !== null)
                 .map((fired) => fired.ruleId),
             },
@@ -1311,11 +1379,19 @@ function allQuestionCount(definition: SurveyDefinition): number {
 function normaliseLocales(input: LocaleBundle[]): LocaleBundle[] {
   return (['en', 'fi', 'sv'] as const).map((locale) => {
     const bundle = input.find((entry) => entry.locale === locale);
+    const rules = Object.fromEntries(
+      Object.entries(bundle?.rules ?? {}).filter(
+        ([, texts]) =>
+          (texts.notifyText !== undefined && texts.notifyText.trim() !== '') ||
+          (texts.taskTitle !== undefined && texts.taskTitle.trim() !== ''),
+      ),
+    );
     return {
       locale,
       title: typeof bundle?.title === 'string' ? bundle.title : '',
       ...(bundle?.description !== undefined ? { description: bundle.description } : {}),
       questions: bundle?.questions ?? {},
+      ...(Object.keys(rules).length > 0 ? { rules } : {}),
     };
   });
 }

@@ -23,3 +23,10 @@ export {
 export { writeAccessEvent, type AccessEventInput } from './audit.js';
 export { writeAuthEvent, type AuthEventInput } from './auth-events.js';
 export { writeChangeEvent, type ChangeEventInput } from './change-events.js';
+export {
+  persistEvaluation,
+  ruleTextsFromBundles,
+  type EvaluationContext,
+  type EvaluationFiring,
+  type EvaluationResultRow,
+} from './evaluation.js';

@@ -15,6 +15,7 @@ export type {
   ChoiceOption,
   Condition,
   LocaleBundle,
+  NotifyRecipient,
   Question,
   QuestionRule,
   QuestionType,
@@ -23,6 +24,8 @@ export type {
   Severity,
   SurveyDefinition,
   SurveyPage,
+  TrendRule,
+  TrendWhen,
 } from './types.js';
 export {
   allQuestions,
@@ -36,18 +39,23 @@ export {
   assertValidDefinition,
   canonicalJson,
   MAX_RULES_PER_QUESTION,
+  MAX_TREND_RULES,
+  MAX_TREND_TIMES,
   missingTranslations,
+  patientBundleView,
   patientView,
   validateDefinition,
   type DefinitionIssue,
 } from './definition.js';
 export {
   evaluateResponse,
+  evaluateTrends,
   maxSeverity,
   SEVERITIES,
   type Evaluation,
   type FiredRule,
   type RuleTrace,
+  type TrendEntry,
 } from './rules.js';
 export {
   BODY_REGION_IDS,

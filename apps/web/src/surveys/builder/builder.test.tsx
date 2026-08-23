@@ -69,6 +69,21 @@ const VERSION = {
         ],
       },
     ],
+    trendRules: [
+      {
+        id: 'r-9',
+        when: {
+          kind: 'repeat',
+          questionId: 'q-1',
+          match: { kind: 'option', optionId: 'o-2' },
+          times: 3,
+        },
+        outcomes: [
+          { kind: 'alert', severity: 'high' },
+          { kind: 'notify', recipients: ['team'] },
+        ],
+      },
+    ],
   },
   locales: [
     {
@@ -78,6 +93,7 @@ const VERSION = {
         'q-1': { label: 'Appetite this week', options: { 'o-1': 'Normal', 'o-2': 'Reduced' } },
         'q-2': { label: 'For how many days?' },
       },
+      rules: { 'r-9': { notifyText: 'Appetite has stayed reduced.' } },
     },
     { locale: 'fi', title: '', questions: {} },
     { locale: 'sv', title: '', questions: {} },
@@ -169,7 +185,8 @@ describe('B2/B4/B5 builder', () => {
 
     // add a question - a fresh card with a minted id appears
     await userEvent.click(screen.getByRole('button', { name: '+ Add question' }));
-    await screen.findByText('q-3');
+    // the id shows on the new card AND in the trend panel's question select
+    expect((await screen.findAllByText('q-3')).length).toBeGreaterThan(0);
 
     // the preview runs the REAL engine: the follow-up is hidden until the
     // gating option is chosen - and the verdict strip runs the REAL rule
@@ -213,6 +230,32 @@ describe('B2/B4/B5 builder', () => {
     // record-only is a first-class outcome
     await userEvent.selectOptions(screen.getByLabelText('Outcome of rule r-2'), 'record');
     expect(screen.getByLabelText('Outcome of rule r-2')).toHaveProperty('value', 'record');
+  });
+
+  it('the B7 trend panel edits windows, outcomes and authored texts', async () => {
+    vi.mocked(api.whoami).mockResolvedValue(LEAD);
+    render(appAt('/surveys/builder/v1'));
+    await screen.findByRole('heading', { name: 'Appetite check' });
+
+    // the fixture trend rule renders: repeat over q-1, x3, alert high +
+    // notify team with its authored text
+    expect(screen.getByText('Trend rules')).toBeTruthy();
+    expect(screen.getByLabelText('Condition kind of rule r-9')).toHaveProperty('value', 'repeat');
+    expect(screen.getByLabelText('Occurrence count of rule r-9')).toHaveProperty('value', '3');
+    expect(screen.getByLabelText('Outcome of rule r-9')).toHaveProperty('value', 'high');
+    expect(screen.getByDisplayValue('Appetite has stayed reduced.')).toBeTruthy();
+
+    // switching the kind to missed drops the question controls
+    await userEvent.selectOptions(screen.getByLabelText('Condition kind of rule r-9'), 'missed');
+    expect(screen.getByLabelText('Condition kind of rule r-9')).toHaveProperty('value', 'missed');
+    expect(screen.queryByLabelText('Question of rule r-9')).toBeNull();
+
+    // a new trend rule mints the next free id in the SHARED namespace
+    await userEvent.click(screen.getByRole('button', { name: '+ Add trend rule' }));
+    expect(await screen.findByLabelText('Condition kind of rule r-2')).toHaveProperty(
+      'value',
+      'missed',
+    );
   });
 
   it('publish asks for confirmation and states immutability', async () => {

@@ -3,7 +3,7 @@ import { isSafePattern } from './safe-regex.js';
 import { BODY_REGION_IDS } from './body-map.js';
 import { isQuestionId } from './ids.js';
 import { SEVERITIES } from './rules.js';
-import type { LocaleBundle, Question, QuestionRule, SurveyDefinition } from './types.js';
+import type { LocaleBundle, Question, QuestionRule, SurveyDefinition, TrendRule } from './types.js';
 
 /**
  * Structural validation of a definition - what the builder enforces by
@@ -51,18 +51,53 @@ export function validateDefinition(definition: SurveyDefinition): DefinitionIssu
       ruleIds.add(rule.id);
     }
   }
+  // survey-level trend rules share the rule-id namespace, so a trace's
+  // (survey_version, rule_id) pair stays unambiguous across both kinds
+  const trendRules = definition.trendRules;
+  if (trendRules !== undefined) {
+    if (!Array.isArray(trendRules) || trendRules.length > MAX_TREND_RULES) {
+      issues.push({ code: 'bad_rule' });
+    } else {
+      const byId = new Map(questions.map((question) => [question.id, question]));
+      for (const rule of trendRules) {
+        if (ruleIds.has(rule.id) || trendRuleIssue(byId, rule)) {
+          issues.push({ questionId: rule.id, code: 'bad_rule' });
+        }
+        ruleIds.add(rule.id);
+      }
+    }
+  }
   return issues;
 }
 
-/** A rule's condition must fit the question it sits on; declarative JSON
- * only - anything shape-invalid is one refusal, not a runtime surprise. */
-function ruleIssue(question: Question, rule: QuestionRule): boolean {
-  if (!isQuestionId(rule.id)) return true;
-  if (!Array.isArray(rule.outcomes) || rule.outcomes.length > 3) return true;
-  for (const outcome of rule.outcomes) {
-    if (outcome.kind !== 'alert' || !SEVERITIES.includes(outcome.severity)) return true;
+const NOTIFY_RECIPIENTS = ['team', 'lead', 'patient'];
+
+/** Outcomes: any combination, one of each kind, all fields shape-valid. */
+function outcomesIssue(outcomes: QuestionRule['outcomes']): boolean {
+  if (!Array.isArray(outcomes) || outcomes.length > 3) return true;
+  const kinds = new Set<string>();
+  for (const outcome of outcomes) {
+    if (kinds.has(outcome.kind)) return true;
+    kinds.add(outcome.kind);
+    if (outcome.kind === 'alert') {
+      if (!SEVERITIES.includes(outcome.severity)) return true;
+    } else if (outcome.kind === 'notify') {
+      if (
+        !Array.isArray(outcome.recipients) ||
+        outcome.recipients.length === 0 ||
+        outcome.recipients.some((entry) => !NOTIFY_RECIPIENTS.includes(entry)) ||
+        new Set(outcome.recipients).size !== outcome.recipients.length
+      ) {
+        return true;
+      }
+    } else if (outcome.kind !== 'task') {
+      return true;
+    }
   }
-  const when = rule.when;
+  return false;
+}
+
+function whenMisfits(question: Question, when: QuestionRule['when']): boolean {
   switch (when.kind) {
     case 'option':
       return (
@@ -82,6 +117,43 @@ function ruleIssue(question: Question, rule: QuestionRule): boolean {
       return question.type !== 'body_map';
     case 'region_count':
       return question.type !== 'body_map' || !Number.isInteger(when.value) || when.value < 1;
+    default:
+      return true;
+  }
+}
+
+/** A rule's condition must fit the question it sits on; declarative JSON
+ * only - anything shape-invalid is one refusal, not a runtime surprise. */
+function ruleIssue(question: Question, rule: QuestionRule): boolean {
+  if (!isQuestionId(rule.id)) return true;
+  if (outcomesIssue(rule.outcomes)) return true;
+  return whenMisfits(question, rule.when);
+}
+
+/** Trend windows stay small and typed: repeat needs >= 2 occurrences (one
+ * is a single-response rule), monotone runs need >= 2, missed >= 1. */
+export const MAX_TREND_TIMES = 12;
+export const MAX_TREND_RULES = 20;
+
+function trendRuleIssue(questions: Map<string, Question>, rule: TrendRule): boolean {
+  if (!isQuestionId(rule.id)) return true;
+  if (outcomesIssue(rule.outcomes)) return true;
+  const when = rule.when;
+  if (!Number.isInteger(when.times) || when.times > MAX_TREND_TIMES) return true;
+  switch (when.kind) {
+    case 'missed':
+      return when.times < 1;
+    case 'repeat': {
+      if (when.times < 2) return true;
+      const question = questions.get(when.questionId);
+      return question === undefined || whenMisfits(question, when.match);
+    }
+    case 'decreasing':
+    case 'increasing': {
+      if (when.times < 2) return true;
+      const question = questions.get(when.questionId);
+      return question === undefined || (question.type !== 'number' && question.type !== 'scale');
+    }
     default:
       return true;
   }
@@ -215,11 +287,22 @@ export function patientView(definition: SurveyDefinition): SurveyDefinition {
     if (question.followUps) rest.followUps = question.followUps.map(strip);
     return rest;
   };
-  return {
+  const stripped: SurveyDefinition = {
     ...definition,
     pages: definition.pages.map((page) => ({
       ...page,
       questions: page.questions.map(strip),
     })),
   };
+  delete stripped.trendRules;
+  return stripped;
+}
+
+/** The bundle as PATIENTS may see it: authored rule texts (notification
+ * bodies, task titles) are clinician configuration and leave the payload
+ * with the rules themselves. */
+export function patientBundleView(bundle: LocaleBundle): LocaleBundle {
+  const stripped: LocaleBundle = { ...bundle };
+  delete stripped.rules;
+  return stripped;
 }

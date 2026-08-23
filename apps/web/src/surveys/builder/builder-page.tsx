@@ -11,6 +11,7 @@ import {
 } from '@mio/survey-schema';
 import { Button, ConfirmDialog, ErrorState, Skeleton, StatusChip } from '@mio/ui';
 import { QuestionCard, type QuestionText } from './question-card.js';
+import { TrendRulesPanel } from './trend-rules.js';
 import { PreviewDialog } from './preview-dialog.js';
 
 /**
@@ -153,12 +154,14 @@ function BuilderFrame({
     while (ids.has(`q-${n}`)) n += 1;
     return `q-${n}`;
   };
-  // rule ids are unique across the WHOLE survey, so a trace names its rule
+  // rule ids are unique across the WHOLE survey - question rules and
+  // trend rules share the namespace, so a trace names its rule
   // unambiguously
   const nextRuleId = (): string => {
-    const ids = new Set(
-      ordered.flatMap((question) => (question.rules ?? []).map((rule) => rule.id)),
-    );
+    const ids = new Set([
+      ...ordered.flatMap((question) => (question.rules ?? []).map((rule) => rule.id)),
+      ...(definition.trendRules ?? []).map((rule) => rule.id),
+    ]);
     let n = 1;
     while (ids.has(`r-${n}`)) n += 1;
     return `r-${n}`;
@@ -343,6 +346,32 @@ function BuilderFrame({
 
       <div className={`flex flex-col gap-3 ${readOnly ? 'pointer-events-none opacity-60' : ''}`}>
         {page ? renderTree(page.questions, 0) : null}
+        <TrendRulesPanel
+          questions={ordered}
+          rules={definition.trendRules ?? []}
+          bundle={bundle}
+          nextRuleId={nextRuleId}
+          onChangeRules={(trendRules) => {
+            const next: SurveyDefinition = { ...definition };
+            if (trendRules.length > 0) next.trendRules = trendRules;
+            else delete next.trendRules;
+            patchDefinition(next);
+          }}
+          onChangeRuleText={(ruleId, partial) => {
+            setLocales(
+              locales.map((entry) => {
+                if (entry.locale !== activeLocale) return entry;
+                const current = entry.rules?.[ruleId] ?? {};
+                const merged = { ...current, ...partial };
+                const cleaned = Object.fromEntries(
+                  Object.entries(merged).filter(([, value]) => value !== undefined),
+                );
+                return { ...entry, rules: { ...entry.rules, [ruleId]: cleaned } };
+              }),
+            );
+            setDirty(true);
+          }}
+        />
       </div>
 
       {!readOnly ? (

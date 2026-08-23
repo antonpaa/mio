@@ -18,6 +18,7 @@
   "dependencies": {
     "@mio/db": "workspace:*",
     "@mio/schedule": "workspace:*",
+    "@mio/survey-schema": "workspace:*",
     "nodemailer": "^9.0.5",
     "pg": "^8.23.0"
   }
