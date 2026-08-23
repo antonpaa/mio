@@ -101,9 +101,13 @@ export class AdminResetController {
       }
 
       // Credentials only, never data: void the password, kill sessions and
-      // outstanding tokens; the account returns to invited.
+      // outstanding tokens; the account returns to invited. The table name
+      // is resolved OUTSIDE the SQL so the one-realm-per-statement tripwire
+      // holds for this file too.
+      const accountTable =
+        realm === 'patient' ? 'identity.patient_account' : ('identity.staff_account' as const);
       await client.query(
-        `UPDATE identity.${realm === 'patient' ? 'patient_account' : 'staff_account'}
+        `UPDATE ${accountTable}
            SET password_hash = NULL, password_set_at = NULL, status = 'invited',
                failed_login_count = 0, next_login_allowed_at = NULL
          WHERE id = $1`,
