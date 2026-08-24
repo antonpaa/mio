@@ -217,7 +217,11 @@ Resolved — Poistunut — Avklingat ⚠️.
 | Password | Salasana | Lösenord | |
 | Verification code | Vahvistuskoodi | Verifieringskod | The email MFA code |
 | Access log | Käyttöloki | Åtkomstlogg | Established FI term |
-| Audit log | Käyttöloki | Granskningslogg | Internal; patients see "access log" |
+| Audit log | Käyttöloki | Åtkomstlogg | Internal; patients see "access log". FI and SV deliberately reuse the access-log term — one word for one concept on both sides (WP-28) |
+| Reset login | Nollaa kirjautuminen | Återställ inloggning | Admin action (A1): new setup link, sessions signed out, data untouched |
+| Deactivate | Poista käytöstä | Avaktivera | Account lifecycle (A1) |
+| Reactivate | Palauta käyttöön | Återaktivera | Inverse of deactivate; restores sign-in only |
+| Capability | Oikeus | Behörighet | A2 role matrix column/row language |
 | Consent | Suostumus | Samtycke | |
 | Terms of use | Käyttöehdot | Användarvillkor | |
 | Privacy notice | Tietosuojaseloste | Integritetspolicy | Established FI term |

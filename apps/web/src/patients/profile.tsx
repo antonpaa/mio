@@ -15,6 +15,7 @@ import {
 import { ValuesCard } from '../observations/values-card.js';
 import { SymptomsCard } from '../observations/symptoms-card.js';
 import { ResponsesCard } from '../surveys/responses-card.js';
+import { ExportDataButton } from './export-dialog.js';
 
 interface PatientProfile {
   patientId: string;
@@ -198,6 +199,12 @@ export function PatientProfilePage(): ReactElement {
             <p className="text-xs text-muted">
               <FormattedMessage id="pp.careTeam" values={{ count: patient.careTeamSize }} />
             </p>
+          </div>
+          <div className="ml-auto">
+            <ExportDataButton
+              patientId={patientId}
+              patientName={`${patient.givenName} ${patient.familyName}`}
+            />
           </div>
         </header>
         <div className="flex flex-col gap-4">

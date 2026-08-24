@@ -1,9 +1,9 @@
 import { createRootRouteWithContext, createRoute, Outlet, redirect } from '@tanstack/react-router';
 import type { QueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
-import { IntlProvider, useIntl } from 'react-intl';
+import { FormattedMessage, IntlProvider, useIntl } from 'react-intl';
 import type { Locale } from '@mio/i18n';
-import { Splash } from '@mio/ui';
+import { EmptyState, Splash } from '@mio/ui';
 import { MESSAGES } from '../i18n/messages.js';
 import { detectLocale, persistLocale } from '../lib/locale.js';
 import { SessionProvider, SESSION_QUERY, useSession } from '../session/session.js';
@@ -36,6 +36,10 @@ import { PatientProfilePage } from '../patients/profile.js';
 import { TreatmentCatalogPage } from '../treatments/catalog.js';
 import { TreatmentDetailPage } from '../treatments/detail.js';
 import { PatientTreatmentsPage } from '../treatments/patient-treatments.js';
+import { AdminUsersPage } from '../admin/users-page.js';
+import { AdminTeamsPage } from '../admin/teams-page.js';
+import { AdminRolesPage } from '../admin/roles-page.js';
+import { AdminAuditPage } from '../admin/audit-page.js';
 
 function Root(): ReactElement {
   const [locale, setLocaleState] = useState<Locale>(() => detectLocale());
@@ -95,7 +99,8 @@ function AuthedIndex(): ReactElement {
         // P1/P7 (WP-26): the patient landing widgets
         <PatientHomePage />
       ) : (
-        <PlaceholderHome />
+        // A1 (WP-28): the administrator lands on user management
+        <AdminUsersPage />
       )}
     </SignedInShell>
   );
@@ -355,6 +360,54 @@ const settingsRoute = createRoute({
   component: SettingsIndex,
 });
 
+/** The admin areas (WP-28) exist only for the administrator role; any
+ * other signed-in visitor gets the shared placeholder, and the server
+ * still refuses the data (matrix, not navigation, decides access). */
+function AdminIndex({ page }: { page: ReactElement }): ReactElement {
+  const session = useSession();
+  if (session.loading || !session.account) return <Splash />;
+  const isAdmin = session.realm === 'staff' && session.account.role === 'administrator';
+  return <SignedInShell>{isAdmin ? page : <PlaceholderHome />}</SignedInShell>;
+}
+
+/** A4 reporting stays a stub until gate P8 (where reporting lives) is
+ * decided - the nav item exists so the decision has a place to land. */
+function ReportingPending(): ReactElement {
+  const intl = useIntl();
+  return (
+    <div className="mx-auto max-w-md pt-10">
+      <EmptyState title={intl.formatMessage({ id: 'nav.reporting' })}>
+        <FormattedMessage id="admin.reportingPending" />
+      </EmptyState>
+    </div>
+  );
+}
+
+const adminTeamsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/teams',
+  beforeLoad: requireSession,
+  component: () => <AdminIndex page={<AdminTeamsPage />} />,
+});
+const adminRolesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/roles',
+  beforeLoad: requireSession,
+  component: () => <AdminIndex page={<AdminRolesPage />} />,
+});
+const adminAuditRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/audit',
+  beforeLoad: requireSession,
+  component: () => <AdminIndex page={<AdminAuditPage />} />,
+});
+const adminReportingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/reporting',
+  beforeLoad: requireSession,
+  component: () => <AdminIndex page={<ReportingPending />} />,
+});
+
 /** /calendar is the patient's consolidated view (P9); staff have no page
  * here yet - their day lives on the dashboard (C1, WP-13+). */
 function CalendarIndex(): ReactElement {
@@ -402,4 +455,8 @@ export const routeTree = rootRoute.addChildren([
   messageThreadRoute,
   notificationsRoute,
   settingsRoute,
+  adminTeamsRoute,
+  adminRolesRoute,
+  adminAuditRoute,
+  adminReportingRoute,
 ]);

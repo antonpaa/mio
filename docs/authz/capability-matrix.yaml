@@ -793,6 +793,16 @@ resources:
           treatment_member: deny
           treatment_lead: deny
           administrator: any
+      - id: reactivate
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: deny
+          administrator: any
+        notes: >-
+          The inverse of deactivate (A1). Restores sign-in only — sessions
+          stay revoked and credentials stay whatever they were.
       - id: reset_credentials
         audit: always
         grants:
@@ -807,6 +817,18 @@ resources:
     schema: identity
     patient_scoped: true
     actions:
+      - id: view
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: deny
+          administrator: any
+        notes: >-
+          The A1 user list (WP-28): identity metadata only - name, email,
+          locale, status. The administrator plane never sees clinical.*,
+          and this action does not change that; it exists so accounts can
+          be administered at all.
       - id: create
         audit: always
         grants:
@@ -825,6 +847,16 @@ resources:
           treatment_member: deny
           treatment_lead: deny
           administrator: any
+      - id: reactivate
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: deny
+          administrator: any
+        notes: >-
+          The inverse of deactivate (A1). Restores sign-in only — sessions
+          stay revoked and credentials stay whatever they were.
       - id: reset_credentials
         audit: always
         grants:

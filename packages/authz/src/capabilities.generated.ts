@@ -180,9 +180,12 @@ export const ROLE_CAPABILITIES: Record<Role, readonly string[]> = {
     "staff_account.view",
     "staff_account.create",
     "staff_account.deactivate",
+    "staff_account.reactivate",
     "staff_account.reset_credentials",
+    "patient_account.view",
     "patient_account.create",
     "patient_account.deactivate",
+    "patient_account.reactivate",
     "patient_account.reset_credentials",
     "team.view",
     "team.create",
@@ -589,7 +592,13 @@ export const ACTION_GROUPS: Record<string, readonly string[]> = {
   "staff_account.deactivate": [
     "grp:administrator:any"
   ],
+  "staff_account.reactivate": [
+    "grp:administrator:any"
+  ],
   "staff_account.reset_credentials": [
+    "grp:administrator:any"
+  ],
+  "patient_account.view": [
     "grp:administrator:any"
   ],
   "patient_account.create": [
@@ -597,6 +606,9 @@ export const ACTION_GROUPS: Record<string, readonly string[]> = {
     "grp:administrator:any"
   ],
   "patient_account.deactivate": [
+    "grp:administrator:any"
+  ],
+  "patient_account.reactivate": [
     "grp:administrator:any"
   ],
   "patient_account.reset_credentials": [
@@ -939,15 +951,27 @@ export const ACTION_METADATA: Record<string, { audit: 'always' | 'never'; patien
     "audit": "always",
     "patientScoped": false
   },
+  "staff_account.reactivate": {
+    "audit": "always",
+    "patientScoped": false
+  },
   "staff_account.reset_credentials": {
     "audit": "always",
     "patientScoped": false
+  },
+  "patient_account.view": {
+    "audit": "always",
+    "patientScoped": true
   },
   "patient_account.create": {
     "audit": "always",
     "patientScoped": true
   },
   "patient_account.deactivate": {
+    "audit": "always",
+    "patientScoped": true
+  },
+  "patient_account.reactivate": {
     "audit": "always",
     "patientScoped": true
   },

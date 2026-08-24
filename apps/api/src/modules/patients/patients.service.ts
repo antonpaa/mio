@@ -1,4 +1,10 @@
-import { Inject, Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import type pg from 'pg';
 import { authorize } from '@mio/authz/engine';
 import { withUserContext, writeAccessEvent } from '@mio/db';
@@ -193,5 +199,103 @@ export class PatientsService {
       throw new ForbiddenException({ status: 'forbidden' });
     }
     return result;
+  }
+
+  /**
+   * PP5 (WP-28): the clinician-prepared export - "who requested it and
+   * why" is the point, so the REASON is required and rides the audit
+   * record. Content mirrors the patient's own GDPR export: what the
+   * patient could download themselves, prepared by a caring hand -
+   * internal notes stay out, they are team process, not patient record.
+   */
+  async exportPatient(
+    staff: StaffPrincipal,
+    patientId: string,
+    reason: string | undefined,
+  ): Promise<object> {
+    const trimmed = (reason ?? '').trim();
+    if (trimmed.length === 0 || trimmed.length > 300) {
+      throw new BadRequestException({ status: 'reason_required' });
+    }
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const { rows: careRows } = await client.query<{ team: string[] }>(
+        `SELECT app.care_team_of($1) AS team`,
+        [patientId],
+      );
+      const careTeam = careRows[0]?.team ?? [];
+      for (const action of ['request', 'download'] as const) {
+        const decision = authorize({
+          principal: { userId: staff.userId, role: staff.role },
+          action,
+          resource: {
+            type: 'patient_data_export',
+            id: patientId,
+            patientId,
+            careTeamUserIds: careTeam,
+          },
+        }).decision;
+        await writeAccessEvent(client, {
+          actorUserId: staff.userId,
+          actorRealm: 'staff',
+          action: `patient_data_export.${action}`,
+          resourceType: 'patient_data_export',
+          resourceId: patientId,
+          patientId,
+          decision,
+          context: { reason: trimmed },
+        });
+        if (decision !== 'allow') throw new NotFoundException({ status: 'unknown_patient' });
+      }
+      const one = async (sql: string): Promise<unknown[]> =>
+        (await client.query(sql, [patientId])).rows;
+      const account = (
+        await client.query(
+          `SELECT email, given_name, family_name, locale, date_of_birth::text AS date_of_birth
+             FROM identity.patient_account WHERE id = $1`,
+          [patientId],
+        )
+      ).rows[0];
+      if (account === undefined) throw new NotFoundException({ status: 'unknown_patient' });
+      const treatments = await one(
+        `SELECT id, name, detail, state, started_at::text AS started_at
+           FROM clinical.treatment WHERE patient_id = $1 AND state <> 'draft' ORDER BY created_at`,
+      );
+      const responses = await one(
+        `SELECT r.id, r.treatment_id, r.locale, r.status, r.answers,
+                r.submitted_at::text AS submitted_at, s.name AS survey_name
+           FROM clinical.survey_response r
+           JOIN clinical.survey_version v ON v.id = r.survey_version_id
+           JOIN clinical.survey s ON s.id = v.survey_id
+          WHERE r.patient_id = $1 ORDER BY r.started_at`,
+      );
+      const messages = await one(
+        `SELECT m.id, th.treatment_id, m.author_realm, m.body, m.created_at::text AS created_at
+           FROM clinical.message m JOIN clinical.message_thread th ON th.id = m.thread_id
+          WHERE m.patient_id = $1 ORDER BY m.created_at`,
+      );
+      const values = await one(
+        `SELECT e.id, s.name AS series, s.unit, e.value, e.measured_at::text AS measured_at,
+                e.on_behalf_of_patient
+           FROM clinical.value_entry e JOIN clinical.value_series s ON s.id = e.series_id
+          WHERE e.patient_id = $1 ORDER BY e.measured_at`,
+      );
+      const symptoms = await one(
+        `SELECT o.id, y.code, o.severity, o.detail, o.source, o.observed_at::text AS observed_at
+           FROM clinical.symptom_observation o JOIN clinical.symptom y ON y.id = o.symptom_id
+          WHERE o.patient_id = $1 ORDER BY o.observed_at`,
+      );
+      return {
+        format: 'mio-export/v1',
+        preparedBy: staff.userId,
+        reason: trimmed,
+        generatedAt: new Date().toISOString(),
+        account,
+        treatments,
+        surveyResponses: responses,
+        messages,
+        values,
+        symptomObservations: symptoms,
+      };
+    });
   }
 }
