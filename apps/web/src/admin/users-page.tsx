@@ -20,7 +20,7 @@ import { postJson, usersQuery, type PatientRow, type StaffRow } from './api.js';
  * password again (step-up), and everything here lands in the audit log.
  */
 
-const STAFF_ROLES = ['treatment_member', 'treatment_lead', 'administrator'] as const;
+const STAFF_ROLES = ['treatment_member', 'treatment_lead', 'administrator', 'auditor'] as const;
 const STATUS_TONE = { invited: 'amber', active: 'teal', deactivated: 'neutral' } as const;
 
 type Tab = 'staff' | 'patients';

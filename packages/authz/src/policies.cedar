@@ -179,3 +179,22 @@ permit (
   action in Mio::Action::"grp:administrator:any",
   resource
 );
+
+// --- auditor -------------------------------------------------------------
+// self: the principal is the subject of the resource
+permit (
+  principal in Mio::Role::"auditor",
+  action in Mio::Action::"grp:auditor:self",
+  resource
+) when { resource has subjectUser && resource.subjectUser == principal };
+
+
+
+
+
+// any: permitted unconditionally within the role (never used for patient-scoped clinical data)
+permit (
+  principal in Mio::Role::"auditor",
+  action in Mio::Action::"grp:auditor:any",
+  resource
+);

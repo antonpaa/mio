@@ -189,6 +189,13 @@ export const ROLE_CAPABILITIES: Record<Role, readonly string[]> = {
     "team.create",
     "team.update_membership",
     "audit_log.view_own_access_history",
+    "own_settings.view",
+    "own_settings.update",
+    "own_data_export.request",
+    "own_data_export.download"
+  ],
+  "auditor": [
+    "audit_log.view_own_access_history",
     "audit_log.view_full",
     "own_settings.view",
     "own_settings.update",
@@ -298,7 +305,11 @@ export const EMPTY_GROUPS: readonly string[] = [
   "grp:administrator:own",
   "grp:administrator:care_relationship",
   "grp:administrator:team_member",
-  "grp:administrator:team_lead"
+  "grp:administrator:team_lead",
+  "grp:auditor:own",
+  "grp:auditor:care_relationship",
+  "grp:auditor:team_member",
+  "grp:auditor:team_lead"
 ];
 
 /** role:scope action-group membership per action - the engine supplies
@@ -631,10 +642,11 @@ export const ACTION_GROUPS: Record<string, readonly string[]> = {
     "grp:patient:self",
     "grp:treatment_member:self",
     "grp:treatment_lead:self",
-    "grp:administrator:self"
+    "grp:administrator:self",
+    "grp:auditor:self"
   ],
   "audit_log.view_full": [
-    "grp:administrator:any"
+    "grp:auditor:any"
   ],
   "report.view": [
     "grp:treatment_member:team_member",
@@ -644,25 +656,29 @@ export const ACTION_GROUPS: Record<string, readonly string[]> = {
     "grp:patient:self",
     "grp:treatment_member:self",
     "grp:treatment_lead:self",
-    "grp:administrator:self"
+    "grp:administrator:self",
+    "grp:auditor:self"
   ],
   "own_settings.update": [
     "grp:patient:self",
     "grp:treatment_member:self",
     "grp:treatment_lead:self",
-    "grp:administrator:self"
+    "grp:administrator:self",
+    "grp:auditor:self"
   ],
   "own_data_export.request": [
     "grp:patient:self",
     "grp:treatment_member:self",
     "grp:treatment_lead:self",
-    "grp:administrator:self"
+    "grp:administrator:self",
+    "grp:auditor:self"
   ],
   "own_data_export.download": [
     "grp:patient:self",
     "grp:treatment_member:self",
     "grp:treatment_lead:self",
-    "grp:administrator:self"
+    "grp:administrator:self",
+    "grp:auditor:self"
   ]
 };
 

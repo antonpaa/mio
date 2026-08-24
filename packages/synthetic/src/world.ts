@@ -23,7 +23,7 @@ export interface SyntheticStaff {
   givenName: string;
   familyName: string;
   email: string;
-  role: 'treatment_member' | 'treatment_lead' | 'administrator';
+  role: 'treatment_member' | 'treatment_lead' | 'administrator' | 'auditor';
   title: string;
   locale: Locale;
 }

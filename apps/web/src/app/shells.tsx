@@ -79,6 +79,9 @@ const CLINICIAN_ITEMS: ShellItem[] = [
   { labelId: 'nav.tasks', href: '/tasks', capability: 'task.view' },
 ];
 
+/** P2: the auditor's whole surface is the audit log. */
+const AUDITOR_ITEMS: ShellItem[] = [{ labelId: 'nav.audit', href: '/' }];
+
 const ADMIN_ITEMS: ShellItem[] = [
   { labelId: 'nav.users', href: '/', capability: 'staff_account.create' },
   { labelId: 'nav.teams', href: '/teams', capability: 'team.create' },
@@ -90,6 +93,7 @@ const ADMIN_ITEMS: ShellItem[] = [
 function shellFor(role: Role): { variant: 'patient' | 'clinician' | 'admin'; items: ShellItem[] } {
   if (role === 'patient') return { variant: 'patient', items: PATIENT_ITEMS };
   if (role === 'administrator') return { variant: 'admin', items: ADMIN_ITEMS };
+  if (role === 'auditor') return { variant: 'admin', items: AUDITOR_ITEMS };
   return { variant: 'clinician', items: CLINICIAN_ITEMS };
 }
 

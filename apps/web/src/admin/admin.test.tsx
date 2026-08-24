@@ -257,8 +257,18 @@ describe('A2 roles', () => {
   });
 });
 
-describe('A3 audit view', () => {
-  it('humanises events, shows patients as initials and flags denials', async () => {
+describe('A3 audit view (P2: auditor)', () => {
+  it('humanises events, renders subjects and flags denials for the auditor', async () => {
+    vi.mocked(api.whoami).mockResolvedValue({
+      realm: 'staff' as const,
+      account: {
+        id: 'au1',
+        givenName: 'Aida',
+        familyName: 'Tarkka',
+        locale: 'en' as const,
+        role: 'auditor',
+      },
+    });
     render(appAt('/audit'));
     await screen.findByText('Elina Koskinen');
     expect(screen.getByText(/Viewed — patient record/)).toBeTruthy();

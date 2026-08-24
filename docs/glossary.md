@@ -39,6 +39,7 @@ interface and in translation.
 | Treatment Member | Hoitotiimin jäsen | Vårdteammedlem | Role name |
 | Treatment Lead | Hoidon vastuuhenkilö | Behandlingsansvarig | Role name ⚠️ |
 | Administrator | Ylläpitäjä | Administratör | Role name |
+| Auditor | Auditoija | Revisor | Role name — oversight of the full audit log (P2, 2026-08-24) |
 | Care relationship | Hoitosuhde | Vårdrelation | Established FI term |
 
 ## Treatments

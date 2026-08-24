@@ -34,6 +34,7 @@ let mailer: CapturingMailer;
 
 const world = generateWorld('demo', 42);
 const admin = world.staff.find((s) => s.role === 'administrator')!;
+const auditor = world.staff.find((s) => s.role === 'auditor')!;
 const treatment = world.treatments.find((t) => {
   const team = world.teams.find((candidate) => candidate.id === t.teamId);
   return t.state === 'active' && (team?.leadIds.length ?? 0) > 0;
@@ -45,6 +46,7 @@ const sparePatient = world.patients.find((p) => p.id !== patient.id)!;
 
 let adminCookie: string;
 let leadCookie: string;
+let auditorCookie: string;
 
 beforeAll(async () => {
   db = await provisionTestDatabase();
@@ -66,6 +68,7 @@ beforeAll(async () => {
   await app.getHttpAdapter().getInstance().ready();
   adminCookie = await signIn(admin.email);
   leadCookie = await signIn(lead.email);
+  auditorCookie = await signIn(auditor.email);
 });
 
 afterAll(async () => {
@@ -260,32 +263,49 @@ describe('A5 teams and A2 roles', () => {
     expect(body.roles['administrator']).toContain('staff_account.create');
     expect(body.roles['patient']).toContain('survey_response.submit');
     expect(body.roles['administrator']).not.toContain('patient_clinical_profile.view');
+    // P2: the full log belongs to the auditor alone
+    expect(body.roles['auditor']).toContain('audit_log.view_full');
+    expect(body.roles['administrator']).not.toContain('audit_log.view_full');
+    expect(body.roles['auditor']).not.toContain('patient_clinical_profile.view');
   });
 });
 
-describe('A3 audit view', () => {
-  it('shows generic events with patients as initials, and is itself audited', async () => {
+describe('A3 audit view (P2: the auditor role)', () => {
+  it('the auditor reads the full log with real identities; admin and lead cannot', async () => {
     // make sure there is at least one patient-subject disclosure
     await inject('GET', `/api/staff/patients/${patient.id}`, undefined, leadCookie);
-    const audit = await inject('GET', '/api/admin/audit?limit=100', undefined, adminCookie);
+    const audit = await inject('GET', '/api/admin/audit?limit=100', undefined, auditorCookie);
     expect(audit.statusCode).toBe(200);
     const { events } = audit.json() as {
       events: { action: string; subject: string | null; actor: string }[];
     };
     expect(events.length).toBeGreaterThan(0);
-    const initials = `${patient.givenName.slice(0, 1)}.${patient.familyName.slice(0, 1)}.`;
-    expect(events.some((event) => event.subject === initials)).toBe(true);
-    // X4: the full name of a patient never appears
-    expect(audit.body).not.toContain(patient.familyName);
+    // oversight is the role's purpose: subjects appear as full identities
+    const fullName = `${patient.givenName} ${patient.familyName}`;
+    expect(events.some((event) => event.subject === fullName)).toBe(true);
 
+    // the administrator plane lost this view with the P2 decision
+    const adminTry = await inject('GET', '/api/admin/audit', undefined, adminCookie);
+    expect(adminTry.statusCode).toBe(403);
     const denied = await inject('GET', '/api/admin/audit', undefined, leadCookie);
     expect(denied.statusCode).toBe(403);
+
+    // reading the log is itself always audited
     const { rows } = await owner.query(
       `SELECT count(*)::int AS n FROM audit.access_event
-        WHERE action = 'audit_log.view_full' AND actor_user_id = $1`,
-      [admin.id],
+        WHERE action = 'audit_log.view_full' AND actor_user_id = $1 AND decision = 'allow'`,
+      [auditor.id],
     );
     expect((rows[0] as { n: number }).n).toBeGreaterThan(0);
+
+    // and the auditor holds nothing clinical: a patient profile is a 404
+    const clinical = await inject(
+      'GET',
+      `/api/staff/patients/${patient.id}`,
+      undefined,
+      auditorCookie,
+    );
+    expect([403, 404]).toContain(clinical.statusCode);
   });
 });
 

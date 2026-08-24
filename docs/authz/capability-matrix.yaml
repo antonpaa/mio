@@ -74,6 +74,16 @@ roles:
       enforced at the database level by the mio_admin role having no grant on
       clinical.* (ADR-0007), not by these policies alone.
 
+  - id: auditor
+    realm: staff
+    label: { en: Auditor, fi: Auditoija, sv: Revisor }
+    description: >
+      Oversight role (P2, decided 2026-08-24): reads the FULL audit log,
+      identities included — that is its purpose — and nothing else. No
+      clinical queries, no administration; separated from administrator
+      precisely because audit metadata reveals which patients have
+      treatments.
+
 # ---------------------------------------------------------------------------
 # Resources and actions
 # ---------------------------------------------------------------------------
@@ -93,6 +103,7 @@ resources:
           treatment_member: care_relationship
           treatment_lead: care_relationship
           administrator: any
+          auditor: deny
       - id: update_contact_details
         audit: always
         grants:
@@ -100,6 +111,7 @@ resources:
           treatment_member: care_relationship
           treatment_lead: care_relationship
           administrator: any
+          auditor: deny
 
   - id: patient_clinical_profile
     schema: clinical
@@ -115,6 +127,7 @@ resources:
           treatment_member: care_relationship
           treatment_lead: care_relationship
           administrator: deny
+          auditor: deny
         notes: >-
           The defining row of the matrix. Administrators are denied here in
           policy AND lack the database grant to execute the query at all.
@@ -130,6 +143,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
         notes: >-
           Patients can see which teams have access to their data.
       - id: create
@@ -139,6 +153,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: end
         audit: always
         grants:
@@ -146,6 +161,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
 
   # -- Treatments ----------------------------------------------------------
   - id: treatment
@@ -159,6 +175,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: create
         audit: always
         grants:
@@ -166,6 +183,7 @@ resources:
           treatment_member: deny
           treatment_lead: any
           administrator: deny
+          auditor: deny
       - id: update
         audit: always
         grants:
@@ -173,6 +191,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: change_lifecycle_state
         audit: always
         grants:
@@ -180,6 +199,7 @@ resources:
           treatment_member: deny
           treatment_lead: team_lead
           administrator: deny
+          auditor: deny
         notes: >-
           draft | active | paused | completed | discontinued
       - id: manage_team
@@ -189,6 +209,7 @@ resources:
           treatment_member: deny
           treatment_lead: team_lead
           administrator: deny
+          auditor: deny
       - id: enrol_patient
         audit: always
         grants:
@@ -196,6 +217,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: enter_on_behalf_of_patient
         audit: always
         grants:
@@ -203,6 +225,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
         notes: >-
           Records provenance on the entity itself, rendered in the UI as
           "entered by X on behalf of patient".
@@ -213,6 +236,7 @@ resources:
           treatment_member: deny
           treatment_lead: team_lead
           administrator: deny
+          auditor: deny
         notes: >-
           REGULATED-ADJACENT, same tier as survey_template.configure_alert_rules:
           program-specific overrides of a survey's thresholds, expected ranges
@@ -232,6 +256,7 @@ resources:
           treatment_member: any
           treatment_lead: any
           administrator: deny
+          auditor: deny
       - id: create
         audit: always
         grants:
@@ -239,6 +264,7 @@ resources:
           treatment_member: deny
           treatment_lead: any
           administrator: deny
+          auditor: deny
       - id: update_draft
         audit: always
         grants:
@@ -246,6 +272,7 @@ resources:
           treatment_member: deny
           treatment_lead: any
           administrator: deny
+          auditor: deny
       - id: publish
         audit: always
         grants:
@@ -253,6 +280,7 @@ resources:
           treatment_member: deny
           treatment_lead: any
           administrator: deny
+          auditor: deny
       - id: archive
         audit: always
         grants:
@@ -260,6 +288,7 @@ resources:
           treatment_member: deny
           treatment_lead: any
           administrator: deny
+          auditor: deny
 
   - id: activity
     schema: clinical
@@ -274,6 +303,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: create
         audit: always
         grants:
@@ -281,6 +311,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: update
         audit: always
         grants:
@@ -288,6 +319,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: remind
         audit: always
         grants:
@@ -295,6 +327,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
         notes: >-
           The C1 "send reminder" control (WP-27): a clinician nudges an
           overdue survey occurrence by hand. Sends only the contentless
@@ -307,6 +340,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
 
   # -- Tasks ---------------------------------------------------------------
   - id: task
@@ -322,6 +356,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
         notes: >-
           A task names a patient, so rendering a worklist discloses patient
           information. Audited accordingly. List views emit one audit event
@@ -334,6 +369,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: claim
         audit: never
         grants:
@@ -341,6 +377,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: assign_to_other
         audit: never
         grants:
@@ -348,6 +385,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: complete
         audit: never
         grants:
@@ -355,6 +393,7 @@ resources:
           treatment_member: own
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
 
   # -- Surveys -------------------------------------------------------------
   - id: survey_template
@@ -370,6 +409,7 @@ resources:
           treatment_member: any
           treatment_lead: any
           administrator: deny
+          auditor: deny
       - id: create
         audit: always
         grants:
@@ -377,6 +417,7 @@ resources:
           treatment_member: deny
           treatment_lead: any
           administrator: deny
+          auditor: deny
       - id: update_draft
         audit: always
         grants:
@@ -384,6 +425,7 @@ resources:
           treatment_member: deny
           treatment_lead: any
           administrator: deny
+          auditor: deny
       - id: publish
         audit: always
         grants:
@@ -391,6 +433,7 @@ resources:
           treatment_member: deny
           treatment_lead: any
           administrator: deny
+          auditor: deny
       - id: archive
         audit: always
         grants:
@@ -398,6 +441,7 @@ resources:
           treatment_member: deny
           treatment_lead: any
           administrator: deny
+          auditor: deny
       - id: configure_alert_rules
         audit: always
         grants:
@@ -405,6 +449,7 @@ resources:
           treatment_member: deny
           treatment_lead: any
           administrator: deny
+          auditor: deny
         notes: >-
           REGULATED-ADJACENT. This capability defines how the software
           grades clinical risk and is the crux of the MDR question in
@@ -423,6 +468,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: create
         audit: always
         grants:
@@ -430,6 +476,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: schedule_recurring
         audit: always
         grants:
@@ -437,6 +484,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: cancel
         audit: always
         grants:
@@ -444,6 +492,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: send_reminder
         audit: never
         grants:
@@ -451,6 +500,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
 
   - id: survey_response
     schema: clinical
@@ -463,6 +513,7 @@ resources:
           treatment_member: care_relationship
           treatment_lead: care_relationship
           administrator: deny
+          auditor: deny
       - id: save_draft
         audit: never
         grants:
@@ -470,6 +521,7 @@ resources:
           treatment_member: deny
           treatment_lead: deny
           administrator: deny
+          auditor: deny
       - id: submit
         audit: always
         grants:
@@ -477,6 +529,7 @@ resources:
           treatment_member: deny
           treatment_lead: deny
           administrator: deny
+          auditor: deny
       - id: submit_on_behalf_of_patient
         audit: always
         grants:
@@ -484,6 +537,7 @@ resources:
           treatment_member: care_relationship
           treatment_lead: care_relationship
           administrator: deny
+          auditor: deny
         notes: >-
           Records provenance on the response.
       - id: view_trend
@@ -493,6 +547,7 @@ resources:
           treatment_member: care_relationship
           treatment_lead: care_relationship
           administrator: deny
+          auditor: deny
         notes: >-
           Same survey over time, for one patient.
 
@@ -510,6 +565,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
         notes: >-
           Patients do not see alerts. Alerts are a care-team triage signal,
           and exposing a machine-graded risk score to a patient without
@@ -521,6 +577,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
         notes: >-
           Why this alert fired. Required by ADR-0009.
       - id: acknowledge
@@ -530,6 +587,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: assign
         audit: always
         grants:
@@ -537,6 +595,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: comment
         audit: always
         grants:
@@ -544,6 +603,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: resolve
         audit: always
         grants:
@@ -551,6 +611,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
 
   # -- Messaging -----------------------------------------------------------
   - id: message_thread
@@ -566,6 +627,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: post
         audit: always
         grants:
@@ -573,6 +635,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
 
   - id: internal_note
     schema: clinical
@@ -587,6 +650,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
         notes: >-
           CRITICAL ROW. A patient must never see an internal note. Internal
           notes are a distinct entity, not a flag on message, so that a
@@ -598,6 +662,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
 
   - id: notification
     schema: clinical
@@ -617,6 +682,7 @@ resources:
           treatment_member: self
           treatment_lead: self
           administrator: deny
+          auditor: deny
       - id: mark_read
         audit: never
         grants:
@@ -624,6 +690,7 @@ resources:
           treatment_member: self
           treatment_lead: self
           administrator: deny
+          auditor: deny
         notes: >-
           Recording attention, not disclosing content - the view that
           preceded it is the audited disclosure.
@@ -639,6 +706,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
       - id: download
         audit: always
         grants:
@@ -646,6 +714,7 @@ resources:
           treatment_member: care_relationship
           treatment_lead: care_relationship
           administrator: deny
+          auditor: deny
 
   # -- Observations ---------------------------------------------------------
   - id: value_series
@@ -663,6 +732,7 @@ resources:
           treatment_member: any
           treatment_lead: any
           administrator: deny
+          auditor: deny
 
   - id: value_entry
     schema: clinical
@@ -678,6 +748,7 @@ resources:
           treatment_member: care_relationship
           treatment_lead: care_relationship
           administrator: deny
+          auditor: deny
       - id: create
         audit: always
         grants:
@@ -685,6 +756,7 @@ resources:
           treatment_member: care_relationship
           treatment_lead: care_relationship
           administrator: deny
+          auditor: deny
         notes: >-
           Clinician creation is on-behalf entry and records provenance
           ("entered by X on behalf of patient").
@@ -703,6 +775,7 @@ resources:
           treatment_member: care_relationship
           treatment_lead: care_relationship
           administrator: deny
+          auditor: deny
       - id: create
         audit: always
         grants:
@@ -710,6 +783,7 @@ resources:
           treatment_member: care_relationship
           treatment_lead: care_relationship
           administrator: deny
+          auditor: deny
         notes: >-
           Patient create is self-report ("Report a symptom"); clinician create
           is on-behalf with provenance. Interpretation (expected vs alarming)
@@ -731,6 +805,7 @@ resources:
           treatment_member: any
           treatment_lead: any
           administrator: deny
+          auditor: deny
       - id: manage
         audit: always
         grants:
@@ -738,6 +813,7 @@ resources:
           treatment_member: deny
           treatment_lead: any
           administrator: deny
+          auditor: deny
 
   - id: patient_data_export
     schema: clinical
@@ -753,6 +829,7 @@ resources:
           treatment_member: care_relationship
           treatment_lead: care_relationship
           administrator: deny
+          auditor: deny
         notes: >-
           A reason is required and written to the audit record with the
           requester ("who requested it and why").
@@ -763,6 +840,7 @@ resources:
           treatment_member: care_relationship
           treatment_lead: care_relationship
           administrator: deny
+          auditor: deny
 
   # -- Administration ------------------------------------------------------
   - id: staff_account
@@ -776,6 +854,7 @@ resources:
           treatment_member: any
           treatment_lead: any
           administrator: any
+          auditor: deny
         notes: >-
           Name, role and team only — clinicians need this to assemble teams
           and assign tasks. Never credentials or account security state.
@@ -786,6 +865,7 @@ resources:
           treatment_member: deny
           treatment_lead: deny
           administrator: any
+          auditor: deny
       - id: deactivate
         audit: always
         grants:
@@ -793,6 +873,7 @@ resources:
           treatment_member: deny
           treatment_lead: deny
           administrator: any
+          auditor: deny
       - id: reactivate
         audit: always
         grants:
@@ -800,6 +881,7 @@ resources:
           treatment_member: deny
           treatment_lead: deny
           administrator: any
+          auditor: deny
         notes: >-
           The inverse of deactivate (A1). Restores sign-in only — sessions
           stay revoked and credentials stay whatever they were.
@@ -810,6 +892,7 @@ resources:
           treatment_member: deny
           treatment_lead: deny
           administrator: any
+          auditor: deny
         notes: >-
           Requires step-up re-authentication. Credentials only, never data.
 
@@ -824,6 +907,7 @@ resources:
           treatment_member: deny
           treatment_lead: deny
           administrator: any
+          auditor: deny
         notes: >-
           The A1 user list (WP-28): identity metadata only - name, email,
           locale, status. The administrator plane never sees clinical.*,
@@ -836,6 +920,7 @@ resources:
           treatment_member: deny
           treatment_lead: deny
           administrator: any
+          auditor: deny
         notes: >-
           DECIDED (owner, 2026-08-24): administrators only. Leads are
           treatment-specific roles, not cross-system administrators;
@@ -849,6 +934,7 @@ resources:
           treatment_member: deny
           treatment_lead: deny
           administrator: any
+          auditor: deny
       - id: reactivate
         audit: always
         grants:
@@ -856,6 +942,7 @@ resources:
           treatment_member: deny
           treatment_lead: deny
           administrator: any
+          auditor: deny
         notes: >-
           The inverse of deactivate (A1). Restores sign-in only — sessions
           stay revoked and credentials stay whatever they were.
@@ -866,6 +953,7 @@ resources:
           treatment_member: deny
           treatment_lead: care_relationship
           administrator: deny
+          auditor: deny
         notes: >-
           A care decision, not identity administration (WP-29): the lead
           who knows the patient records the death. Sign-in closes, every
@@ -878,6 +966,7 @@ resources:
           treatment_member: deny
           treatment_lead: deny
           administrator: any
+          auditor: deny
         notes: >-
           Requires step-up re-authentication. Credentials only, never data.
 
@@ -894,6 +983,7 @@ resources:
           treatment_member: any
           treatment_lead: any
           administrator: any
+          auditor: deny
       - id: create
         audit: always
         grants:
@@ -901,6 +991,7 @@ resources:
           treatment_member: deny
           treatment_lead: deny
           administrator: any
+          auditor: deny
         notes: >-
           Tightened with the P1 decision (2026-08-24): identity teams are
           administration (A5). Leads compose a TREATMENT's care team
@@ -913,6 +1004,7 @@ resources:
           treatment_member: deny
           treatment_lead: deny
           administrator: any
+          auditor: deny
 
   # -- Audit, reporting and self-service -----------------------------------
   - id: audit_log
@@ -926,6 +1018,7 @@ resources:
           treatment_member: self
           treatment_lead: self
           administrator: self
+          auditor: self
         notes: >-
           "Who has accessed my records." A first-class patient feature, not
           an internal tool. Reading one's own access history is not itself
@@ -936,11 +1029,15 @@ resources:
           patient: deny
           treatment_member: deny
           treatment_lead: deny
-          administrator: any
+          administrator: deny
+          auditor: any
         notes: >-
-          OPEN QUESTION below. Audit records reveal that a given patient has
-          a treatment — sensitive metadata even without clinical content. A
-          dedicated auditor/DPO role may be warranted instead.
+          DECIDED (owner, 2026-08-24): the dedicated auditor role, and
+          only it. Audit records reveal that a given patient has a
+          treatment — sensitive metadata even without clinical content —
+          so the administrator plane lost this view; the auditor's
+          rendering shows full identities because oversight is the
+          role's purpose. Every view is itself audited.
 
   - id: report
     schema: clinical
@@ -955,6 +1052,7 @@ resources:
           treatment_member: team_member
           treatment_lead: team_member
           administrator: deny
+          auditor: deny
         notes: >-
           Aggregate but still clinical. Administrators are denied,
           consistent with patient_clinical_profile.
@@ -972,6 +1070,7 @@ resources:
           treatment_member: self
           treatment_lead: self
           administrator: self
+          auditor: self
       - id: update
         audit: always
         grants:
@@ -979,6 +1078,7 @@ resources:
           treatment_member: self
           treatment_lead: self
           administrator: self
+          auditor: self
 
   - id: own_data_export
     schema: identity
@@ -993,6 +1093,7 @@ resources:
           treatment_member: self
           treatment_lead: self
           administrator: self
+          auditor: self
       - id: download
         audit: always
         grants:
@@ -1000,6 +1101,7 @@ resources:
           treatment_member: self
           treatment_lead: self
           administrator: self
+          auditor: self
 # ---------------------------------------------------------------------------
 # Invariants — asserted by generated tests, not by review
 # ---------------------------------------------------------------------------
@@ -1044,13 +1146,6 @@ invariants:
 # Mirrored in docs/compliance/register.md.
 # ---------------------------------------------------------------------------
 open_questions:
-  - id: audit_log_full_access
-    question: Who may read the full audit log?
-    tension: >
-      Administrators need operational access, but audit metadata reveals which
-      patients have treatments. A dedicated auditor/DPO role would separate
-      these concerns at the cost of another role in the model.
-
   - id: dedicated_survey_author
     question: >
       Should survey authoring and alert-rule configuration be a separate

@@ -24,7 +24,7 @@ export interface InviteInput {
   familyName: string;
   locale?: 'en' | 'fi' | 'sv';
   /** staff realm only */
-  role?: 'treatment_member' | 'treatment_lead' | 'administrator';
+  role?: 'treatment_member' | 'treatment_lead' | 'administrator' | 'auditor';
   title?: string;
 }
 

@@ -11,7 +11,13 @@ import { rolesQuery } from './api.js';
  * grouped by resource, localized through the shared audit vocabulary.
  */
 
-const ROLE_ORDER = ['patient', 'treatment_member', 'treatment_lead', 'administrator'] as const;
+const ROLE_ORDER = [
+  'patient',
+  'treatment_member',
+  'treatment_lead',
+  'administrator',
+  'auditor',
+] as const;
 
 export function AdminRolesPage(): ReactElement {
   const intl = useIntl();
@@ -102,7 +108,7 @@ function ResourceGroup({
       <tr className="border-b border-border bg-surface-sunken/50">
         <th
           scope="rowgroup"
-          colSpan={5}
+          colSpan={6}
           className="px-5 py-2 text-left text-xs font-medium uppercase tracking-wide text-secondary"
         >
           {label(`admin.res.${resource}`, resource)}
