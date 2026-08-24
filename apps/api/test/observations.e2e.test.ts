@@ -329,3 +329,67 @@ describe('PP3 symptom register', () => {
     ).toBe(true);
   });
 });
+
+describe('X7 patient self-report', () => {
+  it('a patient reports a symptom; the register shows it as self_report', async () => {
+    const view = await inject('GET', '/api/patient/symptoms', undefined, surveyPatientCookie);
+    expect(view.statusCode).toBe(200);
+    const { taxonomy } = view.json() as { taxonomy: { id: string; code: string }[] };
+    const headache = taxonomy.find((row) => row.code === 'headache') ?? taxonomy[0]!;
+
+    const reported = await inject(
+      'POST',
+      '/api/patient/symptoms',
+      { symptomId: headache.id, severity: 'moderate', note: 'Started this morning.' },
+      surveyPatientCookie,
+    );
+    expect(reported.statusCode).toBe(201);
+    const { observationId } = reported.json() as { observationId: string };
+    const { rows } = await owner.query(
+      `SELECT source, entered_by, on_behalf_of_patient, severity
+         FROM clinical.symptom_observation WHERE id = $1`,
+      [observationId],
+    );
+    const row = rows[0] as {
+      source: string;
+      entered_by: string;
+      on_behalf_of_patient: boolean;
+      severity: string;
+    };
+    expect(row.source).toBe('self_report');
+    expect(row.entered_by).toBe(surveyPatient.id);
+    expect(row.on_behalf_of_patient).toBe(false);
+
+    // their own list shows it; the clinician register shows the same fact
+    const again = await inject('GET', '/api/patient/symptoms', undefined, surveyPatientCookie);
+    const { own } = again.json() as { own: { id: string; source: string }[] };
+    expect(own.some((entry) => entry.id === observationId && entry.source === 'self_report')).toBe(
+      true,
+    );
+    const register = await inject(
+      'GET',
+      `/api/staff/patients/${surveyPatient.id}/symptoms`,
+      undefined,
+      surveyLeadCookie,
+    );
+    expect(register.statusCode).toBe(200);
+    expect(register.body).toContain(observationId);
+  });
+
+  it('refuses a gradeless or unknown report', async () => {
+    const bad = await inject(
+      'POST',
+      '/api/patient/symptoms',
+      { symptomId: '00000000-0000-4000-8000-000000000000', severity: 'moderate' },
+      surveyPatientCookie,
+    );
+    expect(bad.statusCode).toBe(404);
+    const graded = await inject(
+      'POST',
+      '/api/patient/symptoms',
+      { symptomId: '00000000-0000-4000-8000-000000000000', severity: 'alarming' },
+      surveyPatientCookie,
+    );
+    expect(graded.statusCode).toBe(400);
+  });
+});

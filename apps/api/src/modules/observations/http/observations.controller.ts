@@ -4,7 +4,32 @@ import {
   StaffSessionGuard,
   type StaffPrincipal,
 } from '../../../shared/staff-session.js';
+import {
+  CurrentPatient,
+  PatientSessionGuard,
+  type PatientPrincipal,
+} from '../../../shared/patient-session.js';
 import { ObservationsService } from '../observations.service.js';
+
+@Controller('api/patient/symptoms')
+@UseGuards(PatientSessionGuard)
+export class PatientSymptomsController {
+  constructor(private readonly observations: ObservationsService) {}
+
+  @Get()
+  view(@CurrentPatient() patient: PatientPrincipal) {
+    return this.observations.patientSymptomView(patient);
+  }
+
+  @Post()
+  @HttpCode(201)
+  report(
+    @CurrentPatient() patient: PatientPrincipal,
+    @Body() body: { symptomId?: string; severity?: string; note?: string },
+  ) {
+    return this.observations.patientReportSymptom(patient, body);
+  }
+}
 
 @Controller('api/staff/value-series')
 @UseGuards(StaffSessionGuard)
