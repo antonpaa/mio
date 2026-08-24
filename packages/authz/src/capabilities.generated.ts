@@ -164,6 +164,7 @@ export const ROLE_CAPABILITIES: Record<Role, readonly string[]> = {
     "patient_data_export.download",
     "staff_account.view",
     "patient_account.create",
+    "patient_account.mark_deceased",
     "team.view",
     "team.create",
     "team.update_membership",
@@ -269,7 +270,9 @@ export const RESOURCE_ATTRS: Record<string, readonly string[]> = {
     "careTeam"
   ],
   "staff_account": [],
-  "patient_account": [],
+  "patient_account": [
+    "careTeam"
+  ],
   "team": [],
   "audit_log": [
     "subjectUser"
@@ -610,6 +613,9 @@ export const ACTION_GROUPS: Record<string, readonly string[]> = {
   ],
   "patient_account.reactivate": [
     "grp:administrator:any"
+  ],
+  "patient_account.mark_deceased": [
+    "grp:treatment_lead:care_relationship"
   ],
   "patient_account.reset_credentials": [
     "grp:administrator:any"
@@ -972,6 +978,10 @@ export const ACTION_METADATA: Record<string, { audit: 'always' | 'never'; patien
     "patientScoped": true
   },
   "patient_account.reactivate": {
+    "audit": "always",
+    "patientScoped": true
+  },
+  "patient_account.mark_deceased": {
     "audit": "always",
     "patientScoped": true
   },

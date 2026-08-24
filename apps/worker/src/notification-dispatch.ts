@@ -41,17 +41,22 @@ interface PatientContact {
   email: string;
   locale: string;
   email_prefs: Record<string, unknown>;
+  deceased_on: string | null;
 }
 
+/** Returns null for a deceased patient (WP-29): no rows, no mails - the
+ * respectful silence is total, and callers need no second check. */
 async function patientContact(
   client: pg.ClientBase,
   patientId: string,
 ): Promise<PatientContact | null> {
   const { rows } = await client.query<PatientContact>(
-    `SELECT email, locale, email_prefs FROM identity.patient_account WHERE id = $1`,
+    `SELECT email, locale, email_prefs, deceased_on::text AS deceased_on
+       FROM identity.patient_account WHERE id = $1`,
     [patientId],
   );
-  return rows[0] ?? null;
+  const contact = rows[0] ?? null;
+  return contact === null || contact.deceased_on !== null ? null : contact;
 }
 
 /** Absent key = on; only an explicit false switches a type's email off. */
@@ -125,23 +130,25 @@ export async function dispatchNotifications(
         entry.payload.authorRealm === 'staff' &&
         entry.patient_id !== null
       ) {
-        await insertRow(client, {
-          recipientId: entry.patient_id,
-          recipientRealm: 'patient',
-          kind: 'message.new',
-          patientId: entry.patient_id,
-          treatmentId: entry.treatment_id,
-          ref: { treatmentId: entry.treatment_id, messageId: entry.payload.messageId },
-        });
-        result.rowsWritten += 1;
         const contact = await patientContact(client, entry.patient_id);
-        if (contact !== null && emailAllowed(contact.email_prefs, 'message.new')) {
-          mails.push({
-            recipient: contact.email,
-            locale: contact.locale,
-            type: 'new_message',
-            link: '/messages',
+        if (contact !== null) {
+          await insertRow(client, {
+            recipientId: entry.patient_id,
+            recipientRealm: 'patient',
+            kind: 'message.new',
+            patientId: entry.patient_id,
+            treatmentId: entry.treatment_id,
+            ref: { treatmentId: entry.treatment_id, messageId: entry.payload.messageId },
           });
+          result.rowsWritten += 1;
+          if (emailAllowed(contact.email_prefs, 'message.new')) {
+            mails.push({
+              recipient: contact.email,
+              locale: contact.locale,
+              type: 'new_message',
+              link: '/messages',
+            });
+          }
         }
       }
       await client.query(
@@ -174,20 +181,22 @@ export async function dispatchNotifications(
         body: rule.body,
       };
       if (rule.recipients.includes('patient')) {
-        await insertRow(client, {
-          ...base,
-          recipientId: rule.patient_id,
-          recipientRealm: 'patient',
-        });
-        result.rowsWritten += 1;
         const contact = await patientContact(client, rule.patient_id);
-        if (contact !== null && emailAllowed(contact.email_prefs, 'rule.notify')) {
-          mails.push({
-            recipient: contact.email,
-            locale: contact.locale,
-            type: 'rule_notification',
-            link: '/notifications',
+        if (contact !== null) {
+          await insertRow(client, {
+            ...base,
+            recipientId: rule.patient_id,
+            recipientRealm: 'patient',
           });
+          result.rowsWritten += 1;
+          if (emailAllowed(contact.email_prefs, 'rule.notify')) {
+            mails.push({
+              recipient: contact.email,
+              locale: contact.locale,
+              type: 'rule_notification',
+              link: '/notifications',
+            });
+          }
         }
       }
       if (rule.recipients.includes('team') || rule.recipients.includes('lead')) {

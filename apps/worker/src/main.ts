@@ -17,6 +17,7 @@ import {
 } from '@mio/storage';
 import { readFileSync } from 'node:fs';
 import { createLifecycle } from './lifecycle.js';
+import { archiveSettledTreatments, exportAuditDays } from './retention.js';
 import { scanAttachments } from './attachment-scan.js';
 import { createReminderSender } from './reminder-mail.js';
 import { dispatchNotifications } from './notification-dispatch.js';
@@ -143,6 +144,30 @@ async function main(): Promise<void> {
   });
   await boss.schedule(QUEUES.attachmentScan, '* * * * *');
   await boss.send(QUEUES.attachmentScan, {});
+
+  // WP-29: the retention pair. Archival stamps settled treatments after
+  // their quiet period; the audit export copies whole days of audit
+  // events to object storage through the audit-reader carrier (the
+  // worker role itself stays INSERT-only on audit.*).
+  await boss.createQueue(QUEUES.retentionSweep);
+  await boss.work(QUEUES.retentionSweep, async () => {
+    const archived = await archiveSettledTreatments(pool);
+    if (archived > 0) log('info', 'treatments archived', { archived });
+  });
+  await boss.schedule(QUEUES.retentionSweep, '20 4 * * *');
+  await boss.send(QUEUES.retentionSweep, {});
+
+  const auditReader = createRolePool({ connectionString, role: 'mio_audit_reader' });
+  lifecycle.onStop(async () => {
+    await auditReader.end();
+  });
+  await boss.createQueue(QUEUES.auditExport);
+  await boss.work(QUEUES.auditExport, async () => {
+    const result = await exportAuditDays(pool, auditReader, storage);
+    if (result.days > 0) log('info', 'audit days exported', { ...result });
+  });
+  await boss.schedule(QUEUES.auditExport, '50 4 * * *');
+  await boss.send(QUEUES.auditExport, {});
 
   log('info', 'mio worker started, job bus running');
 }

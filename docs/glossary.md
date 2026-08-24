@@ -222,6 +222,11 @@ Resolved — Poistunut — Avklingat ⚠️.
 | Deactivate | Poista käytöstä | Avaktivera | Account lifecycle (A1) |
 | Reactivate | Palauta käyttöön | Återaktivera | Inverse of deactivate; restores sign-in only |
 | Capability | Oikeus | Behörighet | A2 role matrix column/row language |
+| Deceased | Menehtynyt | Avliden | ⚠️ Respectful register — FI deliberately *menehtynyt*, never *kuollut*, in UI text (WP-29) |
+| Mark as deceased | Merkitse menehtyneeksi | Markera som avliden | Lead-only care action (WP-29) |
+| Date of death | Kuolinpäivä | Dödsdatum | Dialog field label |
+| Archived (treatment) | Arkistoitu | Arkiverad | Read-only after the quiet period (WP-29) |
+| Retention | Säilytys | Bevarande | Data kept per statutory periods (R5) |
 | Consent | Suostumus | Samtycke | |
 | Terms of use | Käyttöehdot | Användarvillkor | |
 | Privacy notice | Tietosuojaseloste | Integritetspolicy | Established FI term |

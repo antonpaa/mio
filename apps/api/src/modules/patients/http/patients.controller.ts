@@ -26,6 +26,16 @@ export class PatientsController {
     return this.patients.exportPatient(staff, id, body.reason);
   }
 
+  @Post(':id/deceased')
+  @HttpCode(200)
+  markDeceased(
+    @CurrentStaff() staff: StaffPrincipal,
+    @Param('id') id: string,
+    @Body() body: { date?: string },
+  ) {
+    return this.patients.markDeceased(staff, id, body.date);
+  }
+
   @Get(':id')
   profile(@CurrentStaff() staff: StaffPrincipal, @Param('id') id: string) {
     return this.patients.profile(staff, id);

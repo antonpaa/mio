@@ -26,8 +26,16 @@ resource "google_storage_bucket" "attachments" {
     }
   }
 
+  # WP-29: the worker writes daily audit exports under audit-exports/ in
+  # this bucket. Versioning keeps every overwritten or deleted object as
+  # a noncurrent version - the export files gain tamper evidence, and a
+  # rejected attachment's delete still succeeds (its bytes linger as a
+  # noncurrent version until a lifecycle rule ages them out). A DEDICATED
+  # bucket with a retention lock is the production endgame, but its lock
+  # period IS the statutory retention period - blocked on R5, like every
+  # other period in audit.retention_policy.
   versioning {
-    enabled = false
+    enabled = true
   }
 }
 

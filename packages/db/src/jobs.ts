@@ -25,6 +25,11 @@ export const QUEUES = {
   /** Quarantined-attachment scanning: sniff happened at upload, the
    * scanner promotes to clean or rejects (WP-24). */
   attachmentScan: 'attachment-scan',
+  /** Daily archival stamp on treatments that finished their quiet
+   * period (WP-29). */
+  retentionSweep: 'retention-sweep',
+  /** Daily export of audit events to immutable object storage (WP-29). */
+  auditExport: 'audit-export',
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

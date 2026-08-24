@@ -93,6 +93,10 @@ the record of processing activities.
 behaviour — in particular who answers a data subject access request and how
 "download my data" fits into it.
 
+**Engineering position.** Support material for the DPIA — processing map,
+technical measures, rights implementation, residual open items — is
+maintained at [`dpia-support.md`](dpia-support.md) (WP-29).
+
 | Owner | Needed by | Status |
 |---|---|---|
 | TBD — DPO | Before processing real data | 🟠 Open |
@@ -107,7 +111,12 @@ deceased patients' data.
 
 **Engineering position.** The data model supports per-record retention
 classification ([`../architecture/data-model.md`](../architecture/data-model.md)).
-The periods are a legal input.
+The periods are a legal input. As of WP-29 the classes are live in
+`audit.retention_policy` with NULL periods — NULL means hold, never
+delete — so supplying the statutory numbers is a one-row update per
+class, not a build. Deceased-patient handling (respectful stop of all
+outbound automation, record retained) is implemented; only the "how
+long" is open.
 
 | Owner | Needed by | Status |
 |---|---|---|

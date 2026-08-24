@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import type pg from 'pg';
 import { authorize } from '@mio/authz/engine';
-import { withUserContext, writeAccessEvent } from '@mio/db';
+import { withUserContext, writeAccessEvent, writeChangeEvent } from '@mio/db';
 import { APP_POOL } from '../../shared/db.module.js';
 import type { StaffPrincipal } from '../../shared/staff-session.js';
 
@@ -40,6 +40,7 @@ export interface PatientProfile {
   phone: string | null;
   locale: string;
   careTeamSize: number;
+  deceasedOn: string | null;
 }
 
 @Injectable()
@@ -162,8 +163,10 @@ export class PatientsService {
           email: string;
           phone: string | null;
           locale: string;
+          deceased_on: string | null;
         }>(
-          `SELECT id, given_name, family_name, date_of_birth::text, email, phone, locale
+          `SELECT id, given_name, family_name, date_of_birth::text, email, phone, locale,
+                  deceased_on::text AS deceased_on
            FROM identity.patient_account WHERE id = $1`,
           [patientId],
         );
@@ -179,6 +182,7 @@ export class PatientsService {
           phone: patient.phone,
           locale: patient.locale,
           careTeamSize: careTeam.length,
+          deceasedOn: patient.deceased_on,
         };
       },
     );
@@ -208,6 +212,73 @@ export class PatientsService {
    * patient could download themselves, prepared by a caring hand -
    * internal notes stay out, they are team process, not patient record.
    */
+  /** WP-29: a care decision by the lead who knows the patient. Sign-in
+   * closes, sessions die, outbound automation checks the flag from here
+   * on; the record is retained, respectfully, per the retention policy. */
+  async markDeceased(
+    staff: StaffPrincipal,
+    patientId: string,
+    date: string | undefined,
+  ): Promise<object> {
+    const parsed = /^\d{4}-\d{2}-\d{2}$/.test(date ?? '') ? new Date(`${date}T00:00:00Z`) : null;
+    if (
+      parsed === null ||
+      Number.isNaN(parsed.getTime()) ||
+      parsed.getTime() > Date.now() ||
+      parsed.getUTCFullYear() < 1900
+    ) {
+      throw new BadRequestException({ status: 'invalid_date' });
+    }
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const { rows: careRows } = await client.query<{ team: string[] }>(
+        `SELECT app.care_team_of($1) AS team`,
+        [patientId],
+      );
+      const decision = authorize({
+        principal: { userId: staff.userId, role: staff.role },
+        action: 'mark_deceased',
+        resource: {
+          type: 'patient_account',
+          id: patientId,
+          patientId,
+          careTeamUserIds: careRows[0]?.team ?? [],
+        },
+      }).decision;
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'patient_account.mark_deceased',
+        resourceType: 'patient_account',
+        resourceId: patientId,
+        patientId,
+        decision,
+        context: { date },
+      });
+      if (decision !== 'allow') throw new NotFoundException({ status: 'unknown_patient' });
+      const { rowCount } = await client.query(
+        `UPDATE identity.patient_account
+            SET deceased_on = $2, status = 'deactivated'
+          WHERE id = $1 AND deceased_on IS NULL`,
+        [patientId, date],
+      );
+      if (rowCount === 0) throw new BadRequestException({ status: 'already_marked' });
+      await client.query(
+        `UPDATE identity.patient_session SET revoked_at = now()
+          WHERE account_id = $1 AND revoked_at IS NULL`,
+        [patientId],
+      );
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'patient_account.mark_deceased',
+        resourceType: 'patient_account',
+        resourceId: patientId,
+        patientId,
+      });
+      return { marked: true };
+    });
+  }
+
   async exportPatient(
     staff: StaffPrincipal,
     patientId: string,

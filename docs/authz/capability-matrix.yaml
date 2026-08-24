@@ -857,6 +857,18 @@ resources:
         notes: >-
           The inverse of deactivate (A1). Restores sign-in only — sessions
           stay revoked and credentials stay whatever they were.
+      - id: mark_deceased
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: care_relationship
+          administrator: deny
+        notes: >-
+          A care decision, not identity administration (WP-29): the lead
+          who knows the patient records the death. Sign-in closes, every
+          outbound automation stops, the record is retained respectfully.
+          The administrator plane deliberately cannot do this.
       - id: reset_credentials
         audit: always
         grants:

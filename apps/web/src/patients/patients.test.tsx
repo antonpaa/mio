@@ -1,6 +1,6 @@
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactElement } from 'react';
@@ -83,6 +83,12 @@ beforeEach(() => {
           { status: 200, headers: { 'content-type': 'application/json' } },
         );
       }
+      if (url === '/api/staff/patients/p1/deceased' && init?.method === 'POST') {
+        return new Response('{"marked":true}', {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
       if (url === '/api/staff/patients/p1') {
         return new Response(
           JSON.stringify({
@@ -94,6 +100,7 @@ beforeEach(() => {
             phone: '+358 40 1234567',
             locale: 'fi',
             careTeamSize: 8,
+            deceasedOn: null,
           }),
           { status: 200, headers: { 'content-type': 'application/json' } },
         );
@@ -130,6 +137,28 @@ describe('patient profile (PP shell)', () => {
     await screen.findByText('Values');
     const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });
     expect(results.violations.map((violation) => violation.id)).toEqual([]);
+  });
+});
+
+describe('WP-29 deceased handling', () => {
+  it('the lead records a death through the dialog, with the date posted', async () => {
+    const { element } = appAt('/patients/p1');
+    render(element);
+    await screen.findByRole('heading', { name: 'Anna Virtanen' });
+    await userEvent.click(screen.getByRole('button', { name: 'Mark as deceased' }));
+    await screen.findByText(/Sign-in closes and every reminder/);
+    fireEvent.change(screen.getByLabelText('Date of death'), {
+      target: { value: '2026-08-20' },
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Record' }));
+    await waitFor(() => {
+      const call = vi
+        .mocked(fetch)
+        .mock.calls.find(([url]) => String(url) === '/api/staff/patients/p1/deceased');
+      expect(call).toBeTruthy();
+      const body = JSON.parse(String((call![1] as RequestInit).body)) as { date: string };
+      expect(body.date).toBe('2026-08-20');
+    });
   });
 });
 
