@@ -14,6 +14,7 @@ import {
 } from '@mio/ui';
 import { ValuesCard } from '../observations/values-card.js';
 import { SymptomsCard } from '../observations/symptoms-card.js';
+import { EditContactButton } from './contact-dialog.js';
 import { ResponsesCard } from '../surveys/responses-card.js';
 import { ExportDataButton } from './export-dialog.js';
 import { MarkDeceasedButton } from './deceased-dialog.js';
@@ -27,6 +28,7 @@ interface PatientProfile {
   dateOfBirth: string | null;
   email: string;
   phone: string | null;
+  address: Record<string, string> | null;
   locale: string;
   careTeamSize: number;
   deceasedOn: string | null;
@@ -186,6 +188,9 @@ export function PatientProfilePage(): ReactElement {
   const patient = profile.data;
   const role = (session.account?.role ?? 'treatment_member') as Role;
   const mayMarkDeceased = ROLE_CAPABILITIES[role].includes('patient_account.mark_deceased');
+  const mayEditContact = ROLE_CAPABILITIES[role].includes(
+    'patient_identity.update_contact_details',
+  );
 
   return (
     <div className="flex gap-8">
@@ -225,6 +230,16 @@ export function PatientProfilePage(): ReactElement {
             </p>
           </div>
           <div className="ml-auto flex items-center gap-2">
+            {patient.deceasedOn === null && mayEditContact ? (
+              <EditContactButton
+                patientId={patientId}
+                current={{
+                  phone: patient.phone,
+                  address: patient.address,
+                  locale: patient.locale,
+                }}
+              />
+            ) : null}
             {patient.deceasedOn === null && mayMarkDeceased ? (
               <MarkDeceasedButton
                 patientId={patientId}

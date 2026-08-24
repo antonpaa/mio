@@ -26,6 +26,17 @@ export class PatientsController {
     return this.patients.exportPatient(staff, id, body.reason);
   }
 
+  // PP5 assisted edit: the care team corrects what the patient told them
+  @Post(':id/contact')
+  @HttpCode(200)
+  updateContact(
+    @CurrentStaff() staff: StaffPrincipal,
+    @Param('id') id: string,
+    @Body() body: { phone?: unknown; address?: unknown; locale?: unknown },
+  ) {
+    return this.patients.updateContactDetails(staff, id, body);
+  }
+
   @Post(':id/deceased')
   @HttpCode(200)
   markDeceased(

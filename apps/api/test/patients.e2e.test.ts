@@ -168,6 +168,47 @@ describe('roster and profile', () => {
     expect(roster.statusCode).toBe(401);
   });
 
+  it('PP5 assisted edit: the care team corrects contact details, outsiders cannot', async () => {
+    const updated = await inject(
+      'POST',
+      `/api/staff/patients/${own}/contact`,
+      { phone: '+358 40 555 0101', address: { street: 'Uusikatu 4', city: 'Turku' } },
+      cookie,
+    );
+    expect(updated.statusCode).toBe(200);
+
+    const profile = await inject('GET', `/api/staff/patients/${own}`, undefined, cookie);
+    const body = profile.json() as { phone: string; address: Record<string, string> };
+    expect(body.phone).toBe('+358 40 555 0101');
+    expect(body.address.street).toBe('Uusikatu 4');
+
+    // the trail records WHICH fields moved and that it was assisted -
+    // never the values, which would make the audit a second copy of them
+    const { rows } = await owner.query<{ detail: { keys: string[]; assisted: boolean } }>(
+      `SELECT detail FROM audit.change_event
+        WHERE actor_user_id = $1 AND resource_id = $2
+          AND action = 'patient_identity.update_contact_details'
+        ORDER BY occurred_at DESC LIMIT 1`,
+      [clinician.id, own],
+    );
+    expect(rows[0]!.detail.assisted).toBe(true);
+    expect(new Set(rows[0]!.detail.keys)).toEqual(new Set(['phone', 'address']));
+    expect(JSON.stringify(rows[0]!.detail)).not.toContain('Uusikatu');
+
+    // a patient outside the care relationship is a 404, not a 403
+    const foreignEdit = await inject(
+      'POST',
+      `/api/staff/patients/${foreign}/contact`,
+      { phone: '+358 40 555 0202' },
+      cookie,
+    );
+    expect(foreignEdit.statusCode).toBe(404);
+
+    // and an empty body changes nothing
+    const empty = await inject('POST', `/api/staff/patients/${own}/contact`, {}, cookie);
+    expect(empty.statusCode).toBe(400);
+  });
+
   it('the RLS backstop holds: an app-role query with a foreign staff context sees nothing', async () => {
     const { createRolePool, withUserContext } = await import('@mio/db');
     const appPool = createRolePool({

@@ -98,6 +98,7 @@ beforeEach(() => {
             dateOfBirth: '1975-03-02',
             email: 'anna.virtanen@patient.example',
             phone: '+358 40 1234567',
+            address: { street: 'Rantatie 12', postalCode: '20100', city: 'Turku' },
             locale: 'fi',
             careTeamSize: 8,
             deceasedOn: null,
@@ -185,5 +186,34 @@ describe('PP5 export with reason', () => {
     expect(call).toBeTruthy();
     const body = JSON.parse(String((call![1] as RequestInit).body)) as { reason: string };
     expect(body.reason).toBe('Care transfer to Turku.');
+  });
+});
+
+describe('PP5 assisted contact edit', () => {
+  it('opens with what is on file and posts the corrected details', async () => {
+    const { element } = appAt('/patients/p1');
+    render(element);
+    await screen.findByRole('heading', { name: 'Anna Virtanen' });
+    await userEvent.click(screen.getByRole('button', { name: 'Edit contact details' }));
+
+    // the dialog is seeded from the record, not empty
+    const phone = screen.getByLabelText('Phone');
+    expect((phone as HTMLInputElement).value).toBe('+358 40 1234567');
+    expect((screen.getByLabelText('Street address') as HTMLInputElement).value).toBe('Rantatie 12');
+    // and it says plainly that the patient could do this themselves
+    expect(screen.getByText(/They can change the same details themselves/)).toBeTruthy();
+
+    await userEvent.clear(phone);
+    await userEvent.type(phone, '+358 40 7654321');
+    await userEvent.click(screen.getByRole('button', { name: 'Save details' }));
+
+    await waitFor(() => {
+      const call = vi
+        .mocked(fetch)
+        .mock.calls.find(([url]) => String(url) === '/api/staff/patients/p1/contact');
+      expect(call).toBeTruthy();
+      const body = JSON.parse(String((call![1] as RequestInit).body)) as { phone: string };
+      expect(body.phone).toBe('+358 40 7654321');
+    });
   });
 });

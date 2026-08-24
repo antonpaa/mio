@@ -738,6 +738,15 @@ const en = {
   'symptoms.source.self_report': 'Self-report',
   'symptoms.source.clinician': 'Clinician',
   'symptoms.source.onBehalf': '{name}, on behalf',
+  'pp5.editContact': 'Edit contact details',
+  'pp5.assistedNote':
+    'Correct what the patient told you. They can change the same details themselves; every assisted edit is recorded with your name.',
+  'pp5.phone': 'Phone',
+  'pp5.street': 'Street address',
+  'pp5.postalCode': 'Postal code',
+  'pp5.city': 'City',
+  'pp5.save': 'Save details',
+  'pp5.saveFailed': 'The details could not be saved. Try again.',
   'onBehalf.fillSurvey': 'Fill a survey',
   'onBehalf.dialogNote':
     'You are recording answers the patient gave you. The response is stored in their name, marked as entered on their behalf.',
@@ -1585,6 +1594,15 @@ const fi: Record<MessageId, string> = {
   'symptoms.source.self_report': 'Oma ilmoitus',
   'symptoms.source.clinician': 'Kirjaus vastaanotolla',
   'symptoms.source.onBehalf': '{name}, potilaan puolesta',
+  'pp5.editContact': 'Muokkaa yhteystietoja',
+  'pp5.assistedNote':
+    'Korjaa se, minkä potilas kertoi sinulle. Hän voi muuttaa samat tiedot itse; jokainen avustettu muutos kirjataan nimelläsi.',
+  'pp5.phone': 'Puhelin',
+  'pp5.street': 'Katuosoite',
+  'pp5.postalCode': 'Postinumero',
+  'pp5.city': 'Kaupunki',
+  'pp5.save': 'Tallenna tiedot',
+  'pp5.saveFailed': 'Tietoja ei voitu tallentaa. Yritä uudelleen.',
   'onBehalf.fillSurvey': 'Täytä kysely',
   'onBehalf.dialogNote':
     'Kirjaat vastaukset, jotka potilas antoi sinulle. Vastaus tallennetaan hänen nimiinsä, merkittynä hänen puolestaan kirjatuksi.',
@@ -2427,6 +2445,15 @@ const sv: Record<MessageId, string> = {
   'symptoms.source.self_report': 'Egenrapport',
   'symptoms.source.clinician': 'Klinikanteckning',
   'symptoms.source.onBehalf': '{name}, för patientens räkning',
+  'pp5.editContact': 'Redigera kontaktuppgifter',
+  'pp5.assistedNote':
+    'Rätta det patienten uppgav. Patienten kan ändra samma uppgifter själv; varje assisterad ändring registreras med ditt namn.',
+  'pp5.phone': 'Telefon',
+  'pp5.street': 'Gatuadress',
+  'pp5.postalCode': 'Postnummer',
+  'pp5.city': 'Ort',
+  'pp5.save': 'Spara uppgifter',
+  'pp5.saveFailed': 'Uppgifterna kunde inte sparas. Försök igen.',
   'onBehalf.fillSurvey': 'Fyll i en enkät',
   'onBehalf.dialogNote':
     'Du registrerar svar som patienten gav dig. Svaret sparas i patientens namn, märkt som infört å deras vägnar.',
