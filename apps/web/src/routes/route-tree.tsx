@@ -1,9 +1,9 @@
 import { createRootRouteWithContext, createRoute, Outlet, redirect } from '@tanstack/react-router';
 import type { QueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
-import { FormattedMessage, IntlProvider, useIntl } from 'react-intl';
+import { IntlProvider, useIntl } from 'react-intl';
 import type { Locale } from '@mio/i18n';
-import { EmptyState, Splash } from '@mio/ui';
+import { Splash } from '@mio/ui';
 import { ROLE_CAPABILITIES, type Role } from '@mio/authz';
 import { MESSAGES } from '../i18n/messages.js';
 import { detectLocale, persistLocale } from '../lib/locale.js';
@@ -41,6 +41,7 @@ import { AdminUsersPage } from '../admin/users-page.js';
 import { AdminTeamsPage } from '../admin/teams-page.js';
 import { AdminRolesPage } from '../admin/roles-page.js';
 import { AdminAuditPage } from '../admin/audit-page.js';
+import { ReportingPage } from '../reporting/reporting-page.js';
 
 function Root(): ReactElement {
   const [locale, setLocaleState] = useState<Locale>(() => detectLocale());
@@ -377,19 +378,6 @@ function AdminIndex({ page }: { page: ReactElement }): ReactElement {
   return <SignedInShell>{isAdmin ? page : <PlaceholderHome />}</SignedInShell>;
 }
 
-/** A4 reporting stays a stub until gate P8 (where reporting lives) is
- * decided - the nav item exists so the decision has a place to land. */
-function ReportingPending(): ReactElement {
-  const intl = useIntl();
-  return (
-    <div className="mx-auto max-w-md pt-10">
-      <EmptyState title={intl.formatMessage({ id: 'nav.reporting' })}>
-        <FormattedMessage id="admin.reportingPending" />
-      </EmptyState>
-    </div>
-  );
-}
-
 const adminTeamsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/teams',
@@ -418,11 +406,21 @@ const adminAuditRoute = createRoute({
   beforeLoad: requireSession,
   component: AuditIndex,
 });
-const adminReportingRoute = createRoute({
+/** A4 reporting sits with whoever the matrix grants report.view -
+ * clinicians, not administrators (gate P8, decided 2026-08-24). */
+function ReportingIndex(): ReactElement {
+  const session = useSession();
+  if (session.loading || !session.account) return <Splash />;
+  const role = (session.realm === 'patient' ? 'patient' : session.account.role) as Role;
+  const may = ROLE_CAPABILITIES[role]?.includes('report.view') ?? false;
+  return <SignedInShell>{may ? <ReportingPage /> : <PlaceholderHome />}</SignedInShell>;
+}
+
+const reportingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/reporting',
   beforeLoad: requireSession,
-  component: () => <AdminIndex page={<ReportingPending />} />,
+  component: ReportingIndex,
 });
 
 /** /calendar is the patient's consolidated view (P9); staff have no page
@@ -475,5 +473,5 @@ export const routeTree = rootRoute.addChildren([
   adminTeamsRoute,
   adminRolesRoute,
   adminAuditRoute,
-  adminReportingRoute,
+  reportingRoute,
 ]);

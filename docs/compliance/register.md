@@ -343,7 +343,7 @@ engineering guess.
 | P5 | Is break-glass access outside a care relationship required? | Clinical and legal input |
 | P6 | Patient-initiated symptom self-report: the data model and designs imply it (source "self-report", PP3/PP6), but no patient-side flow is designed | Product decision — design the flow or descope self-report to v1.1 (reconciliation X7) |
 | P7 | How does a numeric survey question feed a value series (PSA reporting → PSA value)? | Product + engineering decision — recommended: explicit per-question binding in the builder (reconciliation X8) |
-| P8 | Reporting screen placement: designed in the admin shell (A4), but its metrics are clinical aggregates that administrators cannot read | Move to clinician shell (Treatment Lead) or redefine metrics as de-identified counts (reconciliation X4/`reporting_shell_placement` in the matrix) |
+| P8 | Reporting screen placement: designed in the admin shell (A4), but its metrics are clinical aggregates that administrators cannot read | **Decided (owner, 2026-08-24): moved to the clinician shell — implemented.** A4 renders for `report.view` holders (clinical roles), scoped to the caller's own treatments and aggregated in-database; administrators keep no route to it (reconciliation X12) |
 
 ---
 

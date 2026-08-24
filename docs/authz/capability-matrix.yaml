@@ -1055,7 +1055,9 @@ resources:
           auditor: deny
         notes: >-
           Aggregate but still clinical. Administrators are denied,
-          consistent with patient_clinical_profile.
+          consistent with patient_clinical_profile. DECIDED 2026-08-24
+          (P8): the A4 screen moves to the clinician shell; the design's
+          admin-shell placement is reconciled in docs/design/README.md.
 
   - id: own_settings
     schema: identity
@@ -1167,18 +1169,6 @@ open_questions:
       submission and any patient-addressed custom notification a rule author
       wrote. Matrix keeps alert.view denied to patients accordingly. Still
       needs clinical sign-off, not an engineering one.
-
-  - id: reporting_shell_placement
-    question: >
-      The reporting screen (A4) sits in the administration shell in the design,
-      but report.view is denied to administrators because its metrics are
-      clinical aggregates.
-    tension: >
-      Either reporting moves to the clinician shell (Treatment Lead), or its
-      metrics must be de-identified counts computable without clinical.*
-      access. The matrix currently denies administrators; the design adjusts
-      or the metric set is redefined. Tracked as P8 in the compliance
-      register.
 
   - id: break_glass
     question: Is emergency access outside a care relationship required?

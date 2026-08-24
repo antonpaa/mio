@@ -77,6 +77,9 @@ const CLINICIAN_ITEMS: ShellItem[] = [
   { labelId: 'nav.surveys', href: '/surveys', capability: 'survey_template.view' },
   { labelId: 'nav.treatments', href: '/treatments', capability: 'treatment.view' },
   { labelId: 'nav.tasks', href: '/tasks', capability: 'task.view' },
+  // A4 lives here, not in admin (P8 decided 2026-08-24): the metrics
+  // are clinical aggregates, so the nav follows report.view
+  { labelId: 'nav.reporting', href: '/reporting', capability: 'report.view' },
 ];
 
 /** P2: the auditor's whole surface is the audit log. */
@@ -87,7 +90,6 @@ const ADMIN_ITEMS: ShellItem[] = [
   { labelId: 'nav.teams', href: '/teams', capability: 'team.create' },
   { labelId: 'nav.roles', href: '/roles' },
   { labelId: 'nav.audit', href: '/audit', capability: 'audit_log.view_full' },
-  { labelId: 'nav.reporting', href: '/reporting' },
 ];
 
 function shellFor(role: Role): { variant: 'patient' | 'clinician' | 'admin'; items: ShellItem[] } {
