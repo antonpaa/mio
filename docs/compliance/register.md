@@ -223,6 +223,27 @@ surveys are unaffected.
 
 ---
 
+## R12 🟠 External penetration test
+
+**Question.** Who performs the WP-30 penetration test, when, and against
+which environment?
+
+**Engineering position.** The system is ready to be tested: the threat
+model ([`../security/threat-model.md`](../security/threat-model.md)) is
+the briefing document, staging (WP-09) the target environment, and the
+named priority targets are authentication and the attachment pipeline.
+Findings land here with owners; a finding against a runtime dependency
+also lands in the SOUP inventory.
+
+**Consequence if unresolved.** No independent validation of the
+security posture before pilot.
+
+| Owner | Needed by | Status |
+|---|---|---|
+| TBD | Before pilot (M5) | 🟠 Open |
+
+---
+
 ## Product decisions pending
 
 These are open in [`../authz/capability-matrix.yaml`](../authz/capability-matrix.yaml)
