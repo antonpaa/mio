@@ -53,6 +53,9 @@ importers:
       '@mio/schedule':
         specifier: workspace:*
         version: link:../../packages/schedule
+      '@mio/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
       '@mio/survey-schema':
         specifier: workspace:*
         version: link:../../packages/survey-schema
@@ -187,6 +190,9 @@ importers:
       '@mio/schedule':
         specifier: workspace:*
         version: link:../../packages/schedule
+      '@mio/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
       '@mio/survey-schema':
         specifier: workspace:*
         version: link:../../packages/survey-schema
@@ -250,6 +256,12 @@ importers:
   packages/i18n: {}
 
   packages/schedule: {}
+
+  packages/storage:
+    devDependencies:
+      '@types/node':
+        specifier: ^26.2.0
+        version: 26.2.0
 
   packages/survey-schema: {}
 

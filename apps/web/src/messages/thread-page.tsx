@@ -180,7 +180,15 @@ export function MessageThreadPage(): ReactElement {
                         })}
                       </p>
                       <div className="mt-1.5">
-                        <MessageDocView doc={item.body} />
+                        <MessageDocView
+                          doc={item.body}
+                          attachmentBase={
+                            realm === 'staff'
+                              ? '/api/staff/attachments'
+                              : '/api/patient/attachments'
+                          }
+                          attachmentAlt={intl.formatMessage({ id: 'messages.attachmentAlt' })}
+                        />
                       </div>
                     </div>
                   </li>
@@ -206,7 +214,13 @@ export function MessageThreadPage(): ReactElement {
                       })}
                     </p>
                     <div className="mt-1">
-                      <MessageDocView doc={item.body} />
+                      <MessageDocView
+                        doc={item.body}
+                        attachmentBase={
+                          realm === 'staff' ? '/api/staff/attachments' : '/api/patient/attachments'
+                        }
+                        attachmentAlt={intl.formatMessage({ id: 'messages.attachmentAlt' })}
+                      />
                     </div>
                   </div>
                 </li>
@@ -251,6 +265,15 @@ export function MessageThreadPage(): ReactElement {
             sendLabel={intl.formatMessage({ id: 'messages.send' })}
             tone={realm === 'staff' && lane === 'note' ? 'note' : 'message'}
             draftKey={`${myId}:${treatmentId}:${realm === 'staff' && lane === 'note' ? 'note' : 'message'}`}
+            {...(realm === 'staff' && lane === 'note'
+              ? {}
+              : {
+                  attachmentConfig: {
+                    uploadUrl: `/api/${realm}/attachments`,
+                    fetchBase: `/api/${realm}/attachments`,
+                    treatmentId,
+                  },
+                })}
             busy={post.isPending}
             onSend={async (doc) => {
               await post.mutateAsync({ doc, asNote: realm === 'staff' && lane === 'note' });

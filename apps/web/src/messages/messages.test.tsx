@@ -291,3 +291,81 @@ describe('X3 composer persistence', () => {
     expect(third.getByRole('textbox').textContent).toBe('');
   });
 });
+
+describe('WP-24 composer attachments', () => {
+  it('uploads, shows scanning, flips to clean, and sends the attachment node', async () => {
+    const sent: unknown[] = [];
+    let polls = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        if (url === '/api/patient/attachments' && init?.method === 'POST') {
+          return new Response(
+            JSON.stringify({ attachmentId: '11111111-2222-4333-8444-555555555555' }),
+            { status: 201, headers: { 'content-type': 'application/json' } },
+          );
+        }
+        if (url.startsWith('/api/patient/attachments/')) {
+          polls += 1;
+          // first poll still scanning, then clean bytes
+          return polls === 1
+            ? new Response('{"state":"quarantined"}', { status: 202 })
+            : new Response(new Uint8Array([1]).buffer, { status: 200 });
+        }
+        return new Response('{}', { status: 404 });
+      }),
+    );
+    vi.useFakeTimers();
+    try {
+      const view = render(
+        <IntlWrap>
+          <Composer
+            label="Write"
+            sendLabel="Send"
+            busy={false}
+            attachmentConfig={{
+              uploadUrl: '/api/patient/attachments',
+              fetchBase: '/api/patient/attachments',
+              treatmentId: 't1',
+            }}
+            onSend={async (doc) => {
+              sent.push(doc);
+            }}
+          />
+        </IntlWrap>,
+      );
+      const input = view.container.querySelector('input[type="file"]')!;
+      const file = new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], 'wound.png', {
+        type: 'image/png',
+      });
+      await vi.waitFor(async () => {
+        fireEvent.change(input, { target: { files: [file] } });
+        await vi.advanceTimersByTimeAsync(50);
+        expect(view.getByText('wound.png')).toBeTruthy();
+      });
+      // scanning chip first
+      expect(view.getByText('Checking…')).toBeTruthy();
+      // two poll ticks: still scanning, then clean
+      await vi.advanceTimersByTimeAsync(1600);
+      await vi.advanceTimersByTimeAsync(1600);
+      await vi.waitFor(() => {
+        expect(view.getByText('✓')).toBeTruthy();
+      });
+      fireEvent.click(view.getByRole('button', { name: 'Send' }));
+      await vi.waitFor(() => {
+        expect(sent).toHaveLength(1);
+      });
+      const doc = sent[0] as { content: { type: string; attachmentId?: string }[] };
+      expect(
+        doc.content.some(
+          (block) =>
+            block.type === 'attachment' &&
+            block.attachmentId === '11111111-2222-4333-8444-555555555555',
+        ),
+      ).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

@@ -31,7 +31,14 @@ export interface MessageList {
   content: MessageListItem[];
 }
 
-export type MessageBlock = MessageParagraph | MessageList;
+/** WP-24: a reference to a scanned attachment; bytes never live in the
+ * document, only the id the serving endpoint authorizes per request. */
+export interface MessageAttachment {
+  type: 'attachment';
+  attachmentId: string;
+}
+
+export type MessageBlock = MessageParagraph | MessageList | MessageAttachment;
 
 export interface MessageDoc {
   type: 'doc';
@@ -72,10 +79,17 @@ function rebuildParagraph(value: unknown): MessageParagraph | null {
   return { type: 'paragraph', content };
 }
 
+const UUID_SHAPE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function rebuildBlock(value: unknown): MessageBlock | null {
   const paragraph = rebuildParagraph(value);
   if (paragraph !== null) return paragraph;
   if (!isRecord(value)) return null;
+  if (value['type'] === 'attachment') {
+    const id = value['attachmentId'];
+    if (typeof id !== 'string' || !UUID_SHAPE.test(id)) return null;
+    return { type: 'attachment', attachmentId: id.toLowerCase() };
+  }
   if (value['type'] !== 'bullet_list' && value['type'] !== 'ordered_list') return null;
   const items = (Array.isArray(value['content']) ? value['content'] : [])
     .slice(0, MESSAGE_MAX_LIST_ITEMS)
@@ -104,9 +118,18 @@ export function parseMessageDoc(value: unknown): MessageDoc | null {
     .filter((block): block is MessageBlock => block !== null);
   const doc: MessageDoc = { type: 'doc', content };
   const text = plainTextOf(doc);
-  if (text.trim().length === 0) return null;
+  // an image-only message is a real message; empty-of-everything is not
+  if (text.trim().length === 0 && attachmentIdsOf(doc).length === 0) return null;
   if (text.length > MESSAGE_MAX_CHARS) return null;
   return doc;
+}
+
+/** Attachment references in document order (WP-24) - the send path
+ * verifies each belongs to the author and is clean before linking. */
+export function attachmentIdsOf(doc: MessageDoc): string[] {
+  return doc.content
+    .filter((block): block is MessageAttachment => block.type === 'attachment')
+    .map((block) => block.attachmentId);
 }
 
 /** Flatten to plain text - previews in lists and notifications. */
@@ -114,11 +137,12 @@ export function plainTextOf(doc: MessageDoc): string {
   const paragraphText = (paragraph: MessageParagraph): string =>
     paragraph.content.map((node) => node.text).join('');
   return doc.content
-    .map((block) =>
-      block.type === 'paragraph'
+    .map((block) => {
+      if (block.type === 'attachment') return '';
+      return block.type === 'paragraph'
         ? paragraphText(block)
-        : block.content.map((item) => item.content.map(paragraphText).join(' ')).join('\n'),
-    )
+        : block.content.map((item) => item.content.map(paragraphText).join(' ')).join('\n');
+    })
     .join('\n')
     .trim();
 }

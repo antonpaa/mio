@@ -22,6 +22,9 @@ export const QUEUES = {
   /** Outbox + rule-notification fan-out into the in-app centre and
    * contentless email (WP-25). */
   notificationDispatch: 'notification-dispatch',
+  /** Quarantined-attachment scanning: sniff happened at upload, the
+   * scanner promotes to clean or rejects (WP-24). */
+  attachmentScan: 'attachment-scan',
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

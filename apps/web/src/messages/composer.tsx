@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type ReactElement, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { useIntl } from 'react-intl';
 import {
   parseMessageDoc,
@@ -126,6 +126,7 @@ function inlineNodes(content: MessageText[]): Node[] {
 function restoreDocInto(root: HTMLElement, doc: MessageDoc): void {
   root.innerHTML = '';
   for (const block of doc.content) {
+    if (block.type === 'attachment') continue; // attachments live outside the editable
     if (block.type === 'paragraph') {
       const div = document.createElement('div');
       inlineNodes(block.content).forEach((node) => div.appendChild(node));
@@ -170,6 +171,12 @@ function ToolButton({
   );
 }
 
+interface PendingAttachment {
+  id: string;
+  name: string;
+  state: 'quarantined' | 'clean' | 'rejected';
+}
+
 export function Composer({
   label,
   sendLabel,
@@ -177,6 +184,7 @@ export function Composer({
   onSend,
   busy,
   draftKey,
+  attachmentConfig,
 }: {
   label: string;
   sendLabel: string;
@@ -187,10 +195,72 @@ export function Composer({
   /** X3: when set, unsent text persists client-side under this key
    * (account+thread+lane) and is restored on return. */
   draftKey?: string;
+  /** WP-24: enables image attach/paste. Uploads land in quarantine and
+   * the strip shows scanning state; send waits for clean. */
+  attachmentConfig?: { uploadUrl: string; fetchBase: string; treatmentId: string };
 }): ReactElement {
   const intl = useIntl();
   const editor = useRef<HTMLDivElement | null>(null);
+  const fileInput = useRef<HTMLInputElement | null>(null);
   const [empty, setEmpty] = useState(() => readDraft(draftKey) === null);
+  const [pending, setPending] = useState<PendingAttachment[]>([]);
+
+  // poll quarantined uploads until the scanner has spoken
+  useEffect(() => {
+    if (attachmentConfig === undefined) return;
+    if (!pending.some((entry) => entry.state === 'quarantined')) return;
+    const timer = setInterval(() => {
+      void (async () => {
+        const next = await Promise.all(
+          pending.map(async (entry) => {
+            if (entry.state !== 'quarantined') return entry;
+            try {
+              const response = await fetch(`${attachmentConfig.fetchBase}/${entry.id}`, {
+                credentials: 'same-origin',
+              });
+              if (response.status === 200) return { ...entry, state: 'clean' as const };
+              if (response.status === 410) return { ...entry, state: 'rejected' as const };
+              return entry;
+            } catch {
+              return entry;
+            }
+          }),
+        );
+        setPending(next);
+      })();
+    }, 1500);
+    return () => clearInterval(timer);
+  }, [pending, attachmentConfig]);
+
+  const addFiles = (files: FileList | File[]): void => {
+    if (attachmentConfig === undefined) return;
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith('image/')) continue;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = String(reader.result ?? '');
+        const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
+        void fetch(attachmentConfig.uploadUrl, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({
+            treatmentId: attachmentConfig.treatmentId,
+            filename: file.name || 'image',
+            dataBase64: base64,
+          }),
+        }).then(async (response) => {
+          if (!response.ok) return;
+          const { attachmentId } = (await response.json()) as { attachmentId: string };
+          setPending((current) => [
+            ...current,
+            { id: attachmentId, name: file.name || 'image', state: 'quarantined' },
+          ]);
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // restore in the ref callback, not an effect: the DOM write happens
   // exactly once as the editable attaches
@@ -222,12 +292,23 @@ export function Composer({
     const root = editor.current;
     if (root === null) return;
     const doc = domToDoc(root);
-    if (doc === null) return;
-    await onSend(doc);
+    const clean = pending.filter((entry) => entry.state === 'clean');
+    if (doc === null && clean.length === 0) return;
+    const finalDoc: MessageDoc = {
+      type: 'doc',
+      content: [
+        ...(doc?.content ?? []),
+        ...clean.map((entry) => ({ type: 'attachment' as const, attachmentId: entry.id })),
+      ],
+    };
+    await onSend(finalDoc);
     root.innerHTML = '';
     setEmpty(true);
+    setPending([]);
     writeDraft(draftKey, null);
   };
+  const scanning = pending.some((entry) => entry.state === 'quarantined');
+  const cleanCount = pending.filter((entry) => entry.state === 'clean').length;
 
   return (
     <div
@@ -283,7 +364,35 @@ export function Composer({
             </text>
           </svg>
         </ToolButton>
+        {attachmentConfig !== undefined ? (
+          <ToolButton
+            label={intl.formatMessage({ id: 'messages.attach' })}
+            onApply={() => fileInput.current?.click()}
+          >
+            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden fill="none">
+              <path
+                d="M10.8 4.2 5.9 9.1a1.9 1.9 0 1 0 2.7 2.7l4.6-4.6a3.2 3.2 0 1 0-4.5-4.5L4 7.4"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          </ToolButton>
+        ) : null}
       </div>
+      {attachmentConfig !== undefined ? (
+        <input
+          ref={fileInput}
+          type="file"
+          accept="image/png,image/jpeg,image/gif,image/webp"
+          multiple
+          hidden
+          onChange={(event) => {
+            if (event.currentTarget.files !== null) addFiles(event.currentTarget.files);
+            event.currentTarget.value = '';
+          }}
+        />
+      ) : null}
       <div className="relative">
         {empty ? (
           <p aria-hidden className="pointer-events-none absolute left-3 top-2.5 text-sm text-muted">
@@ -301,11 +410,61 @@ export function Composer({
             setEmpty((editor.current?.textContent ?? '').trim().length === 0);
             persist();
           }}
+          onPaste={(event) => {
+            if (attachmentConfig === undefined) return;
+            const files = [...event.clipboardData.items]
+              .filter((item) => item.kind === 'file')
+              .map((item) => item.getAsFile())
+              .filter((file): file is File => file !== null);
+            if (files.length > 0) {
+              event.preventDefault();
+              addFiles(files);
+            }
+          }}
           className="min-h-20 px-3 py-2.5 text-sm leading-relaxed outline-none"
         />
       </div>
+      {pending.length > 0 ? (
+        <ul className="flex flex-wrap gap-2 border-t border-hairline px-3 py-2">
+          {pending.map((entry) => (
+            <li
+              key={entry.id}
+              className={`flex items-center gap-1.5 rounded-pill border px-2.5 py-1 text-xs ${
+                entry.state === 'rejected'
+                  ? 'border-red-chip-border bg-red-tint text-red'
+                  : entry.state === 'clean'
+                    ? 'border-teal-chip-border bg-teal-tint text-teal'
+                    : 'border-border bg-surface-sunken text-secondary'
+              }`}
+            >
+              <span className="max-w-36 truncate">{entry.name}</span>
+              <span>
+                {entry.state === 'quarantined'
+                  ? intl.formatMessage({ id: 'messages.scanning' })
+                  : entry.state === 'rejected'
+                    ? intl.formatMessage({ id: 'messages.attachmentRejected' })
+                    : '✓'}
+              </span>
+              <button
+                type="button"
+                aria-label={intl.formatMessage({ id: 'common.remove' })}
+                onClick={() =>
+                  setPending((current) => current.filter((other) => other.id !== entry.id))
+                }
+                className="ml-0.5 font-semibold"
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <div className="flex justify-end border-t border-hairline px-2 py-1.5">
-        <Button size="sm" onPress={() => void send()} isDisabled={busy || empty}>
+        <Button
+          size="sm"
+          onPress={() => void send()}
+          isDisabled={busy || scanning || (empty && cleanCount === 0)}
+        >
           {sendLabel}
         </Button>
       </div>

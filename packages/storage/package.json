@@ -1,0 +1,17 @@
+{
+  "name": "@mio/storage",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Object storage port: filesystem adapter for dev/test, hand-rolled GCS adapter for deployments (ADR-0010 seam)",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0"
+  }
+}
