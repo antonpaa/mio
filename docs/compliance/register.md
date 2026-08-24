@@ -3,6 +3,10 @@
 Open regulatory, legal and clinical items. Each needs an owner and a decision
 date. Engineering can frame these; it cannot answer them.
 
+The gate these items feed is
+[`release-checklist.md`](release-checklist.md) (WP-33): no pilot release
+while a blocking R-item is open.
+
 > **This document is not legal or regulatory advice.** It is an engineering
 > record of what needs professional determination, with the reasoning that
 > raised each item. Where a classification is stated, it is a reading of the
