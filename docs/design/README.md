@@ -96,6 +96,45 @@ implementation start except X1 for the affected copy.
   is a grants edit plus regeneration, not a build — nothing to regret
   now.
 
+## Scope audit (2026-08-24) — known deltas still open
+
+A full board-by-board and capability-by-capability sweep after WP-33.
+Everything in the phasing plan and the canvases is built **except** the
+four items below. Each is a deliberate stopping point, not an
+oversight; building or descoping them is the owner's call.
+
+1. **Clinician on-behalf survey fill.** The PP "Report" group designs
+   three on-behalf flows; two ship with provenance (Report a symptom,
+   New value). Filling a survey *for* the patient does not —
+   `survey_response.submit_on_behalf_of_patient` and
+   `treatment.enter_on_behalf_of_patient` are granted in the matrix but
+   no endpoint or screen exercises them.
+2. **PP5 assisted edits of patient contact details.** PP5 ships
+   read-only + export + mark-deceased. Patients edit their own contact
+   info in P8 settings; the clinician assisted-edit
+   (`patient_identity.update_contact_details`) has no endpoint.
+3. **Team-addressed custom notifications have no staff surface.** A B7
+   rule can target a custom notification at the team; the worker writes
+   the staff notification rows, but no staff endpoint or UI reads them
+   (patients have P11; staff have the alert surface only). Until a
+   staff centre exists, authors should prefer alert or task outcomes
+   for team-facing signals.
+4. **A3 filters and in-UI export.** The audit view renders the latest
+   events without the canvas's range/event/user filters or an export
+   button. Bulk export exists by architecture instead — the WP-29
+   watermarked JSONL job under `mio_audit_reader`.
+
+Matrix capabilities that are deliberately granted but unexercised
+(slots for later, no surface designed): `care_relationship.*`
+(relationships derive from team membership via sync),
+`survey_assignment.cancel`/`send_reminder` (the flows ride
+`activity`-level cancel/remind), `symptom_taxonomy.view`/`manage`
+(taxonomy is seeded data; no management UI), `treatment.enrol_patient`
+(enrolment is treatment creation), and the staff-realm self-service
+quartet (`own_settings.*`, `own_data_export.*`,
+`audit_log.view_own_access_history`, `notification.view` — the shells
+design these menus for patients only).
+
 ## Rhythm with the canvases
 
 The canvases are prototypes: implementation recreates their visual output with
