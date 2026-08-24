@@ -39,8 +39,9 @@ export default tseslint.config(
     languageOptions: { globals: { ...globals.node, ...globals.commonjs } },
   },
   {
-    // The worker's structured stdout log is its interface for now.
-    files: ['apps/worker/src/main.ts'],
+    // The worker's structured stdout log is its interface for now,
+    // and a CLI's printed output is the whole point of running it.
+    files: ['apps/worker/src/main.ts', 'apps/api/src/cli/**'],
     rules: { 'no-console': 'off' },
   },
 );
