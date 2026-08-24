@@ -1,8 +1,34 @@
 import type { ReactElement, ReactNode } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import { ROLE_CAPABILITIES, type Role } from '@mio/authz';
-import { AppShell, Avatar, Button, EmptyState, type NavItem } from '@mio/ui';
+import {
+  AppShell,
+  Avatar,
+  Button,
+  CountBadge,
+  EmptyState,
+  IconAudit,
+  IconCalendar,
+  IconDashboard,
+  IconHome,
+  IconMessages,
+  IconPatients,
+  IconReporting,
+  IconRoles,
+  IconSettings,
+  IconSurveys,
+  IconTasks,
+  IconTeams,
+  IconTreatments,
+  IconUsers,
+  type IconProps,
+  type NavItem,
+} from '@mio/ui';
+import { AlertBell } from '../alerts/bell.js';
+import { NotificationBell } from '../notifications/bell.js';
+import { threadsQuery } from '../messages/model.js';
 import { useSession } from '../session/session.js';
 
 /**
@@ -17,6 +43,24 @@ interface ShellItem {
   /** capability that makes this area meaningful for the role */
   capability?: string;
 }
+
+/** The print-registration glyph for each nav area (X10); decorative -
+ * the localized label carries the name. */
+const NAV_ICONS: Record<string, (props: IconProps) => ReactElement> = {
+  'nav.home': IconHome,
+  'nav.dashboard': IconDashboard,
+  'nav.patients': IconPatients,
+  'nav.messages': IconMessages,
+  'nav.treatments': IconTreatments,
+  'nav.surveys': IconSurveys,
+  'nav.calendar': IconCalendar,
+  'nav.tasks': IconTasks,
+  'nav.users': IconUsers,
+  'nav.teams': IconTeams,
+  'nav.roles': IconRoles,
+  'nav.audit': IconAudit,
+  'nav.reporting': IconReporting,
+};
 
 const PATIENT_ITEMS: ShellItem[] = [
   { labelId: 'nav.home', href: '/' },
@@ -62,13 +106,26 @@ export function SignedInShell({ children }: { children: ReactNode }): ReactEleme
   const capabilities = new Set(ROLE_CAPABILITIES[role]);
   const { variant, items } = shellFor(role);
 
+  // the same audited disclosure the messages page makes - shared cache,
+  // one query key per realm (the WP-19 bell precedent)
+  const threads = useQuery({
+    ...threadsQuery(session.realm === 'patient' ? 'patient' : 'staff'),
+    enabled: capabilities.has('message_thread.view'),
+  });
+  const unread = (threads.data ?? []).reduce((sum, row) => sum + row.unread, 0);
+
   const navItems: NavItem[] = items
     .filter((item) => item.capability === undefined || capabilities.has(item.capability))
-    .map((item) => ({
-      label: intl.formatMessage({ id: item.labelId }),
-      href: item.href,
-      active: pathname === item.href,
-    }));
+    .map((item) => {
+      const Icon = NAV_ICONS[item.labelId];
+      return {
+        label: intl.formatMessage({ id: item.labelId }),
+        href: item.href,
+        active: pathname === item.href,
+        ...(Icon !== undefined ? { icon: <Icon size={17} /> } : {}),
+        ...(item.labelId === 'nav.messages' && unread > 0 ? { badge: unread } : {}),
+      };
+    });
 
   const initials = `${session.account?.givenName?.[0] ?? ''}${session.account?.familyName?.[0] ?? ''}`;
 
@@ -80,11 +137,31 @@ export function SignedInShell({ children }: { children: ReactNode }): ReactEleme
       items={navItems}
       renderLink={(item, className) => (
         <Link to={item.href} className={className} aria-current={item.active ? 'page' : undefined}>
+          {item.icon}
           {item.label}
+          {item.badge !== undefined ? (
+            <CountBadge
+              count={item.badge}
+              label={intl.formatMessage({ id: 'messages.unread' }, { count: item.badge })}
+            />
+          ) : null}
         </Link>
       )}
       end={
         <div className="flex items-center gap-3">
+          {variant === 'clinician' && capabilities.has('alert.view') ? <AlertBell /> : null}
+          {variant === 'patient' && capabilities.has('notification.view') ? (
+            <NotificationBell />
+          ) : null}
+          {variant === 'patient' && capabilities.has('own_settings.update') ? (
+            <Link
+              to="/settings"
+              aria-label={intl.formatMessage({ id: 'nav.settings' })}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-pill text-secondary transition-colors hover:bg-surface-sunken hover:text-ink"
+            >
+              <IconSettings size={20} />
+            </Link>
+          ) : null}
           <Avatar
             initials={initials}
             label={`${session.account?.givenName ?? ''} ${session.account?.familyName ?? ''}`}

@@ -120,7 +120,7 @@ export function generateArtifacts(): Artifact[] {
         `| \`${actionId(resource.id, action.id)}\` | ${action.audit} | ` +
           ROLES.map((role) => {
             const scope = action.grants[role];
-            return scope === 'deny' ? '·' : `**${scope.replace(/_/g, ' ')}**`;
+            return scope === 'deny' ? '—' : `**${scope.replace(/_/g, ' ')}**`;
           }).join(' | ') +
           ' |',
       );

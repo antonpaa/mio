@@ -7,6 +7,7 @@ import {
   ActivityController,
   PatientCalendarController,
   ScheduleController,
+  StaffDashboardController,
   TreatmentSchedulingController,
 } from './http/scheduling.controller.js';
 import { SchedulingService } from './scheduling.service.js';
@@ -17,6 +18,7 @@ import { SchedulingService } from './scheduling.service.js';
     TreatmentSchedulingController,
     ActivityController,
     ScheduleController,
+    StaffDashboardController,
     PatientCalendarController,
   ],
   providers: [SchedulingService, StaffSessionGuard, PatientSessionGuard],

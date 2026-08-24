@@ -64,6 +64,23 @@ const COPY: Record<MailKind, Record<'en' | 'fi' | 'sv', Copy>> = {
         `Återställ ditt lösenord här:\n\n${m.deepLink}\n\nLänken fungerar i 60 minuter. Om du inte begärde detta kan du ignorera meddelandet.\n\nVård, tillsammans — Mio`,
     },
   },
+  survey_reminder: {
+    en: {
+      subject: 'Something is waiting for you in Mio',
+      body: () =>
+        `You have something to fill in. Sign in to Mio to see it:\n\nhttps://app.mio.health/surveys\n\nFor your privacy, Mio emails never include health information.\n\nCare, together — Mio`,
+    },
+    fi: {
+      subject: 'Sinulle on odottavaa Miossa',
+      body: () =>
+        `Sinulla on jotakin täytettävää. Kirjaudu Mioon nähdäksesi sen:\n\nhttps://app.mio.health/surveys\n\nYksityisyytesi vuoksi Mion sähköpostit eivät koskaan sisällä terveystietoja.\n\nHoitoa yhdessä — Mio`,
+    },
+    sv: {
+      subject: 'Något väntar på dig i Mio',
+      body: () =>
+        `Du har något att fylla i. Logga in i Mio för att se det:\n\nhttps://app.mio.health/surveys\n\nFör din integritet innehåller Mios e-post aldrig hälsouppgifter.\n\nVård, tillsammans — Mio`,
+    },
+  },
   login_reset_by_admin: {
     en: {
       subject: 'Your Mio sign-in was reset',

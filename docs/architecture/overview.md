@@ -47,9 +47,9 @@ that sentence.
               └────────▲───────┘
                        │
               ┌────────┴───────┐
-              │   Worker       │  email · reminders · escalation
+              │   Worker       │  email, reminders, escalation
               │                │  recurrence materialisation
-              │                │  virus scan · GDPR export · audit archival
+              │                │  virus scan, GDPR export, audit archival
               └────────────────┘
 ```
 

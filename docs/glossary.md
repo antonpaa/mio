@@ -107,6 +107,8 @@ Used for both survey and treatment templates.
 | New | Uusi | Ny | |
 | Acknowledged | Kuitattu | Kvitterad | ⚠️ |
 | Resolved | Ratkaistu | Åtgärdad | ⚠️ |
+| Triage queue | Hälytysjono | Larmkö | The dashboard's open-alert queue (C1). FI/SV avoid the loanword "triage" - plain "alert queue" reads better (product decision 2026-08) |
+| Record only | Vain kirjaus | Endast registrering | Rule with all outcomes off — stored, nothing raised |
 | Trend rule | Trendisääntö | Trendregel | Condition across consecutive responses ⚠️ |
 | Custom notification | Mukautettu ilmoitus | Anpassad avisering | Rule outcome with authored text ⚠️ |
 | Expected in this program | Odotettu tässä ohjelmassa | Förväntat i detta program | Response-detail standing ⚠️ |
@@ -118,6 +120,7 @@ Used for both survey and treatment templates.
 | English | Finnish | Swedish | Note |
 |---|---|---|---|
 | Message | Viesti | Meddelande | |
+| Conversation | Keskustelu | Samtal | One thread per treatment programme (WP-23) |
 | Internal note | Sisäinen muistiinpano | Intern anteckning | Never patient-visible |
 | Attachment | Liite | Bilaga | |
 
@@ -129,6 +132,8 @@ Terms fixed by the brief's naming conventions.
 |---|---|---|---|
 | Updates | Päivitykset | Uppdateringar | Landing feed. **Not** "Recent activities" |
 | Action needed | Vaatii toimia | Kräver åtgärd | Patient's pending items |
+| Download my data | Lataa omat tietoni | Ladda ner mina uppgifter | GDPR self-export (WP-26) |
+| Who has viewed my records | Kuka on katsonut tietojani | Vem har tittat på mina uppgifter | P8 access log (WP-26) |
 | Upcoming | Tulevat | Kommande | |
 | Messages | Viestit | Meddelanden | |
 | Treatments | Hoidot | Behandlingar | |
@@ -193,12 +198,13 @@ instrument, not a symptom — it lives in the survey catalog (register R11).
 | Tihentynyt virtsaamisen tarve | Urinary frequency | Täta urinträngningar |
 | Ummetus | Constipation | Förstoppning |
 | Verivirtsaisuus | Hematuria | Blod i urinen |
+| Väsymys | Fatigue | Trötthet |
 | Virtsan karkailu | Urinary incontinence | Urininkontinens |
 | Virtsapakko | Urinary urgency | Urinträngningar |
 | Virtsaumpi | Urinary retention | Urinstämma |
 
-Symptom-observation trend labels: New — Uusi — Ny ⚠️ · Worsening — Pahenee —
-Förvärras ⚠️ · Stable — Vakaa — Stabil ⚠️ · Easing — Helpottaa — Lindras ⚠️ ·
+Symptom-observation trend labels: New — Uusi — Ny ⚠️; Worsening — Pahenee —
+Förvärras ⚠️; Stable — Vakaa — Stabil ⚠️; Easing — Helpottaa — Lindras ⚠️;
 Resolved — Poistunut — Avklingat ⚠️.
 
 ## Account and access

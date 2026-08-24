@@ -3,6 +3,7 @@ import { useState, type ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button, Skeleton, StatusChip } from '@mio/ui';
 import { AssignSurveyDialog } from './assign-survey-dialog.js';
+import { ProgramRulesDialog } from './program-rules-dialog.js';
 
 /** T1: the treatment's attached surveys with their schedules (PP1's
  * "assigned surveys w/ schedules" slice). */
@@ -29,6 +30,7 @@ export function SurveysSection({ treatmentId }: { treatmentId: string }): ReactE
   const intl = useIntl();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [rulesFor, setRulesFor] = useState<{ surveyId: string; name: string } | null>(null);
   const assignments = useQuery({
     queryKey: ['treatment-surveys', treatmentId],
     queryFn: async () => {
@@ -116,6 +118,13 @@ export function SurveysSection({ treatmentId }: { treatmentId: string }): ReactE
                   ? intl.formatMessage({ id: 'assign.patientsChoice' })
                   : row.language.toUpperCase()}
               </StatusChip>
+              <Button
+                variant="quiet"
+                size="sm"
+                onPress={() => setRulesFor({ surveyId: row.survey_id, name: row.name })}
+              >
+                <FormattedMessage id="rules.open" />
+              </Button>
             </li>
           ))}
         </ul>
@@ -129,6 +138,14 @@ export function SurveysSection({ treatmentId }: { treatmentId: string }): ReactE
             void queryClient.invalidateQueries({ queryKey: ['treatment-surveys', treatmentId] });
             void queryClient.invalidateQueries({ queryKey: ['activities', treatmentId] });
           }}
+        />
+      ) : null}
+      {rulesFor !== null ? (
+        <ProgramRulesDialog
+          treatmentId={treatmentId}
+          surveyId={rulesFor.surveyId}
+          surveyName={rulesFor.name}
+          onClose={() => setRulesFor(null)}
         />
       ) : null}
     </section>

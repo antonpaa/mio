@@ -19,6 +19,8 @@ export const ROLE_CAPABILITIES: Record<Role, readonly string[]> = {
     "survey_response.view_trend",
     "message_thread.view",
     "message_thread.post",
+    "notification.view",
+    "notification.mark_read",
     "attachment.upload",
     "attachment.download",
     "value_entry.view",
@@ -46,6 +48,7 @@ export const ROLE_CAPABILITIES: Record<Role, readonly string[]> = {
     "activity.view",
     "activity.create",
     "activity.update",
+    "activity.remind",
     "activity.cancel",
     "task.view",
     "task.create",
@@ -71,6 +74,8 @@ export const ROLE_CAPABILITIES: Record<Role, readonly string[]> = {
     "message_thread.post",
     "internal_note.view",
     "internal_note.post",
+    "notification.view",
+    "notification.mark_read",
     "attachment.upload",
     "attachment.download",
     "value_entry.view",
@@ -112,6 +117,7 @@ export const ROLE_CAPABILITIES: Record<Role, readonly string[]> = {
     "activity.view",
     "activity.create",
     "activity.update",
+    "activity.remind",
     "activity.cancel",
     "task.view",
     "task.create",
@@ -142,6 +148,8 @@ export const ROLE_CAPABILITIES: Record<Role, readonly string[]> = {
     "message_thread.post",
     "internal_note.view",
     "internal_note.post",
+    "notification.view",
+    "notification.mark_read",
     "attachment.upload",
     "attachment.download",
     "value_entry.view",
@@ -233,6 +241,9 @@ export const RESOURCE_ATTRS: Record<string, readonly string[]> = {
   ],
   "internal_note": [
     "team"
+  ],
+  "notification": [
+    "subjectUser"
   ],
   "attachment": [
     "careTeam",
@@ -375,6 +386,10 @@ export const ACTION_GROUPS: Record<string, readonly string[]> = {
     "grp:treatment_member:team_member",
     "grp:treatment_lead:team_member"
   ],
+  "activity.remind": [
+    "grp:treatment_member:team_member",
+    "grp:treatment_lead:team_member"
+  ],
   "activity.cancel": [
     "grp:treatment_member:team_member",
     "grp:treatment_lead:team_member"
@@ -500,6 +515,16 @@ export const ACTION_GROUPS: Record<string, readonly string[]> = {
   "internal_note.post": [
     "grp:treatment_member:team_member",
     "grp:treatment_lead:team_member"
+  ],
+  "notification.view": [
+    "grp:patient:self",
+    "grp:treatment_member:self",
+    "grp:treatment_lead:self"
+  ],
+  "notification.mark_read": [
+    "grp:patient:self",
+    "grp:treatment_member:self",
+    "grp:treatment_lead:self"
   ],
   "attachment.upload": [
     "grp:patient:self",
@@ -711,6 +736,10 @@ export const ACTION_METADATA: Record<string, { audit: 'always' | 'never'; patien
     "audit": "always",
     "patientScoped": true
   },
+  "activity.remind": {
+    "audit": "always",
+    "patientScoped": true
+  },
   "activity.cancel": {
     "audit": "always",
     "patientScoped": true
@@ -837,6 +866,14 @@ export const ACTION_METADATA: Record<string, { audit: 'always' | 'never'; patien
   },
   "internal_note.post": {
     "audit": "always",
+    "patientScoped": true
+  },
+  "notification.view": {
+    "audit": "always",
+    "patientScoped": true
+  },
+  "notification.mark_read": {
+    "audit": "never",
     "patientScoped": true
   },
   "attachment.upload": {

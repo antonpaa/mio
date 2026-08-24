@@ -158,7 +158,7 @@ export function AssignSurveyDialog({
             {(catalog.data ?? []).map((row) => (
               <option key={row.id} value={row.id}>
                 {row.name}
-                {row.licensed_source ? ` · ${intl.formatMessage({ id: 'assign.licensed' })}` : ''}
+                {row.licensed_source ? ` — ${intl.formatMessage({ id: 'assign.licensed' })}` : ''}
               </option>
             ))}
           </select>

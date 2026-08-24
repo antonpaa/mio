@@ -21,6 +21,7 @@ import {
   type ScheduleSegment,
 } from '@mio/schedule';
 import { APP_POOL } from '../../shared/db.module.js';
+import { MAILER, type Mailer } from '../identity/index.js';
 import type { StaffPrincipal } from '../../shared/staff-session.js';
 
 /**
@@ -49,7 +50,10 @@ const ACTIVITY_STATUS_FLOW: Record<string, string[]> = {
 
 @Injectable()
 export class SchedulingService {
-  constructor(@Inject(APP_POOL) private readonly pool: pg.Pool) {}
+  constructor(
+    @Inject(APP_POOL) private readonly pool: pg.Pool,
+    @Inject(MAILER) private readonly mailer: Mailer,
+  ) {}
 
   private async treatmentContext(
     client: pg.ClientBase,
@@ -463,5 +467,177 @@ export class SchedulingService {
         return rows;
       },
     );
+  }
+
+  /** C1 (WP-27): overdue survey occurrences across the caller's care
+   * patients - due date passed, nothing submitted, not yet marked
+   * missed. One list-level access event carries the disclosed ids. */
+  async staffOverdue(staff: StaffPrincipal): Promise<object[]> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const { rows } = await client.query(
+        `SELECT a.id, a.treatment_id, a.patient_id,
+                a.occurrence_date::text AS occurrence_date,
+                a.reminded_at::text AS reminded_at,
+                t.name AS treatment_name,
+                p.given_name AS patient_given, p.family_name AS patient_family,
+                s.name AS survey_name
+           FROM clinical.activity a
+           JOIN clinical.treatment t ON t.id = a.treatment_id
+           JOIN identity.patient_account p ON p.id = a.patient_id
+           LEFT JOIN clinical.schedule sch ON sch.id = a.schedule_id
+           LEFT JOIN clinical.survey s ON s.id = COALESCE(a.survey_id, sch.survey_id)
+          WHERE a.kind = 'survey' AND a.status IN ('planned', 'confirmed')
+            AND a.occurrence_date < current_date
+            AND NOT EXISTS (SELECT 1 FROM clinical.survey_response r
+                             WHERE r.activity_id = a.id AND r.status = 'submitted')
+            AND EXISTS (SELECT 1 FROM clinical.care_relationship cr
+                         WHERE cr.patient_id = a.patient_id
+                           AND cr.staff_id = $1 AND cr.ended_at IS NULL)
+          ORDER BY a.occurrence_date
+          LIMIT 50`,
+        [staff.userId],
+      );
+      for (const row of rows as { id: string; patient_id: string }[]) {
+        const decision = authorize({
+          principal: { userId: staff.userId, role: staff.role },
+          action: 'view',
+          resource: {
+            type: 'activity',
+            id: row.id,
+            patientId: row.patient_id,
+            teamUserIds: [staff.userId],
+          },
+        });
+        if (decision.decision !== 'allow') {
+          throw new ForbiddenException({ status: 'scoping_policy_disagreement' });
+        }
+      }
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'activity.view',
+        resourceType: 'overdue_worklist',
+        resourceId: null,
+        patientId: null,
+        decision: 'allow',
+        context: {
+          patientIds: [...new Set((rows as { patient_id: string }[]).map((r) => r.patient_id))],
+        },
+      });
+      return rows as object[];
+    });
+  }
+
+  /** The manual reminder behind C1's control: contentless email only,
+   * honouring the patient's P8 toggle - a declined email sends nothing
+   * and marks nothing. */
+  async remindActivity(staff: StaffPrincipal, activityId: string): Promise<object> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const { rows } = await client.query<{
+        id: string;
+        treatment_id: string;
+        patient_id: string;
+        status: string;
+        kind: string;
+      }>(
+        `SELECT id, treatment_id, patient_id, status, kind
+           FROM clinical.activity WHERE id = $1`,
+        [activityId],
+      );
+      const activity = rows[0];
+      // RLS hides out-of-care rows - the same 404 as an unknown id
+      if (!activity) throw new NotFoundException({ status: 'unknown_activity' });
+      if (activity.kind !== 'survey' || !['planned', 'confirmed'].includes(activity.status)) {
+        throw new BadRequestException({ status: 'not_remindable' });
+      }
+      const decision = authorize({
+        principal: { userId: staff.userId, role: staff.role },
+        action: 'remind',
+        resource: {
+          type: 'activity',
+          id: activity.id,
+          patientId: activity.patient_id,
+          teamUserIds: [staff.userId],
+        },
+      });
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'activity.remind',
+        resourceType: 'activity',
+        resourceId: activity.id,
+        patientId: activity.patient_id,
+        decision: decision.decision,
+      });
+      if (decision.decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+
+      const { rows: contacts } = await client.query<{
+        email: string;
+        locale: 'en' | 'fi' | 'sv';
+        email_prefs: Record<string, unknown>;
+      }>(`SELECT email, locale, email_prefs FROM identity.patient_account WHERE id = $1`, [
+        activity.patient_id,
+      ]);
+      const contact = contacts[0]!;
+      if (contact.email_prefs['survey_reminder'] === false) {
+        return { sent: false, reason: 'email_declined' };
+      }
+      await this.mailer.send({
+        recipient: contact.email,
+        kind: 'survey_reminder',
+        locale: contact.locale,
+        deepLink: '/surveys',
+      });
+      await client.query(`UPDATE clinical.activity SET reminded_at = now() WHERE id = $1`, [
+        activity.id,
+      ]);
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_reminder.sent',
+        resourceType: 'activity',
+        resourceId: activity.id,
+        patientId: activity.patient_id,
+      });
+      return { sent: true };
+    });
+  }
+
+  /** C1's today-and-upcoming slice: the next week of activities across
+   * the caller's care patients. */
+  async staffAgenda(staff: StaffPrincipal): Promise<object[]> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const { rows } = await client.query(
+        `SELECT a.id, a.patient_id, a.treatment_id, a.title, a.kind, a.location, a.status,
+                a.occurrence_date::text AS occurrence_date, a.scheduled_at,
+                t.name AS treatment_name,
+                p.given_name AS patient_given, p.family_name AS patient_family
+           FROM clinical.activity a
+           JOIN clinical.treatment t ON t.id = a.treatment_id
+           JOIN identity.patient_account p ON p.id = a.patient_id
+          WHERE a.status IN ('planned', 'confirmed')
+            AND coalesce(a.occurrence_date, a.scheduled_at::date)
+                BETWEEN current_date AND current_date + 7
+            AND EXISTS (SELECT 1 FROM clinical.care_relationship cr
+                         WHERE cr.patient_id = a.patient_id
+                           AND cr.staff_id = $1 AND cr.ended_at IS NULL)
+          ORDER BY coalesce(a.occurrence_date, a.scheduled_at::date), a.scheduled_at NULLS LAST
+          LIMIT 60`,
+        [staff.userId],
+      );
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'activity.view',
+        resourceType: 'agenda_worklist',
+        resourceId: null,
+        patientId: null,
+        decision: 'allow',
+        context: {
+          patientIds: [...new Set((rows as { patient_id: string }[]).map((r) => r.patient_id))],
+        },
+      });
+      return rows as object[];
+    });
   }
 }

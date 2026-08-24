@@ -62,6 +62,6 @@ import {
         new OnboardingService(pool, STAFF_TABLES, auth, mailer, config.publicBaseUrl),
     },
   ],
-  exports: [PATIENT_AUTH, STAFF_AUTH, PATIENT_ONBOARDING, STAFF_ONBOARDING],
+  exports: [PATIENT_AUTH, STAFF_AUTH, PATIENT_ONBOARDING, STAFF_ONBOARDING, MAILER],
 })
 export class IdentityModule {}

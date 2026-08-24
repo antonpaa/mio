@@ -125,9 +125,9 @@ export function ActivitiesSection({ treatmentId }: { treatmentId: string }): Rea
                 <p className="truncate text-xs text-secondary">
                   {intl.formatMessage({ id: `activity.kind.${activity.kind}` })}
                   {activity.scheduled_at !== null
-                    ? ` · ${intl.formatTime(activity.scheduled_at, { hour: '2-digit', minute: '2-digit' })}`
+                    ? ` — ${intl.formatTime(activity.scheduled_at, { hour: '2-digit', minute: '2-digit' })}`
                     : ''}
-                  {activity.location ? ` · ${activity.location}` : ''}
+                  {activity.location ? ` — ${activity.location}` : ''}
                 </p>
               </div>
               <StatusChip tone={STATUS_TONE[activity.status]}>

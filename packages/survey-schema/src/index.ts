@@ -15,10 +15,18 @@ export type {
   ChoiceOption,
   Condition,
   LocaleBundle,
+  NotifyRecipient,
   Question,
+  QuestionRule,
   QuestionType,
+  RuleOutcome,
+  RuleWhen,
+  Severity,
   SurveyDefinition,
   SurveyPage,
+  SymptomMap,
+  TrendRule,
+  TrendWhen,
 } from './types.js';
 export {
   allQuestions,
@@ -31,11 +39,32 @@ export {
 export {
   assertValidDefinition,
   canonicalJson,
+  MAX_RULES_PER_QUESTION,
+  MAX_TREND_RULES,
+  MAX_TREND_TIMES,
   missingTranslations,
+  patientBundleView,
   patientView,
   validateDefinition,
   type DefinitionIssue,
 } from './definition.js';
+export { deriveObservations, type DerivedObservation } from './observations.js';
+export {
+  applyOverrides,
+  validateOverrides,
+  type OverrideIssue,
+  type ProgramOverrides,
+} from './overrides.js';
+export {
+  evaluateResponse,
+  evaluateTrends,
+  maxSeverity,
+  SEVERITIES,
+  type Evaluation,
+  type FiredRule,
+  type RuleTrace,
+  type TrendEntry,
+} from './rules.js';
 export {
   BODY_REGION_IDS,
   BODY_REGIONS,

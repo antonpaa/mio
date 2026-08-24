@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import {
   BadRequestException,
   ForbiddenException,
@@ -8,16 +8,35 @@ import {
 } from '@nestjs/common';
 import type pg from 'pg';
 import { authorize } from '@mio/authz/engine';
-import { withUserContext, writeAccessEvent, writeChangeEvent } from '@mio/db';
 import {
+  persistEvaluation,
+  ruleTextsFromBundles,
+  withUserContext,
+  writeAccessEvent,
+  writeChangeEvent,
+} from '@mio/db';
+import {
+  applyOverrides,
+  BODY_REGION_IDS,
+  canonicalJson,
+  deriveObservations,
+  evaluateResponse,
+  evaluateTrends,
+  maxSeverity,
   missingTranslations,
   normaliseDraft,
+  patientBundleView,
   patientView,
   progressOf,
+  validateDefinition,
+  validateOverrides,
   validateSubmission,
   type Answers,
   type LocaleBundle,
+  type ProgramOverrides,
+  type RuleTrace,
   type SurveyDefinition,
+  type TrendEntry,
 } from '@mio/survey-schema';
 import {
   addDays,
@@ -28,6 +47,7 @@ import {
   parseDate,
   type ScheduleSegment,
 } from '@mio/schedule';
+import { citeTrigger } from '../../shared/trigger-citation.js';
 import { APP_POOL } from '../../shared/db.module.js';
 import type { PatientPrincipal } from '../../shared/patient-session.js';
 import type { StaffPrincipal } from '../../shared/staff-session.js';
@@ -313,6 +333,80 @@ export class SurveysService {
     );
   }
 
+  /**
+   * The consecutive-occurrence history for trend evaluation: every
+   * occurrence of the SAME survey in the SAME treatment up to the
+   * anchoring one, oldest first. An occurrence neither submitted nor
+   * missed is 'open' and breaks every streak. The just-submitted
+   * response is spliced in because its row-status update and this read
+   * share a transaction.
+   */
+  private async occurrenceHistory(
+    client: pg.ClientBase,
+    activityId: string,
+    current: { responseId: string; answers: Answers },
+  ): Promise<TrendEntry[]> {
+    const { rows: anchorRows } = await client.query<{
+      survey_id: string;
+      treatment_id: string;
+      occurrence_date: string;
+    }>(
+      `SELECT COALESCE(a.survey_id, sch.survey_id) AS survey_id, a.treatment_id,
+              a.occurrence_date::text AS occurrence_date
+         FROM clinical.activity a
+         LEFT JOIN clinical.schedule sch ON sch.id = a.schedule_id
+        WHERE a.id = $1`,
+      [activityId],
+    );
+    const anchorRow = anchorRows[0];
+    if (!anchorRow || anchorRow.survey_id === null) return [];
+    const { rows } = await client.query<{
+      activity_id: string;
+      date: string;
+      status: string;
+      response_id: string | null;
+      answers: Answers | null;
+    }>(
+      `SELECT a.id AS activity_id, a.occurrence_date::text AS date, a.status,
+              r.id AS response_id, r.answers
+         FROM clinical.activity a
+         LEFT JOIN clinical.schedule sch ON sch.id = a.schedule_id
+         LEFT JOIN clinical.survey_response r
+                ON r.activity_id = a.id AND r.status = 'submitted'
+        WHERE a.treatment_id = $1 AND a.kind = 'survey'
+          AND COALESCE(a.survey_id, sch.survey_id) = $2
+          AND a.occurrence_date <= $3
+        ORDER BY a.occurrence_date DESC, a.id DESC
+        LIMIT 24`,
+      [anchorRow.treatment_id, anchorRow.survey_id, anchorRow.occurrence_date],
+    );
+    return rows.reverse().map((row): TrendEntry => {
+      if (row.activity_id === activityId) {
+        return {
+          date: row.date,
+          status: 'submitted',
+          responseId: current.responseId,
+          activityId: row.activity_id,
+          answers: current.answers,
+        };
+      }
+      if (row.response_id !== null) {
+        return {
+          date: row.date,
+          status: 'submitted',
+          responseId: row.response_id,
+          activityId: row.activity_id,
+          answers: row.answers ?? {},
+        };
+      }
+      return {
+        date: row.date,
+        status: row.status === 'missed' ? 'missed' : 'open',
+        activityId: row.activity_id,
+      };
+    });
+  }
+
   private async loadResponse(
     client: pg.ClientBase,
     responseId: string,
@@ -378,7 +472,7 @@ export class SurveysService {
           kind: version.definition.kind ?? 'generic',
           // criticality is clinician configuration - never patient-visible
           definition: patientView(version.definition),
-          bundle,
+          bundle: patientBundleView(bundle),
           answers: response.answers,
           progress: progressOf(version.definition, response.answers),
           submittedAt: response.submitted_at,
@@ -462,6 +556,74 @@ export class SurveysService {
           // the patient realm holds no UPDATE on clinical.activity
           await client.query(`SELECT app.complete_survey_occurrence($1)`, [response.activity_id]);
         }
+        // WP-18/20/22: single-response AND trend evaluation run in the
+        // SAME transaction as the submission, against the treatment's
+        // EFFECTIVE rule set (template + program overrides) - triggers,
+        // alert, notifications and rule-created tasks commit with the
+        // answers or not at all. The patient's reply stays the designed
+        // P12 copy; nothing rule-shaped is returned here.
+        const { rows: overrideRows } = await client.query<{ rule_overrides: ProgramOverrides }>(
+          `SELECT rule_overrides FROM clinical.treatment_survey
+            WHERE treatment_id = $1 AND survey_id = $2`,
+          [response.treatment_id, version.survey_id],
+        );
+        const effective = applyOverrides(version.definition, overrideRows[0]?.rule_overrides ?? {});
+        const singles = evaluateResponse(effective, result.answers);
+        const trends =
+          response.activity_id === null
+            ? { fired: [], severity: null }
+            : evaluateTrends(
+                effective,
+                await this.occurrenceHistory(client, response.activity_id, {
+                  responseId,
+                  answers: result.answers,
+                }),
+              );
+        const persisted = await persistEvaluation(
+          client,
+          {
+            treatmentId: response.treatment_id,
+            patientId: response.patient_id,
+            surveyVersionId: response.survey_version_id,
+            surveyResponseId: responseId,
+            activityId: response.activity_id,
+            ruleTexts: ruleTextsFromBundles(version.locales),
+          },
+          {
+            fired: [...singles.fired, ...trends.fired],
+            severity: maxSeverity(singles.severity, trends.severity),
+          },
+        );
+        // WP-21: mapped answers land in the symptom register in the same
+        // transaction, source 'survey', provenance = the submitting patient
+        const derived = deriveObservations(version.definition, result.answers);
+        if (derived.length > 0) {
+          const { rows: symptomRows } = await client.query<{ id: string; code: string }>(
+            `SELECT id, code FROM clinical.symptom WHERE active AND code = ANY($1)`,
+            [derived.map((entry) => entry.code)],
+          );
+          const symptomByCode = new Map(symptomRows.map((row) => [row.code, row.id]));
+          for (const entry of derived) {
+            const symptomId = symptomByCode.get(entry.code);
+            if (symptomId === undefined) continue; // unmapped code: skip, never fail a submission
+            await client.query(
+              `INSERT INTO clinical.symptom_observation
+                 (id, patient_id, treatment_id, symptom_id, severity, detail, observed_at,
+                  source, survey_response_id, entered_by, on_behalf_of_patient)
+               VALUES ($1, $2, $3, $4, $5, $6, current_date, 'survey', $7, $8, false)`,
+              [
+                randomUUID(),
+                response.patient_id,
+                response.treatment_id,
+                symptomId,
+                entry.severity,
+                JSON.stringify(entry.regions !== undefined ? { regions: entry.regions } : {}),
+                responseId,
+                patient.userId,
+              ],
+            );
+          }
+        }
         await writeChangeEvent(client, {
           actorUserId: patient.userId,
           actorRealm: 'patient',
@@ -471,6 +633,24 @@ export class SurveysService {
           patientId: response.patient_id,
           detail: { surveyVersionId: response.survey_version_id },
         });
+        if (persisted.alertId !== null) {
+          // the PP6 timeline's "raised by rule" entry - the actor is the
+          // submission that caused it, the why lives in the trigger traces
+          await writeChangeEvent(client, {
+            actorUserId: patient.userId,
+            actorRealm: 'patient',
+            action: 'alert.raise',
+            resourceType: 'alert',
+            resourceId: persisted.alertId,
+            patientId: response.patient_id,
+            detail: {
+              severity: maxSeverity(singles.severity, trends.severity),
+              ruleIds: [...singles.fired, ...trends.fired]
+                .filter((fired) => fired.severity !== null)
+                .map((fired) => fired.ruleId),
+            },
+          });
+        }
         return { status: 'submitted' };
       },
     );
@@ -864,4 +1044,693 @@ export class SurveysService {
       },
     );
   }
+
+  private decideTemplate(
+    staff: StaffPrincipal,
+    action: 'view' | 'create' | 'update_draft' | 'publish' | 'archive',
+    resourceId: string,
+  ): 'allow' | 'deny' {
+    return authorize({
+      principal: { userId: staff.userId, role: staff.role },
+      action,
+      resource: { type: 'survey_template', id: resourceId },
+    }).decision;
+  }
+
+  private static hashContent(definition: SurveyDefinition, locales: LocaleBundle[]): string {
+    return createHash('sha256').update(canonicalJson({ definition, locales })).digest('hex');
+  }
+
+  /** Missing-text count per locale: title + labels + option labels. */
+  private static completeness(
+    definition: SurveyDefinition,
+    locales: LocaleBundle[],
+  ): Record<string, number> {
+    return Object.fromEntries(
+      locales.map((bundle) => [
+        bundle.locale,
+        missingTranslations(definition, bundle).length + (bundle.title.trim() === '' ? 1 : 0),
+      ]),
+    );
+  }
+
+  /** B1 "+ New survey": the survey and an EMPTY draft v1 to edit. */
+  async createSurvey(
+    staff: StaffPrincipal,
+    input: { name: string; kind?: string; licensedSource?: string },
+  ): Promise<{ surveyId: string; versionId: string }> {
+    if (!input.name?.trim()) throw new BadRequestException({ status: 'name_required' });
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const decision = this.decideTemplate(staff, 'create', 'new');
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.create',
+        resourceType: 'survey_template',
+        resourceId: null,
+        patientId: null,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+
+      const surveyId = randomUUID();
+      const versionId = randomUUID();
+      const kind = input.kind === 'symptom' ? 'symptom' : 'generic';
+      const definition: SurveyDefinition = {
+        kind: kind as 'symptom' | 'generic',
+        pages: [{ id: 'page-1', questions: [] }],
+      };
+      const locales: LocaleBundle[] = (['en', 'fi', 'sv'] as const).map((locale) => ({
+        locale,
+        title: locale === 'en' ? input.name.trim() : '',
+        questions: {},
+      }));
+      await client.query(
+        `INSERT INTO clinical.survey (id, name, kind, licensed_source, created_by)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [surveyId, input.name.trim(), kind, input.licensedSource?.trim() || null, staff.userId],
+      );
+      await client.query(
+        `INSERT INTO clinical.survey_version
+           (id, survey_id, version, state, definition, locales, content_hash, created_by)
+         VALUES ($1, $2, 1, 'draft', $3, $4, $5, $6)`,
+        [
+          versionId,
+          surveyId,
+          JSON.stringify(definition),
+          JSON.stringify(locales),
+          SurveysService.hashContent(definition, locales),
+          staff.userId,
+        ],
+      );
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.create',
+        resourceType: 'survey_template',
+        resourceId: surveyId,
+        patientId: null,
+      });
+      return { surveyId, versionId };
+    });
+  }
+
+  /** B4: the survey with its versions and per-locale completeness. */
+  async surveyDetail(staff: StaffPrincipal, surveyId: string): Promise<object> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const decision = this.decideTemplate(staff, 'view', surveyId);
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const { rows } = await client.query(
+        `SELECT id, name, kind, licensed_source FROM clinical.survey WHERE id = $1`,
+        [surveyId],
+      );
+      const survey = rows[0] as Record<string, unknown> | undefined;
+      if (!survey) throw new NotFoundException({ status: 'unknown_survey' });
+      const { rows: versions } = await client.query(
+        `SELECT id, version, state, definition, locales,
+                created_at, published_at
+           FROM clinical.survey_version WHERE survey_id = $1 ORDER BY version DESC`,
+        [surveyId],
+      );
+      return {
+        ...survey,
+        versions: (versions as Record<string, unknown>[]).map((row) => ({
+          id: row['id'],
+          version: row['version'],
+          state: row['state'],
+          createdAt: row['created_at'],
+          publishedAt: row['published_at'],
+          completeness: SurveysService.completeness(
+            row['definition'] as SurveyDefinition,
+            row['locales'] as LocaleBundle[],
+          ),
+          questionCount: allQuestionCount(row['definition'] as SurveyDefinition),
+        })),
+      };
+    });
+  }
+
+  /** The editor payload: the full version with its survey header. */
+  async versionDetail(staff: StaffPrincipal, versionId: string): Promise<object> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const decision = this.decideTemplate(staff, 'view', versionId);
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const { rows } = await client.query(
+        `SELECT v.id, v.survey_id, v.version, v.state, v.definition, v.locales,
+                s.name, s.kind, s.licensed_source
+           FROM clinical.survey_version v
+           JOIN clinical.survey s ON s.id = v.survey_id
+          WHERE v.id = $1`,
+        [versionId],
+      );
+      const row = rows[0] as Record<string, unknown> | undefined;
+      if (!row) throw new NotFoundException({ status: 'unknown_version' });
+      return {
+        ...row,
+        completeness: SurveysService.completeness(
+          row['definition'] as SurveyDefinition,
+          row['locales'] as LocaleBundle[],
+        ),
+      };
+    });
+  }
+
+  /** B2/B5/B6: update a DRAFT. A published version never comes back here -
+   * the service refuses and the storage trigger backstops it. Licensed
+   * instruments are locked from restructuring entirely (R11). */
+  async updateDraft(
+    staff: StaffPrincipal,
+    versionId: string,
+    input: { definition: SurveyDefinition; locales: LocaleBundle[] },
+  ): Promise<{ issues: object[] }> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const decision = this.decideTemplate(staff, 'update_draft', versionId);
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.update_draft',
+        resourceType: 'survey_template',
+        resourceId: versionId,
+        patientId: null,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const { rows } = await client.query<{ state: string; licensed_source: string | null }>(
+        `SELECT v.state, s.licensed_source
+           FROM clinical.survey_version v JOIN clinical.survey s ON s.id = v.survey_id
+          WHERE v.id = $1`,
+        [versionId],
+      );
+      const version = rows[0];
+      if (!version) throw new NotFoundException({ status: 'unknown_version' });
+      if (version.state !== 'draft') throw new BadRequestException({ status: 'not_a_draft' });
+      if (version.licensed_source !== null) {
+        throw new BadRequestException({ status: 'licensed_locked' });
+      }
+
+      const issues = validateDefinition(input.definition);
+      // an EMPTY page set is fine while drafting; every other issue blocks
+      const blocking = issues.filter((issue) => issue.code !== 'empty');
+      if (blocking.length > 0) {
+        throw new BadRequestException({ status: 'invalid_definition', issues: blocking });
+      }
+      const locales = normaliseLocales(input.locales);
+      await client.query(
+        `UPDATE clinical.survey_version
+            SET definition = $2, locales = $3, content_hash = $4 WHERE id = $1`,
+        [
+          versionId,
+          JSON.stringify(input.definition),
+          JSON.stringify(locales),
+          SurveysService.hashContent(input.definition, locales),
+        ],
+      );
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.update_draft',
+        resourceType: 'survey_template',
+        resourceId: versionId,
+        patientId: null,
+      });
+      return { issues };
+    });
+  }
+
+  /** B4: publish - immutable from this moment on. Requires a real
+   * definition and at least one COMPLETE locale (a variant with gaps is
+   * never offered to patients, so an all-gaps version cannot go live). */
+  async publishVersion(staff: StaffPrincipal, versionId: string): Promise<void> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const decision = this.decideTemplate(staff, 'publish', versionId);
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.publish',
+        resourceType: 'survey_template',
+        resourceId: versionId,
+        patientId: null,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const { rows } = await client.query<{
+        state: string;
+        definition: SurveyDefinition;
+        locales: LocaleBundle[];
+      }>(`SELECT state, definition, locales FROM clinical.survey_version WHERE id = $1`, [
+        versionId,
+      ]);
+      const version = rows[0];
+      if (!version) throw new NotFoundException({ status: 'unknown_version' });
+      if (version.state !== 'draft') throw new BadRequestException({ status: 'not_a_draft' });
+      const issues = validateDefinition(version.definition);
+      if (issues.length > 0) {
+        throw new BadRequestException({ status: 'invalid_definition', issues });
+      }
+      const completeness = SurveysService.completeness(version.definition, version.locales);
+      if (!Object.values(completeness).some((missing) => missing === 0)) {
+        throw new BadRequestException({ status: 'no_complete_locale', completeness });
+      }
+      await client.query(
+        `UPDATE clinical.survey_version
+            SET state = 'published', published_at = now() WHERE id = $1`,
+        [versionId],
+      );
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.publish',
+        resourceType: 'survey_template',
+        resourceId: versionId,
+        patientId: null,
+      });
+    });
+  }
+
+  async archiveVersion(staff: StaffPrincipal, versionId: string): Promise<void> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const decision = this.decideTemplate(staff, 'archive', versionId);
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.archive',
+        resourceType: 'survey_template',
+        resourceId: versionId,
+        patientId: null,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const result = await client.query(
+        `UPDATE clinical.survey_version SET state = 'archived'
+          WHERE id = $1 AND state IN ('draft', 'published')`,
+        [versionId],
+      );
+      if (result.rowCount === 0) throw new NotFoundException({ status: 'unknown_version' });
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.archive',
+        resourceType: 'survey_template',
+        resourceId: versionId,
+        patientId: null,
+      });
+    });
+  }
+
+  /** B4 "New draft from vN": any edit to a published version starts here. */
+  async newDraft(
+    staff: StaffPrincipal,
+    surveyId: string,
+  ): Promise<{ versionId: string; version: number }> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const decision = this.decideTemplate(staff, 'update_draft', surveyId);
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.update_draft',
+        resourceType: 'survey_template',
+        resourceId: surveyId,
+        patientId: null,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const { rows } = await client.query<{
+        id: string;
+        version: number;
+        state: string;
+        definition: SurveyDefinition;
+        locales: LocaleBundle[];
+        content_hash: string;
+        licensed_source: string | null;
+      }>(
+        `SELECT v.id, v.version, v.state, v.definition, v.locales, v.content_hash,
+                s.licensed_source
+           FROM clinical.survey_version v JOIN clinical.survey s ON s.id = v.survey_id
+          WHERE v.survey_id = $1 ORDER BY v.version DESC`,
+        [surveyId],
+      );
+      if (rows.length === 0) throw new NotFoundException({ status: 'unknown_survey' });
+      if (rows[0]!.licensed_source !== null) {
+        throw new BadRequestException({ status: 'licensed_locked' });
+      }
+      if (rows.some((row) => row.state === 'draft')) {
+        throw new BadRequestException({ status: 'draft_exists' });
+      }
+      const source = rows[0]!;
+      const versionId = randomUUID();
+      const version = source.version + 1;
+      await client.query(
+        `INSERT INTO clinical.survey_version
+           (id, survey_id, version, state, definition, locales, content_hash, created_by)
+         VALUES ($1, $2, $3, 'draft', $4, $5, $6, $7)`,
+        [
+          versionId,
+          surveyId,
+          version,
+          JSON.stringify(source.definition),
+          JSON.stringify(source.locales),
+          source.content_hash,
+          staff.userId,
+        ],
+      );
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_template.new_draft',
+        resourceType: 'survey_template',
+        resourceId: versionId,
+        patientId: null,
+        detail: { surveyId, fromVersion: source.version, version },
+      });
+      return { versionId, version };
+    });
+  }
+
+  /** Resolve one attachment's effective version + overrides for the
+   * program-rules panel and the C7 standing computation. */
+  private async loadAttachment(
+    client: pg.ClientBase,
+    treatmentId: string,
+    surveyId: string,
+  ): Promise<{ version: VersionRow; overrides: ProgramOverrides } | undefined> {
+    const { rows } = await client.query(
+      `SELECT ts.rule_overrides, v.id, v.survey_id, v.version, v.definition, v.locales,
+              v.content_hash
+         FROM clinical.treatment_survey ts
+         JOIN clinical.survey_version v ON v.id = COALESCE(
+           ts.pinned_version_id,
+           (SELECT v2.id FROM clinical.survey_version v2
+             WHERE v2.survey_id = ts.survey_id AND v2.state = 'published'
+             ORDER BY v2.version DESC LIMIT 1))
+        WHERE ts.treatment_id = $1 AND ts.survey_id = $2 AND ts.removed_at IS NULL`,
+      [treatmentId, surveyId],
+    );
+    const row = rows[0] as (VersionRow & { rule_overrides: ProgramOverrides }) | undefined;
+    if (!row) return undefined;
+    return {
+      version: {
+        id: row.id,
+        survey_id: row.survey_id,
+        version: row.version,
+        definition: row.definition,
+        locales: row.locales,
+        content_hash: row.content_hash,
+      },
+      overrides: row.rule_overrides ?? {},
+    };
+  }
+
+  private decideProgramRules(
+    staff: StaffPrincipal,
+    treatmentId: string,
+    context: { patientId: string; teamUserIds: string[]; leadUserIds: string[] },
+  ): 'allow' | 'deny' {
+    return authorize({
+      principal: { userId: staff.userId, role: staff.role },
+      action: 'configure_program_rules',
+      resource: {
+        type: 'treatment',
+        id: treatmentId,
+        patientId: context.patientId,
+        teamUserIds: context.teamUserIds,
+        leadUserIds: context.leadUserIds,
+      },
+    }).decision;
+  }
+
+  /** The program-rules panel payload: the effective version, its locales
+   * for labels, and the current overrides. REGULATED-ADJACENT read, so
+   * it is audited like the write. */
+  async programRules(
+    staff: StaffPrincipal,
+    treatmentId: string,
+    surveyId: string,
+  ): Promise<object> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const context = await this.treatmentContext(client, treatmentId);
+      if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
+      const decision = this.decideProgramRules(staff, treatmentId, context);
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'treatment.configure_program_rules',
+        resourceType: 'program_rules',
+        resourceId: `${treatmentId}:${surveyId}`,
+        patientId: context.patientId,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const attachment = await this.loadAttachment(client, treatmentId, surveyId);
+      if (!attachment) throw new NotFoundException({ status: 'unknown_attachment' });
+      return {
+        versionId: attachment.version.id,
+        version: attachment.version.version,
+        definition: attachment.version.definition,
+        locales: attachment.version.locales,
+        overrides: attachment.overrides,
+      };
+    });
+  }
+
+  /** Write the program's override layer. Validated against the effective
+   * version so an override can never reference a rule that is not there. */
+  async saveProgramRules(
+    staff: StaffPrincipal,
+    treatmentId: string,
+    surveyId: string,
+    overrides: ProgramOverrides,
+  ): Promise<{ status: string }> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const context = await this.treatmentContext(client, treatmentId);
+      if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
+      const decision = this.decideProgramRules(staff, treatmentId, context);
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'treatment.configure_program_rules',
+        resourceType: 'program_rules',
+        resourceId: `${treatmentId}:${surveyId}`,
+        patientId: context.patientId,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const attachment = await this.loadAttachment(client, treatmentId, surveyId);
+      if (!attachment) throw new NotFoundException({ status: 'unknown_attachment' });
+      const issues = validateOverrides(
+        attachment.version.definition,
+        overrides ?? {},
+        BODY_REGION_IDS,
+      );
+      if (issues.length > 0) {
+        throw new BadRequestException({ status: 'invalid_overrides', issues });
+      }
+      await client.query(
+        `UPDATE clinical.treatment_survey SET rule_overrides = $3
+          WHERE treatment_id = $1 AND survey_id = $2`,
+        [treatmentId, surveyId, JSON.stringify(overrides ?? {})],
+      );
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'treatment.configure_program_rules',
+        resourceType: 'treatment_survey',
+        resourceId: `${treatmentId}:${surveyId}`,
+        patientId: context.patientId,
+        detail: {
+          overriddenRules: Object.keys(overrides?.rules ?? {}),
+          criticalSets: Object.keys(overrides?.criticalRegions ?? {}),
+        },
+      });
+      return { status: 'saved' };
+    });
+  }
+
+  /** C7: one response with per-answer STANDING against the program's
+   * effective rules ("Above expected" / "Expected in this program" /
+   * "Critical area"), the stored triggers it actually raised, and the
+   * program rule summary. Staff surface - the full definition ships. */
+  async responseDetail(staff: StaffPrincipal, responseId: string): Promise<object> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const { response, version } = await this.loadResponse(client, responseId);
+      const context = await this.treatmentContext(client, response.treatment_id);
+      if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
+      const decision = authorize({
+        principal: { userId: staff.userId, role: staff.role },
+        action: 'view',
+        resource: {
+          type: 'survey_response',
+          id: responseId,
+          patientId: response.patient_id,
+          careTeamUserIds: [staff.userId],
+        },
+      }).decision;
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_response.view',
+        resourceType: 'survey_response',
+        resourceId: responseId,
+        patientId: response.patient_id,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+
+      const attachment = await this.loadAttachment(
+        client,
+        response.treatment_id,
+        version.survey_id,
+      );
+      const overrides = attachment?.overrides ?? {};
+      // standing is computed against the response's OWN version with the
+      // program's overrides - the exact rule set this program applies to
+      // these answers
+      const effective = applyOverrides(version.definition, overrides);
+      const evaluation = evaluateResponse(effective, response.answers);
+      const standing: Record<string, 'above_expected' | 'critical_area' | 'expected'> = {};
+      for (const fired of evaluation.fired) {
+        if (fired.questionId === null || fired.severity === null) continue;
+        const kind = fired.trace.condition.kind;
+        standing[fired.questionId] =
+          kind === 'critical_region' ? 'critical_area' : 'above_expected';
+      }
+
+      const { rows: head } = await client.query(
+        `SELECT t.name AS treatment_name, s.name AS survey_name,
+                p.given_name AS patient_given, p.family_name AS patient_family,
+                b.given_name AS behalf_given, b.family_name AS behalf_family
+           FROM clinical.survey_response r
+           JOIN clinical.treatment t ON t.id = r.treatment_id
+           JOIN clinical.survey_version v ON v.id = r.survey_version_id
+           JOIN clinical.survey s ON s.id = v.survey_id
+           JOIN identity.patient_account p ON p.id = r.patient_id
+           LEFT JOIN identity.staff_account b ON b.id = r.on_behalf_by
+          WHERE r.id = $1`,
+        [responseId],
+      );
+      const { rows: triggerRows } = await client.query<{
+        id: string;
+        rule_id: string;
+        severity: string | null;
+        trace: RuleTrace;
+        alert_id: string | null;
+      }>(
+        `SELECT id, rule_id, severity, trace, alert_id
+           FROM clinical.rule_trigger WHERE survey_response_id = $1 ORDER BY rule_id`,
+        [responseId],
+      );
+      return {
+        response: {
+          id: response.id,
+          status: response.status,
+          locale: response.locale,
+          submitted_at: response.submitted_at,
+          answers: response.answers,
+          treatment_id: response.treatment_id,
+          patient_id: response.patient_id,
+          version: version.version,
+          ...head[0],
+        },
+        definition: version.definition,
+        effectiveDefinition: effective,
+        locales: version.locales,
+        overrides,
+        standing,
+        triggers: triggerRows.map((row) => ({
+          id: row.id,
+          rule_id: row.rule_id,
+          severity: row.severity,
+          alert_id: row.alert_id,
+          source: row.trace.source,
+          citation: citeTrigger(row.trace, version.locales, response.locale),
+        })),
+      };
+    });
+  }
+
+  /** PP4: the patient's completed surveys, each color-coded by what its
+   * submission raised and opening the WHOLE response bound to its exact
+   * version. One list-level audited disclosure. */
+  async patientResponses(staff: StaffPrincipal, patientId: string): Promise<object[]> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const { rows: care } = await client.query(
+        `SELECT 1 FROM clinical.care_relationship
+          WHERE patient_id = $1 AND staff_id = $2 AND ended_at IS NULL`,
+        [patientId, staff.userId],
+      );
+      if (care.length === 0) throw new NotFoundException({ status: 'unknown_patient' });
+      const decision = authorize({
+        principal: { userId: staff.userId, role: staff.role },
+        action: 'view',
+        resource: {
+          type: 'survey_response',
+          id: 'list',
+          patientId,
+          careTeamUserIds: [staff.userId],
+        },
+      }).decision;
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_response.view',
+        resourceType: 'survey_response_list',
+        resourceId: patientId,
+        patientId,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const { rows } = await client.query(
+        `SELECT r.id, r.locale, r.submitted_at::text AS submitted_at,
+                v.version, s.name AS survey_name,
+                b.given_name AS behalf_given, b.family_name AS behalf_family,
+                (SELECT a.severity FROM clinical.alert a
+                  WHERE a.survey_response_id = r.id
+                  ORDER BY CASE a.severity WHEN 'high' THEN 3 WHEN 'moderate' THEN 2 ELSE 1 END DESC
+                  LIMIT 1) AS alert_severity,
+                (SELECT count(*)::int FROM clinical.rule_trigger rt
+                  WHERE rt.survey_response_id = r.id) AS trigger_count
+           FROM clinical.survey_response r
+           JOIN clinical.survey_version v ON v.id = r.survey_version_id
+           JOIN clinical.survey s ON s.id = v.survey_id
+           LEFT JOIN identity.staff_account b ON b.id = r.on_behalf_by
+          WHERE r.patient_id = $1 AND r.status = 'submitted'
+          ORDER BY r.submitted_at DESC
+          LIMIT 100`,
+        [patientId],
+      );
+      return rows as object[];
+    });
+  }
+}
+
+function allQuestionCount(definition: SurveyDefinition): number {
+  let count = 0;
+  const visit = (questions: { followUps?: unknown[] }[]): void => {
+    for (const question of questions) {
+      count += 1;
+      if (question.followUps) visit(question.followUps as { followUps?: unknown[] }[]);
+    }
+  };
+  for (const page of definition.pages) visit(page.questions);
+  return count;
+}
+
+/** Keep exactly the three platform locales, shaped, in a stable order. */
+function normaliseLocales(input: LocaleBundle[]): LocaleBundle[] {
+  return (['en', 'fi', 'sv'] as const).map((locale) => {
+    const bundle = input.find((entry) => entry.locale === locale);
+    const rules = Object.fromEntries(
+      Object.entries(bundle?.rules ?? {}).filter(
+        ([, texts]) =>
+          (texts.notifyText !== undefined && texts.notifyText.trim() !== '') ||
+          (texts.taskTitle !== undefined && texts.taskTitle.trim() !== ''),
+      ),
+    );
+    return {
+      locale,
+      title: typeof bundle?.title === 'string' ? bundle.title : '',
+      ...(bundle?.description !== undefined ? { description: bundle.description } : {}),
+      questions: bundle?.questions ?? {},
+      ...(Object.keys(rules).length > 0 ? { rules } : {}),
+    };
+  });
 }

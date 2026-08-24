@@ -10,14 +10,14 @@ Three shells, matching the three account contexts:
 
 | Shell | Nav (top, centered) | Notes |
 |---|---|---|
-| Patient | Home · Messages · Treatments · Surveys · Calendar — bell + avatar; mobile menu adds Notifications, Settings, Help & contact, language, sign out | Mobile-first |
-| Clinician | Dashboard · Patients · Messages · Surveys · Treatments · Tasks — avatar | Desktop-first |
-| Administration | Users · Teams · Roles · Audit log · Reporting, under a "mio Administration" masthead | Separate shell, served by the no-clinical-grant path ([ADR-0007](../adr/0007-separate-identity-from-clinical-data.md)) |
+| Patient | Home, Messages, Treatments, Surveys, Calendar — bell + avatar; mobile menu adds Notifications, Settings, Help & contact, language, sign out | Mobile-first |
+| Clinician | Dashboard, Patients, Messages, Surveys, Treatments, Tasks — avatar | Desktop-first |
+| Administration | Users, Teams, Roles, Audit log, Reporting, under a "mio Administration" masthead | Separate shell, served by the no-clinical-grant path ([ADR-0007](../adr/0007-separate-identity-from-clinical-data.md)) |
 
 Patient-scoped clinician pages (C2, PP1–PP6) add a left sub-navigation with
-three groups — **Patient profile** (Patient summary · Programs, surveys & care
-team · Patient details), **Health data** (Values · Symptoms · Completed
-surveys · Data export), **Report** (Report a symptom · Fill a survey · New
+three groups — **Patient profile** (Patient summary, Programs, surveys & care
+team, Patient details), **Health data** (Values, Symptoms, Completed
+surveys, Data export), **Report** (Report a symptom, Fill a survey, New
 value). Group headers are labels, not links.
 
 ## Login — `Mio Login.dc.html`

@@ -1,7 +1,7 @@
 import { createRootRouteWithContext, createRoute, Outlet, redirect } from '@tanstack/react-router';
 import type { QueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
-import { IntlProvider } from 'react-intl';
+import { IntlProvider, useIntl } from 'react-intl';
 import type { Locale } from '@mio/i18n';
 import { Splash } from '@mio/ui';
 import { MESSAGES } from '../i18n/messages.js';
@@ -18,9 +18,20 @@ import { RosterPage } from '../patients/roster.js';
 import { PatientCalendarPage } from '../scheduling/calendar.js';
 import { TasksPage } from '../tasks/tasks-page.js';
 import { MyTasksCard } from '../tasks/my-tasks-card.js';
+import { TriageCard } from '../alerts/triage-card.js';
+import { AlertPage } from '../alerts/alert-page.js';
+import { ResponseDetailPage } from '../surveys/response-detail.js';
+import { MessagesPage } from '../messages/messages-page.js';
+import { MessageThreadPage } from '../messages/thread-page.js';
+import { NotificationsPage } from '../notifications/notifications-page.js';
+import { SettingsPage } from '../notifications/settings-page.js';
+import { PatientHomePage } from '../home/patient-home.js';
+import { AgendaCard, OverdueCard, UnreadConversationsCard } from '../dashboard/cards.js';
 import { PatientSurveysPage } from '../surveys/patient-surveys.js';
 import { SurveyFillPage } from '../surveys/fill.js';
 import { SurveySubmittedPage } from '../surveys/submitted.js';
+import { SurveyCatalogPage } from '../surveys/builder/catalog.js';
+import { SurveyBuilderPage } from '../surveys/builder/builder-page.js';
 import { PatientProfilePage } from '../patients/profile.js';
 import { TreatmentCatalogPage } from '../treatments/catalog.js';
 import { TreatmentDetailPage } from '../treatments/detail.js';
@@ -79,14 +90,54 @@ function AuthedIndex(): ReactElement {
   return (
     <SignedInShell>
       {clinician ? (
-        // The dashboard's tasks slice (WP-13); the full C1 lands with WP-27.
-        <div className="mx-auto flex max-w-2xl flex-col gap-4">
-          <MyTasksCard />
-        </div>
+        <ClinicianDashboard />
+      ) : session.realm === 'patient' ? (
+        // P1/P7 (WP-26): the patient landing widgets
+        <PatientHomePage />
       ) : (
         <PlaceholderHome />
       )}
     </SignedInShell>
+  );
+}
+
+/** C1 complete (WP-27): triage over tasks in the main column, the
+ * worklists beside them, and the segmented filter narrowing the queue
+ * to the caller's assignments. */
+function ClinicianDashboard(): ReactElement {
+  const intl = useIntl();
+  const [filter, setFilter] = useState<'all' | 'mine'>('all');
+  return (
+    <div className="mx-auto flex max-w-5xl flex-col gap-4">
+      <div className="flex gap-1.5">
+        {(['all', 'mine'] as const).map((option) => (
+          <button
+            key={option}
+            type="button"
+            aria-pressed={filter === option}
+            onClick={() => setFilter(option)}
+            className={`rounded-pill border px-3.5 py-1.5 text-sm transition-colors ${
+              filter === option
+                ? 'border-teal bg-teal-tint font-medium text-teal'
+                : 'border-border bg-surface text-secondary hover:bg-surface-sunken hover:text-ink'
+            }`}
+          >
+            {intl.formatMessage({ id: `dashboard.filter.${option}` })}
+          </button>
+        ))}
+      </div>
+      <div className="grid items-start gap-4 lg:grid-cols-5">
+        <div className="flex flex-col gap-4 lg:col-span-3">
+          <TriageCard filter={filter} />
+          <MyTasksCard />
+        </div>
+        <div className="flex flex-col gap-4 lg:col-span-2">
+          <OverdueCard />
+          <AgendaCard />
+          <UnreadConversationsCard />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -222,16 +273,87 @@ const surveySubmittedRoute = createRoute({
   component: () => <ShellPage page={<SurveySubmittedPage />} />,
 });
 
-/** /surveys: the patient's fill list (WP-14); the staff catalog is WP-15. */
+/** /surveys: the patient's fill list (P3) or the staff catalog (B1). */
 function SurveysIndex(): ReactElement {
   const session = useSession();
   if (session.loading || !session.account) return <Splash />;
   return (
     <SignedInShell>
-      {session.realm === 'patient' ? <PatientSurveysPage /> : <PlaceholderHome />}
+      {session.realm === 'patient' ? <PatientSurveysPage /> : <SurveyCatalogPage />}
     </SignedInShell>
   );
 }
+
+const surveyBuilderRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/surveys/builder/$versionId',
+  beforeLoad: requireSession,
+  component: () => <ShellPage page={<SurveyBuilderPage />} />,
+});
+
+const alertRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/alerts/$alertId',
+  beforeLoad: requireSession,
+  component: () => <ShellPage page={<AlertPage />} />,
+});
+
+const responseDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/responses/$responseId',
+  beforeLoad: requireSession,
+  component: () => <ShellPage page={<ResponseDetailPage />} />,
+});
+
+const messagesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/messages',
+  beforeLoad: requireSession,
+  component: () => <ShellPage page={<MessagesPage />} />,
+});
+
+const messageThreadRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/messages/$treatmentId',
+  beforeLoad: requireSession,
+  component: () => <ShellPage page={<MessageThreadPage />} />,
+});
+
+/** P11 and the P8 slice are patient surfaces; staff land on the shared
+ * placeholder until WP-27 gives them a centre of their own. */
+function NotificationsIndex(): ReactElement {
+  const session = useSession();
+  if (session.loading || !session.account) return <Splash />;
+  return (
+    <SignedInShell>
+      {session.realm === 'patient' ? <NotificationsPage /> : <PlaceholderHome />}
+    </SignedInShell>
+  );
+}
+
+function SettingsIndex(): ReactElement {
+  const session = useSession();
+  if (session.loading || !session.account) return <Splash />;
+  return (
+    <SignedInShell>
+      {session.realm === 'patient' ? <SettingsPage /> : <PlaceholderHome />}
+    </SignedInShell>
+  );
+}
+
+const notificationsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/notifications',
+  beforeLoad: requireSession,
+  component: NotificationsIndex,
+});
+
+const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings',
+  beforeLoad: requireSession,
+  component: SettingsIndex,
+});
 
 /** /calendar is the patient's consolidated view (P9); staff have no page
  * here yet - their day lives on the dashboard (C1, WP-13+). */
@@ -273,4 +395,11 @@ export const routeTree = rootRoute.addChildren([
   surveysRoute,
   surveyFillRoute,
   surveySubmittedRoute,
+  surveyBuilderRoute,
+  alertRoute,
+  responseDetailRoute,
+  messagesRoute,
+  messageThreadRoute,
+  notificationsRoute,
+  settingsRoute,
 ]);

@@ -187,6 +187,9 @@ importers:
       '@mio/schedule':
         specifier: workspace:*
         version: link:../../packages/schedule
+      '@mio/survey-schema':
+        specifier: workspace:*
+        version: link:../../packages/survey-schema
       nodemailer:
         specifier: ^9.0.5
         version: 9.0.5
@@ -262,6 +265,9 @@ importers:
       '@mio/authz':
         specifier: workspace:*
         version: link:../authz
+      '@mio/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       '@mio/survey-schema':
         specifier: workspace:*
         version: link:../survey-schema

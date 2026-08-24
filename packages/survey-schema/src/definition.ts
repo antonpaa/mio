@@ -2,7 +2,8 @@ import { allQuestions } from './engine.js';
 import { isSafePattern } from './safe-regex.js';
 import { BODY_REGION_IDS } from './body-map.js';
 import { isQuestionId } from './ids.js';
-import type { LocaleBundle, Question, SurveyDefinition } from './types.js';
+import { SEVERITIES } from './rules.js';
+import type { LocaleBundle, Question, QuestionRule, SurveyDefinition, TrendRule } from './types.js';
 
 /**
  * Structural validation of a definition - what the builder enforces by
@@ -24,8 +25,13 @@ export interface DefinitionIssue {
     | 'forward_condition'
     | 'unknown_condition_target'
     | 'unknown_region'
+    | 'bad_rule'
+    | 'bad_symptom_map'
     | 'empty';
 }
+
+/** B2 keeps rule lists short; the server refuses hand-crafted excess. */
+export const MAX_RULES_PER_QUESTION = 10;
 
 export function validateDefinition(definition: SurveyDefinition): DefinitionIssue[] {
   const issues: DefinitionIssue[] = [];
@@ -35,13 +41,123 @@ export function validateDefinition(definition: SurveyDefinition): DefinitionIssu
     return issues;
   }
   const seen = new Set<string>();
+  const ruleIds = new Set<string>();
   for (const question of questions) {
     if (!isQuestionId(question.id)) issues.push({ questionId: question.id, code: 'bad_id' });
     if (seen.has(question.id)) issues.push({ questionId: question.id, code: 'duplicate_id' });
     seen.add(question.id);
     issues.push(...questionIssues(question, seen));
+    for (const rule of question.rules ?? []) {
+      if (ruleIds.has(rule.id)) issues.push({ questionId: question.id, code: 'bad_rule' });
+      ruleIds.add(rule.id);
+    }
+  }
+  // survey-level trend rules share the rule-id namespace, so a trace's
+  // (survey_version, rule_id) pair stays unambiguous across both kinds
+  const trendRules = definition.trendRules;
+  if (trendRules !== undefined) {
+    if (!Array.isArray(trendRules) || trendRules.length > MAX_TREND_RULES) {
+      issues.push({ code: 'bad_rule' });
+    } else {
+      const byId = new Map(questions.map((question) => [question.id, question]));
+      for (const rule of trendRules) {
+        if (ruleIds.has(rule.id) || trendRuleIssue(byId, rule)) {
+          issues.push({ questionId: rule.id, code: 'bad_rule' });
+        }
+        ruleIds.add(rule.id);
+      }
+    }
   }
   return issues;
+}
+
+const NOTIFY_RECIPIENTS = ['team', 'lead', 'patient'];
+
+/** Outcomes: any combination, one of each kind, all fields shape-valid. */
+function outcomesIssue(outcomes: QuestionRule['outcomes']): boolean {
+  if (!Array.isArray(outcomes) || outcomes.length > 3) return true;
+  const kinds = new Set<string>();
+  for (const outcome of outcomes) {
+    if (kinds.has(outcome.kind)) return true;
+    kinds.add(outcome.kind);
+    if (outcome.kind === 'alert') {
+      if (!SEVERITIES.includes(outcome.severity)) return true;
+    } else if (outcome.kind === 'notify') {
+      if (
+        !Array.isArray(outcome.recipients) ||
+        outcome.recipients.length === 0 ||
+        outcome.recipients.some((entry) => !NOTIFY_RECIPIENTS.includes(entry)) ||
+        new Set(outcome.recipients).size !== outcome.recipients.length
+      ) {
+        return true;
+      }
+    } else if (outcome.kind !== 'task') {
+      return true;
+    }
+  }
+  return false;
+}
+
+function whenMisfits(question: Question, when: QuestionRule['when']): boolean {
+  switch (when.kind) {
+    case 'option':
+      return (
+        (question.type !== 'choice_single' && question.type !== 'choice_multi') ||
+        !(question.options ?? []).some((option) => option.id === when.optionId)
+      );
+    case 'at_least':
+    case 'at_most':
+      return (
+        (question.type !== 'number' && question.type !== 'scale') ||
+        typeof when.value !== 'number' ||
+        !Number.isFinite(when.value)
+      );
+    case 'critical_region':
+      return question.type !== 'body_map' || (question.criticalRegions ?? []).length === 0;
+    case 'other_region':
+      return question.type !== 'body_map';
+    case 'region_count':
+      return question.type !== 'body_map' || !Number.isInteger(when.value) || when.value < 1;
+    default:
+      return true;
+  }
+}
+
+/** A rule's condition must fit the question it sits on; declarative JSON
+ * only - anything shape-invalid is one refusal, not a runtime surprise. */
+function ruleIssue(question: Question, rule: QuestionRule): boolean {
+  if (!isQuestionId(rule.id)) return true;
+  if (outcomesIssue(rule.outcomes)) return true;
+  return whenMisfits(question, rule.when);
+}
+
+/** Trend windows stay small and typed: repeat needs >= 2 occurrences (one
+ * is a single-response rule), monotone runs need >= 2, missed >= 1. */
+export const MAX_TREND_TIMES = 12;
+export const MAX_TREND_RULES = 20;
+
+function trendRuleIssue(questions: Map<string, Question>, rule: TrendRule): boolean {
+  if (!isQuestionId(rule.id)) return true;
+  if (outcomesIssue(rule.outcomes)) return true;
+  const when = rule.when;
+  if (!Number.isInteger(when.times) || when.times > MAX_TREND_TIMES) return true;
+  switch (when.kind) {
+    case 'missed':
+      return when.times < 1;
+    case 'repeat': {
+      if (when.times < 2) return true;
+      const question = questions.get(when.questionId);
+      return question === undefined || whenMisfits(question, when.match);
+    }
+    case 'decreasing':
+    case 'increasing': {
+      if (when.times < 2) return true;
+      const question = questions.get(when.questionId);
+      return question === undefined || (question.type !== 'number' && question.type !== 'scale');
+    }
+    default:
+      return true;
+  }
 }
 
 function questionIssues(question: Question, earlier: Set<string>): DefinitionIssue[] {
@@ -108,6 +224,35 @@ function questionIssues(question: Question, earlier: Set<string>): DefinitionIss
       issues.push({ questionId: question.id, code: 'unknown_condition_target' });
     }
   }
+  if (question.symptomMap !== undefined) {
+    const map = question.symptomMap;
+    const grades = ['mild', 'moderate', 'severe'];
+    const mapBad =
+      typeof map.code !== 'string' ||
+      map.code.trim() === '' ||
+      (question.type !== 'choice_single' && question.type !== 'body_map') ||
+      (question.type === 'choice_single' &&
+        (map.severities === undefined ||
+          Object.keys(map.severities).length === 0 ||
+          Object.entries(map.severities).some(
+            ([optionId, grade]) =>
+              !grades.includes(grade) ||
+              !(question.options ?? []).some((option) => option.id === optionId),
+          ))) ||
+      (question.type === 'body_map' &&
+        map.severity !== undefined &&
+        !grades.includes(map.severity));
+    if (mapBad) issues.push({ questionId: question.id, code: 'bad_symptom_map' });
+  }
+  if (question.rules !== undefined) {
+    if (!Array.isArray(question.rules) || question.rules.length > MAX_RULES_PER_QUESTION) {
+      issues.push({ questionId: question.id, code: 'bad_rule' });
+    } else {
+      for (const rule of question.rules) {
+        if (ruleIssue(question, rule)) issues.push({ questionId: question.id, code: 'bad_rule' });
+      }
+    }
+  }
   return issues;
 }
 
@@ -150,22 +295,36 @@ export function canonicalJson(value: unknown): string {
 
 /**
  * The definition as PATIENTS may see it: template-critical body-map
- * regions are clinician configuration ("the patient never sees severities
- * or critical areas - only the map") and are stripped before a definition
- * leaves the server on a patient-facing path.
+ * regions and the rules that grade answers are clinician configuration
+ * ("the patient never sees severities or critical areas - only the map")
+ * and are stripped before a definition leaves the server on a
+ * patient-facing path.
  */
 export function patientView(definition: SurveyDefinition): SurveyDefinition {
   const strip = (question: Question): Question => {
     const rest: Question = { ...question };
     delete rest.criticalRegions;
+    delete rest.rules;
+    delete rest.symptomMap;
     if (question.followUps) rest.followUps = question.followUps.map(strip);
     return rest;
   };
-  return {
+  const stripped: SurveyDefinition = {
     ...definition,
     pages: definition.pages.map((page) => ({
       ...page,
       questions: page.questions.map(strip),
     })),
   };
+  delete stripped.trendRules;
+  return stripped;
+}
+
+/** The bundle as PATIENTS may see it: authored rule texts (notification
+ * bodies, task titles) are clinician configuration and leave the payload
+ * with the rules themselves. */
+export function patientBundleView(bundle: LocaleBundle): LocaleBundle {
+  const stripped: LocaleBundle = { ...bundle };
+  delete stripped.rules;
+  return stripped;
 }

@@ -4,6 +4,22 @@
  * that keep client and server honest about the same shapes.
  */
 
+export {
+  docFromText,
+  MESSAGE_MAX_BLOCKS,
+  MESSAGE_MAX_CHARS,
+  MESSAGE_MAX_LIST_ITEMS,
+  parseMessageDoc,
+  plainTextOf,
+  type MessageBlock,
+  type MessageDoc,
+  type MessageList,
+  type MessageListItem,
+  type MessageMark,
+  type MessageParagraph,
+  type MessageText,
+} from './message-doc.js';
+
 export const HEALTH_PATH = '/health' as const;
 
 export interface HealthResponse {

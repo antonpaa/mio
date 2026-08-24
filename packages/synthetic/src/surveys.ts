@@ -27,6 +27,24 @@ const SYMPTOM_CORE: SurveyDefinition = {
           type: 'choice_single',
           required: true,
           options: [{ id: 'none' }, { id: 'mild' }, { id: 'severe' }],
+          // WP-21: the answer lands in the symptom register, graded
+          symptomMap: { code: 'nausea', severities: { mild: 'mild', severe: 'severe' } },
+          // WP-18 single-response rules straight off the canvas: severe
+          // nausea alerts high, "2 times or more" moderate, heavy impact
+          // moderate; considerable fatigue is RECORD-ONLY - stored for
+          // trends, nothing raised.
+          rules: [
+            {
+              id: 'r-nausea-severe',
+              when: { kind: 'option', optionId: 'severe' },
+              // the WP-20 authored patient note (P4's calm copy) rides the
+              // alert - WP-25 delivers it into the notification centre
+              outcomes: [
+                { kind: 'alert', severity: 'high' },
+                { kind: 'notify', recipients: ['patient', 'lead'] },
+              ],
+            },
+          ],
           followUps: [
             {
               id: 'nausea-frequency',
@@ -34,6 +52,13 @@ const SYMPTOM_CORE: SurveyDefinition = {
               required: true,
               condition: { questionId: 'nausea', op: 'in', value: ['mild', 'severe'] },
               options: [{ id: 'once' }, { id: 'twice-or-more' }],
+              rules: [
+                {
+                  id: 'r-nausea-frequent',
+                  when: { kind: 'option', optionId: 'twice-or-more' },
+                  outcomes: [{ kind: 'alert', severity: 'moderate' }],
+                },
+              ],
               followUps: [
                 {
                   id: 'nausea-impact',
@@ -45,6 +70,13 @@ const SYMPTOM_CORE: SurveyDefinition = {
                     op: 'equals',
                     value: 'twice-or-more',
                   },
+                  rules: [
+                    {
+                      id: 'r-nausea-impact',
+                      when: { kind: 'at_least', value: 7 },
+                      outcomes: [{ kind: 'alert', severity: 'moderate' }],
+                    },
+                  ],
                 },
               ],
             },
@@ -55,6 +87,17 @@ const SYMPTOM_CORE: SurveyDefinition = {
           type: 'choice_single',
           required: true,
           options: [{ id: 'none' }, { id: 'slight' }, { id: 'moderate' }, { id: 'considerable' }],
+          symptomMap: {
+            code: 'fatigue',
+            severities: { slight: 'mild', moderate: 'moderate', considerable: 'severe' },
+          },
+          rules: [
+            {
+              id: 'r-fatigue-considerable',
+              when: { kind: 'option', optionId: 'considerable' },
+              outcomes: [],
+            },
+          ],
         },
         {
           id: 'temperature',
@@ -151,11 +194,18 @@ const SYMPTOM_CORE_TEXT = {
   },
 } as const;
 
+const NAUSEA_NOTIFY_TEXT = {
+  en: 'Because nausea has increased, your care team has been notified. They will be in touch if anything needs to change.',
+  fi: 'Koska pahoinvointi on lisääntynyt, hoitotiimillesi on ilmoitettu. He ottavat yhteyttä, jos jotakin pitää muuttaa.',
+  sv: 'Eftersom illamåendet har ökat har ditt vårdteam meddelats. De hör av sig om något behöver ändras.',
+} as const;
+
 function symptomLocales(titles: { en: string; fi: string; sv: string }): LocaleBundle[] {
   return (['en', 'fi', 'sv'] as const).map((locale) => ({
     locale,
     title: titles[locale],
     questions: { ...SYMPTOM_CORE_TEXT[locale] },
+    rules: { 'r-nausea-severe': { notifyText: NAUSEA_NOTIFY_TEXT[locale] } },
   }));
 }
 
@@ -196,6 +246,26 @@ export const SYNTHETIC_SURVEYS: SyntheticSurvey[] = [
                   // template-critical areas per the canvas (B3): chest, neck.
                   // Stripped from every patient-facing payload.
                   criticalRegions: ['chest', 'neck'],
+                  symptomMap: { code: 'skin_change', severity: 'moderate' },
+                  // B3's three rule kinds: critical area, any other area,
+                  // count threshold ("3 or more areas")
+                  rules: [
+                    {
+                      id: 'r-skin-critical',
+                      when: { kind: 'critical_region' },
+                      outcomes: [{ kind: 'alert', severity: 'high' }],
+                    },
+                    {
+                      id: 'r-skin-other',
+                      when: { kind: 'other_region' },
+                      outcomes: [{ kind: 'alert', severity: 'low' }],
+                    },
+                    {
+                      id: 'r-skin-spread',
+                      when: { kind: 'region_count', value: 3 },
+                      outcomes: [{ kind: 'alert', severity: 'moderate' }],
+                    },
+                  ],
                 },
               ],
             },
@@ -364,6 +434,7 @@ export const SYNTHETIC_SURVEYS: SyntheticSurvey[] = [
               type: 'choice_single',
               required: true,
               options: [{ id: 'none' }, { id: 'mild' }, { id: 'severe' }],
+              symptomMap: { code: 'neuropathy', severities: { mild: 'mild', severe: 'severe' } },
               followUps: [
                 {
                   id: 'numbness-areas',
@@ -374,7 +445,19 @@ export const SYNTHETIC_SURVEYS: SyntheticSurvey[] = [
                 },
               ],
             },
-            { id: 'pain', type: 'scale', required: true, scale: { min: 0, max: 10 } },
+            {
+              id: 'pain',
+              type: 'scale',
+              required: true,
+              scale: { min: 0, max: 10 },
+              rules: [
+                {
+                  id: 'r-pain-severe',
+                  when: { kind: 'at_least', value: 8 },
+                  outcomes: [{ kind: 'alert', severity: 'moderate' }],
+                },
+              ],
+            },
           ],
         },
       ],

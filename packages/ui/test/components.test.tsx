@@ -11,6 +11,22 @@ import {
   CountBadge,
   EmptyState,
   ErrorState,
+  IconAudit,
+  IconBell,
+  IconCalendar,
+  IconDashboard,
+  IconHome,
+  IconMessages,
+  IconPatients,
+  IconReporting,
+  IconRoles,
+  IconSurveys,
+  IconSymptoms,
+  IconTasks,
+  IconTeams,
+  IconTreatments,
+  IconUsers,
+  IconValues,
   LanguageSwitcher,
   ListRow,
   MioLockup,
@@ -139,6 +155,50 @@ describe('kit renders and is axe-clean', () => {
     fireEvent.click(toggle);
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
     expect(screen.getAllByRole('link', { name: /Users/ })).toHaveLength(2);
+    expect(await axeViolations(container)).toEqual([]);
+  });
+
+  it('icons: decorative two-layer glyphs never leak into the accessible name', async () => {
+    const { container } = render(
+      <main>
+        <nav aria-label="Main navigation">
+          <a href="/patients" aria-current="page">
+            <IconPatients size={17} />
+            Patients
+          </a>
+          <a href="/tasks">
+            <IconTasks size={17} />
+            Tasks
+          </a>
+        </nav>
+        <Card>
+          <CardHeader icon={<IconValues size={17} />} title="Values" />
+        </Card>
+        <IconBell />
+        <IconHome />
+        <IconDashboard />
+        <IconMessages />
+        <IconSurveys />
+        <IconTreatments />
+        <IconCalendar />
+        <IconSymptoms />
+        <IconUsers />
+        <IconTeams />
+        <IconRoles />
+        <IconAudit />
+        <IconReporting />
+      </main>,
+    );
+    // the icon is decorative - the label alone names the link
+    expect(screen.getByRole('link', { name: 'Patients' })).toBeDefined();
+    const svgs = container.querySelectorAll('svg.mio-icon');
+    expect(svgs.length).toBe(16);
+    for (const svg of svgs) {
+      expect(svg.getAttribute('aria-hidden')).toBe('true');
+      // both print layers: the offset tint circle and the ink stroke
+      expect(svg.querySelector('.mio-icon-tint')).not.toBeNull();
+      expect(svg.querySelector('g[stroke="currentColor"]')).not.toBeNull();
+    }
     expect(await axeViolations(container)).toEqual([]);
   });
 
