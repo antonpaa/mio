@@ -1,0 +1,4 @@
+project         = "your-gcp-project"
+api_image       = "europe-north1-docker.pkg.dev/your-gcp-project/mio-staging/api:TAG"
+worker_image    = "europe-north1-docker.pkg.dev/your-gcp-project/mio-staging/worker:TAG"
+public_base_url = "https://staging.mio.example"
