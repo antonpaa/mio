@@ -738,6 +738,17 @@ const en = {
   'symptoms.source.self_report': 'Self-report',
   'symptoms.source.clinician': 'Clinician',
   'symptoms.source.onBehalf': '{name}, on behalf',
+  'onBehalf.fillSurvey': 'Fill a survey',
+  'onBehalf.dialogNote':
+    'You are recording answers the patient gave you. The response is stored in their name, marked as entered on their behalf.',
+  'onBehalf.pickSurvey': 'Which survey',
+  'onBehalf.optionDue': '{survey} — due {date}',
+  'onBehalf.optionAdHoc': '{survey} — {program}',
+  'onBehalf.noneFillable': 'Nothing to fill for this patient right now.',
+  'onBehalf.begin': 'Begin',
+  'onBehalf.bannerTitle': 'Entering on behalf of the patient',
+  'onBehalf.bannerBody':
+    'Record the answers as the patient gave them. Alerts and follow-up work exactly as if they had answered themselves; the record keeps your name as the person who entered it.',
   'symptoms.onBehalfNote':
     'Recorded with your name, on behalf of the patient. Whether this is expected in the program is judged by the program\u2019s rules, never stored here.',
   'symptoms.save': 'Save observation',
@@ -1574,6 +1585,17 @@ const fi: Record<MessageId, string> = {
   'symptoms.source.self_report': 'Oma ilmoitus',
   'symptoms.source.clinician': 'Kirjaus vastaanotolla',
   'symptoms.source.onBehalf': '{name}, potilaan puolesta',
+  'onBehalf.fillSurvey': 'Täytä kysely',
+  'onBehalf.dialogNote':
+    'Kirjaat vastaukset, jotka potilas antoi sinulle. Vastaus tallennetaan hänen nimiinsä, merkittynä hänen puolestaan kirjatuksi.',
+  'onBehalf.pickSurvey': 'Mikä kysely',
+  'onBehalf.optionDue': '{survey} — määräpäivä {date}',
+  'onBehalf.optionAdHoc': '{survey} — {program}',
+  'onBehalf.noneFillable': 'Tälle potilaalle ei ole nyt täytettävää.',
+  'onBehalf.begin': 'Aloita',
+  'onBehalf.bannerTitle': 'Kirjaat potilaan puolesta',
+  'onBehalf.bannerBody':
+    'Kirjaa vastaukset sellaisina kuin potilas ne antoi. Hälytykset ja jatkotoimet toimivat kuten jos hän olisi vastannut itse; kirjaukseen jää sinun nimesi kirjaajana.',
   'symptoms.onBehalfNote':
     'Kirjataan nimell\u00e4si potilaan puolesta. Ohjelman s\u00e4\u00e4nn\u00f6t arvioivat, onko oire odotettu \u2014 sit\u00e4 ei koskaan tallenneta havaintoon.',
   'symptoms.save': 'Tallenna havainto',
@@ -2405,6 +2427,17 @@ const sv: Record<MessageId, string> = {
   'symptoms.source.self_report': 'Egenrapport',
   'symptoms.source.clinician': 'Klinikanteckning',
   'symptoms.source.onBehalf': '{name}, för patientens räkning',
+  'onBehalf.fillSurvey': 'Fyll i en enkät',
+  'onBehalf.dialogNote':
+    'Du registrerar svar som patienten gav dig. Svaret sparas i patientens namn, märkt som infört å deras vägnar.',
+  'onBehalf.pickSurvey': 'Vilken enkät',
+  'onBehalf.optionDue': '{survey} — senast {date}',
+  'onBehalf.optionAdHoc': '{survey} — {program}',
+  'onBehalf.noneFillable': 'Inget att fylla i för den här patienten just nu.',
+  'onBehalf.begin': 'Börja',
+  'onBehalf.bannerTitle': 'Du registrerar å patientens vägnar',
+  'onBehalf.bannerBody':
+    'Registrera svaren så som patienten gav dem. Larm och uppföljning fungerar precis som om patienten svarat själv; ditt namn står kvar som den som registrerade.',
   'symptoms.onBehalfNote':
     'Registreras i ditt namn för patientens räkning. Programmets regler avgör om symtomet är förväntat — det lagras aldrig på observationen.',
   'symptoms.save': 'Spara observation',

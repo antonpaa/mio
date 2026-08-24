@@ -7,6 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type pg from 'pg';
+import type { Role } from '@mio/authz';
 import { authorize } from '@mio/authz/engine';
 import {
   persistEvaluation,
@@ -99,6 +100,15 @@ function pickBundle(version: VersionRow, preferred: string): LocaleBundle {
 function isoToday(): string {
   return new Date().toISOString().slice(0, 10);
 }
+
+/**
+ * Who is entering answers: the patient, or a clinician on their behalf
+ * (the PP "Report" group's "Fill a survey"). Everything downstream of
+ * the authorisation is identical; the actor is what provenance and the
+ * audit trail record.
+ */
+type FillActor =
+  { realm: 'patient'; userId: string } | { realm: 'staff'; userId: string; role: Role };
 
 @Injectable()
 export class SurveysService {
@@ -541,151 +551,178 @@ export class SurveysService {
           decision,
         });
         if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
-
-        const result = validateSubmission(version.definition, answers);
-        if (!result.ok) {
-          throw new BadRequestException({ status: 'invalid_answers', errors: result.errors });
-        }
-        await client.query(
-          `UPDATE clinical.survey_response
-              SET answers = $2, status = 'submitted', submitted_at = now(), updated_at = now()
-            WHERE id = $1`,
-          [responseId, JSON.stringify(result.answers)],
-        );
-        if (response.activity_id !== null) {
-          // completes the occurrence; self-guarding SECURITY DEFINER since
-          // the patient realm holds no UPDATE on clinical.activity
-          await client.query(`SELECT app.complete_survey_occurrence($1)`, [response.activity_id]);
-        }
-        // WP-18/20/22: single-response AND trend evaluation run in the
-        // SAME transaction as the submission, against the treatment's
-        // EFFECTIVE rule set (template + program overrides) - triggers,
-        // alert, notifications and rule-created tasks commit with the
-        // answers or not at all. The patient's reply stays the designed
-        // P12 copy; nothing rule-shaped is returned here.
-        const { rows: overrideRows } = await client.query<{ rule_overrides: ProgramOverrides }>(
-          `SELECT rule_overrides FROM clinical.treatment_survey
-            WHERE treatment_id = $1 AND survey_id = $2`,
-          [response.treatment_id, version.survey_id],
-        );
-        const effective = applyOverrides(version.definition, overrideRows[0]?.rule_overrides ?? {});
-        const singles = evaluateResponse(effective, result.answers);
-        const trends =
-          response.activity_id === null
-            ? { fired: [], severity: null }
-            : evaluateTrends(
-                effective,
-                await this.occurrenceHistory(client, response.activity_id, {
-                  responseId,
-                  answers: result.answers,
-                }),
-              );
-        const persisted = await persistEvaluation(
+        return this.finishSubmission(
           client,
-          {
-            treatmentId: response.treatment_id,
-            patientId: response.patient_id,
-            surveyVersionId: response.survey_version_id,
-            surveyResponseId: responseId,
-            activityId: response.activity_id,
-            ruleTexts: ruleTextsFromBundles(version.locales),
-          },
-          {
-            fired: [...singles.fired, ...trends.fired],
-            severity: maxSeverity(singles.severity, trends.severity),
-          },
+          { realm: 'patient', userId: patient.userId },
+          response,
+          version,
+          answers,
         );
-        // WP-21: mapped answers land in the symptom register in the same
-        // transaction, source 'survey', provenance = the submitting patient
-        const derived = deriveObservations(version.definition, result.answers);
-        if (derived.length > 0) {
-          const { rows: symptomRows } = await client.query<{ id: string; code: string }>(
-            `SELECT id, code FROM clinical.symptom WHERE active AND code = ANY($1)`,
-            [derived.map((entry) => entry.code)],
-          );
-          const symptomByCode = new Map(symptomRows.map((row) => [row.code, row.id]));
-          for (const entry of derived) {
-            const symptomId = symptomByCode.get(entry.code);
-            if (symptomId === undefined) continue; // unmapped code: skip, never fail a submission
-            await client.query(
-              `INSERT INTO clinical.symptom_observation
-                 (id, patient_id, treatment_id, symptom_id, severity, detail, observed_at,
-                  source, survey_response_id, entered_by, on_behalf_of_patient)
-               VALUES ($1, $2, $3, $4, $5, $6, current_date, 'survey', $7, $8, false)`,
-              [
-                randomUUID(),
-                response.patient_id,
-                response.treatment_id,
-                symptomId,
-                entry.severity,
-                JSON.stringify(entry.regions !== undefined ? { regions: entry.regions } : {}),
-                responseId,
-                patient.userId,
-              ],
-            );
-          }
-        }
-        // X8: bound numeric answers land in the patient's value series
-        // in the same transaction - value from the bound question, date
-        // from its date neighbour when present, provenance the patient.
-        // An unknown series key skips silently: a rename must never fail
-        // a submission.
-        const valueWrites = deriveValueEntries(version.definition, result.answers);
-        if (valueWrites.length > 0) {
-          const { rows: seriesRows } = await client.query<{ id: string; key: string }>(
-            `SELECT id, key FROM clinical.value_series WHERE key = ANY($1)`,
-            [valueWrites.map((entry) => entry.seriesKey)],
-          );
-          const seriesByKey = new Map(seriesRows.map((row) => [row.key, row.id]));
-          for (const entry of valueWrites) {
-            const seriesId = seriesByKey.get(entry.seriesKey);
-            if (seriesId === undefined) continue;
-            await client.query(
-              `INSERT INTO clinical.value_entry
-                 (id, series_id, patient_id, value, measured_at, note, entered_by,
-                  on_behalf_of_patient)
-               VALUES ($1, $2, $3, $4, $5, '', $6, false)`,
-              [
-                randomUUID(),
-                seriesId,
-                response.patient_id,
-                entry.value,
-                entry.measuredAt ?? new Date().toISOString().slice(0, 10),
-                patient.userId,
-              ],
-            );
-          }
-        }
-        await writeChangeEvent(client, {
-          actorUserId: patient.userId,
-          actorRealm: 'patient',
-          action: 'survey_response.submit',
-          resourceType: 'survey_response',
-          resourceId: responseId,
-          patientId: response.patient_id,
-          detail: { surveyVersionId: response.survey_version_id },
-        });
-        if (persisted.alertId !== null) {
-          // the PP6 timeline's "raised by rule" entry - the actor is the
-          // submission that caused it, the why lives in the trigger traces
-          await writeChangeEvent(client, {
-            actorUserId: patient.userId,
-            actorRealm: 'patient',
-            action: 'alert.raise',
-            resourceType: 'alert',
-            resourceId: persisted.alertId,
-            patientId: response.patient_id,
-            detail: {
-              severity: maxSeverity(singles.severity, trends.severity),
-              ruleIds: [...singles.fired, ...trends.fired]
-                .filter((fired) => fired.severity !== null)
-                .map((fired) => fired.ruleId),
-            },
-          });
-        }
-        return { status: 'submitted' };
       },
     );
+  }
+
+  /**
+   * Everything a submission does once it is authorised: validate,
+   * store, complete the occurrence, evaluate the effective rule set,
+   * and derive observations and value entries. Shared by the patient's
+   * own submission and a clinician's on-behalf entry - the rules must
+   * fire identically either way, so there is exactly one copy of this.
+   * Only the ACTOR differs, and the actor is what provenance records.
+   */
+  private async finishSubmission(
+    client: pg.ClientBase,
+    actor: FillActor,
+    response: ResponseRow,
+    version: VersionRow,
+    answers: Answers,
+  ): Promise<object> {
+    const onBehalf = actor.realm === 'staff';
+    const responseId = response.id;
+    const result = validateSubmission(version.definition, answers);
+    if (!result.ok) {
+      throw new BadRequestException({ status: 'invalid_answers', errors: result.errors });
+    }
+    await client.query(
+      `UPDATE clinical.survey_response
+            SET answers = $2, status = 'submitted', submitted_at = now(), updated_at = now()
+          WHERE id = $1`,
+      [responseId, JSON.stringify(result.answers)],
+    );
+    if (response.activity_id !== null) {
+      // completes the occurrence; self-guarding SECURITY DEFINER since
+      // the patient realm holds no UPDATE on clinical.activity
+      await client.query(`SELECT app.complete_survey_occurrence($1)`, [response.activity_id]);
+    }
+    // WP-18/20/22: single-response AND trend evaluation run in the
+    // SAME transaction as the submission, against the treatment's
+    // EFFECTIVE rule set (template + program overrides) - triggers,
+    // alert, notifications and rule-created tasks commit with the
+    // answers or not at all. The patient's reply stays the designed
+    // P12 copy; nothing rule-shaped is returned here.
+    const { rows: overrideRows } = await client.query<{ rule_overrides: ProgramOverrides }>(
+      `SELECT rule_overrides FROM clinical.treatment_survey
+          WHERE treatment_id = $1 AND survey_id = $2`,
+      [response.treatment_id, version.survey_id],
+    );
+    const effective = applyOverrides(version.definition, overrideRows[0]?.rule_overrides ?? {});
+    const singles = evaluateResponse(effective, result.answers);
+    const trends =
+      response.activity_id === null
+        ? { fired: [], severity: null }
+        : evaluateTrends(
+            effective,
+            await this.occurrenceHistory(client, response.activity_id, {
+              responseId,
+              answers: result.answers,
+            }),
+          );
+    const persisted = await persistEvaluation(
+      client,
+      {
+        treatmentId: response.treatment_id,
+        patientId: response.patient_id,
+        surveyVersionId: response.survey_version_id,
+        surveyResponseId: responseId,
+        activityId: response.activity_id,
+        ruleTexts: ruleTextsFromBundles(version.locales),
+      },
+      {
+        fired: [...singles.fired, ...trends.fired],
+        severity: maxSeverity(singles.severity, trends.severity),
+      },
+    );
+    // WP-21: mapped answers land in the symptom register in the same
+    // transaction, source 'survey', provenance = the submitting patient
+    const derived = deriveObservations(version.definition, result.answers);
+    if (derived.length > 0) {
+      const { rows: symptomRows } = await client.query<{ id: string; code: string }>(
+        `SELECT id, code FROM clinical.symptom WHERE active AND code = ANY($1)`,
+        [derived.map((entry) => entry.code)],
+      );
+      const symptomByCode = new Map(symptomRows.map((row) => [row.code, row.id]));
+      for (const entry of derived) {
+        const symptomId = symptomByCode.get(entry.code);
+        if (symptomId === undefined) continue; // unmapped code: skip, never fail a submission
+        await client.query(
+          `INSERT INTO clinical.symptom_observation
+               (id, patient_id, treatment_id, symptom_id, severity, detail, observed_at,
+                source, survey_response_id, entered_by, on_behalf_of_patient)
+             VALUES ($1, $2, $3, $4, $5, $6, current_date, 'survey', $7, $8, $9)`,
+          [
+            randomUUID(),
+            response.patient_id,
+            response.treatment_id,
+            symptomId,
+            entry.severity,
+            JSON.stringify(entry.regions !== undefined ? { regions: entry.regions } : {}),
+            responseId,
+            actor.userId,
+            onBehalf,
+          ],
+        );
+      }
+    }
+    // X8: bound numeric answers land in the patient's value series
+    // in the same transaction - value from the bound question, date
+    // from its date neighbour when present, provenance the patient.
+    // An unknown series key skips silently: a rename must never fail
+    // a submission.
+    const valueWrites = deriveValueEntries(version.definition, result.answers);
+    if (valueWrites.length > 0) {
+      const { rows: seriesRows } = await client.query<{ id: string; key: string }>(
+        `SELECT id, key FROM clinical.value_series WHERE key = ANY($1)`,
+        [valueWrites.map((entry) => entry.seriesKey)],
+      );
+      const seriesByKey = new Map(seriesRows.map((row) => [row.key, row.id]));
+      for (const entry of valueWrites) {
+        const seriesId = seriesByKey.get(entry.seriesKey);
+        if (seriesId === undefined) continue;
+        await client.query(
+          `INSERT INTO clinical.value_entry
+               (id, series_id, patient_id, value, measured_at, note, entered_by,
+                on_behalf_of_patient)
+             VALUES ($1, $2, $3, $4, $5, '', $6, $7)`,
+          [
+            randomUUID(),
+            seriesId,
+            response.patient_id,
+            entry.value,
+            entry.measuredAt ?? new Date().toISOString().slice(0, 10),
+            actor.userId,
+            onBehalf,
+          ],
+        );
+      }
+    }
+    await writeChangeEvent(client, {
+      actorUserId: actor.userId,
+      actorRealm: actor.realm,
+      action: 'survey_response.submit',
+      resourceType: 'survey_response',
+      resourceId: responseId,
+      patientId: response.patient_id,
+      detail: { surveyVersionId: response.survey_version_id },
+    });
+    if (persisted.alertId !== null) {
+      // the PP6 timeline's "raised by rule" entry - the actor is the
+      // submission that caused it, the why lives in the trigger traces
+      await writeChangeEvent(client, {
+        actorUserId: actor.userId,
+        actorRealm: actor.realm,
+        action: 'alert.raise',
+        resourceType: 'alert',
+        resourceId: persisted.alertId,
+        patientId: response.patient_id,
+        detail: {
+          severity: maxSeverity(singles.severity, trends.severity),
+          ruleIds: [...singles.fired, ...trends.fired]
+            .filter((fired) => fired.severity !== null)
+            .map((fired) => fired.ruleId),
+        },
+      });
+    }
+    return { status: 'submitted' };
   }
 
   private async treatmentContext(
@@ -1075,6 +1112,415 @@ export class SurveysService {
         return { responseId };
       },
     );
+  }
+
+  /** The published version bound for this patient x treatment: the
+   * attachment's pin when there is one, otherwise the newest published,
+   * plus the language the fill should speak. */
+  private async resolveBoundVersion(
+    client: pg.ClientBase,
+    surveyId: string,
+    treatmentId: string,
+    patientId: string,
+  ): Promise<
+    | {
+        version_id: string;
+        definition: SurveyDefinition;
+        locales: LocaleBundle[];
+        content_hash: string;
+        language: string | null;
+        locale: string;
+      }
+    | undefined
+  > {
+    const { rows } = await client.query<{
+      version_id: string;
+      definition: SurveyDefinition;
+      locales: LocaleBundle[];
+      content_hash: string;
+      language: string | null;
+      locale: string;
+    }>(
+      `SELECT v.id AS version_id, v.definition, v.locales, v.content_hash,
+              ts.language, p.locale
+         FROM clinical.survey_version v
+         LEFT JOIN clinical.treatment_survey ts
+           ON ts.treatment_id = $2 AND ts.survey_id = v.survey_id AND ts.removed_at IS NULL
+         JOIN identity.patient_account p ON p.id = $3
+        WHERE v.survey_id = $1 AND v.state = 'published'
+          AND v.id = COALESCE(
+            ts.pinned_version_id,
+            (SELECT v2.id FROM clinical.survey_version v2
+              WHERE v2.survey_id = $1 AND v2.state = 'published'
+              ORDER BY v2.version DESC LIMIT 1))`,
+      [surveyId, treatmentId, patientId],
+    );
+    return rows[0];
+  }
+
+  /**
+   * PP "Report" -> "Fill a survey": what this patient's care team may
+   * fill on their behalf right now. Open occurrences first (the common
+   * case - the patient answered by phone or in clinic), then every
+   * attached survey for an ad-hoc entry.
+   */
+  async fillableForPatient(staff: StaffPrincipal, patientId: string): Promise<object[]> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const { rows: treatmentRows } = await client.query<{ id: string }>(
+        `SELECT id FROM clinical.treatment
+          WHERE patient_id = $1 AND state = 'active' AND archived_at IS NULL`,
+        [patientId],
+      );
+      if (treatmentRows.length === 0) {
+        // RLS already hides out-of-care patients; an in-care patient with
+        // no active treatment simply has nothing fillable
+        return [];
+      }
+      const decision = authorize({
+        principal: { userId: staff.userId, role: staff.role },
+        action: 'view',
+        resource: {
+          type: 'survey_assignment',
+          id: patientId,
+          patientId,
+          teamUserIds: [staff.userId],
+        },
+      });
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_assignment.view',
+        resourceType: 'survey_assignment',
+        resourceId: patientId,
+        patientId,
+        decision: decision.decision,
+      });
+      if (decision.decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+
+      const { rows } = await client.query(
+        `SELECT a.id AS activity_id, a.treatment_id, a.occurrence_date::text AS due_date,
+                COALESCE(a.survey_id, sch.survey_id) AS survey_id,
+                s.name AS survey_name, t.name AS treatment_name,
+                (SELECT r.id FROM clinical.survey_response r
+                  WHERE r.activity_id = a.id AND r.status = 'draft') AS draft_id
+           FROM clinical.activity a
+           LEFT JOIN clinical.schedule sch ON sch.id = a.schedule_id
+           JOIN clinical.treatment t ON t.id = a.treatment_id
+           JOIN clinical.survey s ON s.id = COALESCE(a.survey_id, sch.survey_id)
+          WHERE a.patient_id = $1 AND a.kind = 'survey'
+            AND a.status IN ('planned', 'confirmed')
+            AND t.state = 'active' AND t.archived_at IS NULL
+          ORDER BY a.occurrence_date NULLS LAST`,
+        [patientId],
+      );
+      const { rows: adHoc } = await client.query(
+        `SELECT NULL::uuid AS activity_id, ts.treatment_id, NULL::text AS due_date,
+                ts.survey_id, s.name AS survey_name, t.name AS treatment_name,
+                NULL::uuid AS draft_id
+           FROM clinical.treatment_survey ts
+           JOIN clinical.treatment t ON t.id = ts.treatment_id
+           JOIN clinical.survey s ON s.id = ts.survey_id
+          WHERE t.patient_id = $1 AND ts.removed_at IS NULL
+            AND t.state = 'active' AND t.archived_at IS NULL
+          ORDER BY s.name`,
+        [patientId],
+      );
+      return [...rows, ...adHoc] as object[];
+    });
+  }
+
+  /**
+   * Opens (or resumes) a response the clinician fills on the patient's
+   * behalf. The provenance is stamped at creation - on_behalf_by - so a
+   * response can never become on-behalf after the fact, and PP4/PP2/PP3
+   * render "on behalf of patient" from it.
+   */
+  async startOnBehalf(
+    staff: StaffPrincipal,
+    patientId: string,
+    input: { treatmentId: string; surveyId: string; activityId?: string },
+  ): Promise<{ responseId: string }> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const context = await this.treatmentContext(client, input.treatmentId);
+      if (!context || context.patientId !== patientId) {
+        throw new NotFoundException({ status: 'unknown_treatment' });
+      }
+      const decision = authorize({
+        principal: { userId: staff.userId, role: staff.role },
+        action: 'enter_on_behalf_of_patient',
+        resource: {
+          type: 'treatment',
+          id: input.treatmentId,
+          patientId,
+          teamUserIds: context.teamUserIds,
+          leadUserIds: context.leadUserIds,
+        },
+      });
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'treatment.enter_on_behalf_of_patient',
+        resourceType: 'survey_response',
+        resourceId: input.activityId ?? input.treatmentId,
+        patientId,
+        decision: decision.decision,
+      });
+      if (decision.decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+
+      if (input.activityId !== undefined) {
+        const { rows: activityRows } = await client.query<{
+          patient_id: string;
+          treatment_id: string;
+          status: string;
+          survey_id: string | null;
+        }>(
+          `SELECT a.patient_id, a.treatment_id, a.status,
+                  COALESCE(a.survey_id, sch.survey_id) AS survey_id
+             FROM clinical.activity a
+             LEFT JOIN clinical.schedule sch ON sch.id = a.schedule_id
+            WHERE a.id = $1 AND a.kind = 'survey'`,
+          [input.activityId],
+        );
+        const activity = activityRows[0];
+        if (
+          !activity ||
+          activity.patient_id !== patientId ||
+          activity.treatment_id !== input.treatmentId
+        ) {
+          throw new NotFoundException({ status: 'unknown_occurrence' });
+        }
+        if (!['planned', 'confirmed'].includes(activity.status)) {
+          throw new BadRequestException({ status: 'occurrence_closed' });
+        }
+        // the patient may already have a draft open on this occurrence:
+        // it is the same answer sheet, so the clinician continues it
+        // rather than opening a competing one
+        const { rows: existing } = await client.query<{ id: string; status: string }>(
+          `SELECT id, status FROM clinical.survey_response WHERE activity_id = $1`,
+          [input.activityId],
+        );
+        if (existing[0]) {
+          if (existing[0].status !== 'draft') {
+            throw new BadRequestException({ status: 'already_submitted' });
+          }
+          await client.query(
+            `UPDATE clinical.survey_response SET on_behalf_by = $2, updated_at = now()
+              WHERE id = $1`,
+            [existing[0].id, staff.userId],
+          );
+          return { responseId: existing[0].id };
+        }
+      }
+
+      const version = await this.resolveBoundVersion(
+        client,
+        input.surveyId,
+        input.treatmentId,
+        patientId,
+      );
+      if (!version) throw new NotFoundException({ status: 'no_published_version' });
+      if (input.activityId === undefined) {
+        // ad-hoc: one open draft per patient x treatment x version is a
+        // database invariant - resume whichever is open, whoever opened it
+        const { rows: openDraft } = await client.query<{ id: string }>(
+          `SELECT id FROM clinical.survey_response
+            WHERE patient_id = $1 AND treatment_id = $2 AND survey_version_id = $3
+              AND status = 'draft' AND activity_id IS NULL`,
+          [patientId, input.treatmentId, version.version_id],
+        );
+        if (openDraft[0]) {
+          await client.query(
+            `UPDATE clinical.survey_response SET on_behalf_by = $2, updated_at = now()
+              WHERE id = $1`,
+            [openDraft[0].id, staff.userId],
+          );
+          return { responseId: openDraft[0].id };
+        }
+      }
+      const bundle = pickBundle(
+        {
+          id: version.version_id,
+          survey_id: input.surveyId,
+          version: 0,
+          definition: version.definition,
+          locales: version.locales,
+          content_hash: version.content_hash,
+        },
+        version.language ?? version.locale ?? 'en',
+      );
+      const responseId = randomUUID();
+      await client.query(
+        `INSERT INTO clinical.survey_response
+           (id, survey_version_id, treatment_id, patient_id, activity_id, locale,
+            content_hash, on_behalf_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          responseId,
+          version.version_id,
+          input.treatmentId,
+          patientId,
+          input.activityId ?? null,
+          bundle.locale,
+          version.content_hash,
+          staff.userId,
+        ],
+      );
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_response.start',
+        resourceType: 'survey_response',
+        resourceId: responseId,
+        patientId,
+        detail: {
+          surveyId: input.surveyId,
+          activityId: input.activityId ?? null,
+          onBehalfOfPatient: true,
+        },
+      });
+      return { responseId };
+    });
+  }
+
+  /** The on-behalf fill payload. Deliberately the PATIENT view of the
+   * definition: the clinician is recording the patient's answers, and
+   * rule criticality is not part of that conversation (B3). */
+  async responseForFill(staff: StaffPrincipal, responseId: string): Promise<object> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const { response, version } = await this.loadResponse(client, responseId);
+      const decision = authorize({
+        principal: { userId: staff.userId, role: staff.role },
+        action: 'view',
+        resource: {
+          type: 'survey_response',
+          id: responseId,
+          patientId: response.patient_id,
+          careTeamUserIds: [staff.userId],
+        },
+      });
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_response.view',
+        resourceType: 'survey_response',
+        resourceId: responseId,
+        patientId: response.patient_id,
+        decision: decision.decision,
+      });
+      if (decision.decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const bundle =
+        version.locales.find((entry) => entry.locale === response.locale) ?? version.locales[0]!;
+      const { rows: who } = await client.query<{ given_name: string; family_name: string }>(
+        `SELECT given_name, family_name FROM identity.patient_account WHERE id = $1`,
+        [response.patient_id],
+      );
+      return {
+        responseId,
+        status: response.status,
+        locale: response.locale,
+        kind: version.definition.kind ?? 'generic',
+        definition: patientView(version.definition),
+        bundle: patientBundleView(bundle),
+        answers: response.answers,
+        progress: progressOf(version.definition, response.answers),
+        submittedAt: response.submitted_at,
+        patient: who[0] ?? null,
+      };
+    });
+  }
+
+  /** Save-and-resume for an on-behalf fill: the same entry act, still
+   * in progress, so it rides enter_on_behalf_of_patient. */
+  async saveDraftOnBehalf(
+    staff: StaffPrincipal,
+    responseId: string,
+    answers: Answers,
+  ): Promise<object> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const { response, version } = await this.loadResponse(client, responseId);
+      if (response.status !== 'draft') {
+        throw new BadRequestException({ status: 'already_submitted' });
+      }
+      const context = await this.treatmentContext(client, response.treatment_id);
+      const decision = authorize({
+        principal: { userId: staff.userId, role: staff.role },
+        action: 'enter_on_behalf_of_patient',
+        resource: {
+          type: 'treatment',
+          id: response.treatment_id,
+          patientId: response.patient_id,
+          teamUserIds: context?.teamUserIds ?? [],
+          leadUserIds: context?.leadUserIds ?? [],
+        },
+      });
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'treatment.enter_on_behalf_of_patient',
+        resourceType: 'survey_response',
+        resourceId: responseId,
+        patientId: response.patient_id,
+        decision: decision.decision,
+      });
+      if (decision.decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const kept = normaliseDraft(version.definition, answers);
+      await client.query(
+        `UPDATE clinical.survey_response
+            SET answers = $2, on_behalf_by = $3, updated_at = now() WHERE id = $1`,
+        [responseId, JSON.stringify(kept), staff.userId],
+      );
+      return { progress: progressOf(version.definition, kept) };
+    });
+  }
+
+  /**
+   * The on-behalf submission. Same engine, same rules, same alerts as
+   * the patient's own - only the actor differs, and every derived
+   * record carries on_behalf_of_patient so the register never claims
+   * the patient said it themselves.
+   */
+  async submitOnBehalf(
+    staff: StaffPrincipal,
+    responseId: string,
+    answers: Answers,
+  ): Promise<object> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const { response, version } = await this.loadResponse(client, responseId);
+      if (response.status !== 'draft') {
+        throw new BadRequestException({ status: 'already_submitted' });
+      }
+      const decision = authorize({
+        principal: { userId: staff.userId, role: staff.role },
+        action: 'submit_on_behalf_of_patient',
+        resource: {
+          type: 'survey_response',
+          id: responseId,
+          patientId: response.patient_id,
+          careTeamUserIds: [staff.userId],
+        },
+      });
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'survey_response.submit_on_behalf_of_patient',
+        resourceType: 'survey_response',
+        resourceId: responseId,
+        patientId: response.patient_id,
+        decision: decision.decision,
+      });
+      if (decision.decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      await client.query(`UPDATE clinical.survey_response SET on_behalf_by = $2 WHERE id = $1`, [
+        responseId,
+        staff.userId,
+      ]);
+      return this.finishSubmission(
+        client,
+        { realm: 'staff', userId: staff.userId, role: staff.role },
+        response,
+        version,
+        answers,
+      );
+    });
   }
 
   private decideTemplate(

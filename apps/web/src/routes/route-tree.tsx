@@ -42,6 +42,7 @@ import { AdminTeamsPage } from '../admin/teams-page.js';
 import { AdminRolesPage } from '../admin/roles-page.js';
 import { AdminAuditPage } from '../admin/audit-page.js';
 import { ReportingPage } from '../reporting/reporting-page.js';
+import { OnBehalfFillPage } from '../surveys/fill-on-behalf.js';
 
 function Root(): ReactElement {
   const [locale, setLocaleState] = useState<Locale>(() => detectLocale());
@@ -232,6 +233,14 @@ const patientProfileRoute = createRoute({
   path: '/patients/$patientId',
   beforeLoad: requireSession,
   component: () => <ShellPage page={<PatientProfilePage />} />,
+});
+/** On-behalf survey entry (PP "Report"): the patient's own fill screen,
+ * driven by the clinician, under a banner saying exactly that. */
+const onBehalfFillRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/patients/$patientId/fill/$responseId',
+  beforeLoad: requireSession,
+  component: () => <ShellPage page={<OnBehalfFillPage />} />,
 });
 const treatmentsRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -456,6 +465,7 @@ export const routeTree = rootRoute.addChildren([
   resetRoute,
   patientsRoute,
   patientProfileRoute,
+  onBehalfFillRoute,
   treatmentsRoute,
   treatmentDetailRoute,
   calendarRoute,

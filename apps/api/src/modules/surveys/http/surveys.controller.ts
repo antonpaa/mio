@@ -167,6 +167,52 @@ export class StaffSurveysController {
     return this.surveys.patientResponses(staff, patientId);
   }
 
+  // PP "Report" -> "Fill a survey": on-behalf entry, provenance stamped
+  // at creation and carried onto everything the submission derives.
+  @Get('patients/:patientId/fillable')
+  fillable(@CurrentStaff() staff: StaffPrincipal, @Param('patientId') patientId: string) {
+    return this.surveys.fillableForPatient(staff, patientId);
+  }
+
+  @Post('patients/:patientId/responses')
+  @HttpCode(201)
+  startOnBehalf(
+    @CurrentStaff() staff: StaffPrincipal,
+    @Param('patientId') patientId: string,
+    @Body() body: { treatmentId?: string; surveyId?: string; activityId?: string },
+  ) {
+    return this.surveys.startOnBehalf(staff, patientId, {
+      treatmentId: body.treatmentId ?? '',
+      surveyId: body.surveyId ?? '',
+      ...(body.activityId !== undefined ? { activityId: body.activityId } : {}),
+    });
+  }
+
+  @Get('responses/:responseId/fill')
+  responseForFill(@CurrentStaff() staff: StaffPrincipal, @Param('responseId') responseId: string) {
+    return this.surveys.responseForFill(staff, responseId);
+  }
+
+  @Post('responses/:responseId/answers')
+  @HttpCode(200)
+  saveOnBehalf(
+    @CurrentStaff() staff: StaffPrincipal,
+    @Param('responseId') responseId: string,
+    @Body() body: { answers?: Answers },
+  ) {
+    return this.surveys.saveDraftOnBehalf(staff, responseId, body.answers ?? {});
+  }
+
+  @Post('responses/:responseId/submit')
+  @HttpCode(200)
+  submitOnBehalf(
+    @CurrentStaff() staff: StaffPrincipal,
+    @Param('responseId') responseId: string,
+    @Body() body: { answers?: Answers },
+  ) {
+    return this.surveys.submitOnBehalf(staff, responseId, body.answers ?? {});
+  }
+
   @Get('treatments/:treatmentId/surveys')
   assignments(@CurrentStaff() staff: StaffPrincipal, @Param('treatmentId') treatmentId: string) {
     return this.surveys.listAssignments(staff, treatmentId);
