@@ -1,7 +1,16 @@
 import { useState, type ReactElement } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Avatar, Button, EmptyState, ErrorState, ListRow, Skeleton, StatusChip } from '@mio/ui';
+import {
+  Avatar,
+  Button,
+  EmptyState,
+  ErrorState,
+  ListRow,
+  Skeleton,
+  StatusChip,
+  useModalFocus,
+} from '@mio/ui';
 import { postJson, usersQuery, type PatientRow, type StaffRow } from './api.js';
 
 /**
@@ -213,6 +222,7 @@ function UserList({
 /** "+ New user": staff accounts only - patient accounts are created at
  * enrolment by the care side, never from the admin plane. */
 function CreateStaffDialog({ onClose }: { onClose: () => void }): ReactElement {
+  const modalRef = useModalFocus<HTMLDivElement>();
   const intl = useIntl();
   const queryClient = useQueryClient();
   const [email, setEmail] = useState('');
@@ -246,7 +256,7 @@ function CreateStaffDialog({ onClose }: { onClose: () => void }): ReactElement {
         if (event.key === 'Escape') onClose();
       }}
     >
-      <div className="w-full max-w-md rounded-card bg-surface p-6 shadow-raised">
+      <div ref={modalRef} className="w-full max-w-md rounded-card bg-surface p-6 shadow-raised">
         <h2 id="create-staff-title" className="font-display text-lg italic text-ink">
           <FormattedMessage id="admin.createTitle" />
         </h2>
@@ -339,6 +349,7 @@ function ResetLoginDialog({
   target: { realm: 'staff' | 'patient'; id: string; name: string };
   onClose: () => void;
 }): ReactElement {
+  const modalRef = useModalFocus<HTMLDivElement>();
   const intl = useIntl();
   const [password, setPassword] = useState('');
   const [done, setDone] = useState(false);
@@ -358,7 +369,7 @@ function ResetLoginDialog({
         if (event.key === 'Escape') onClose();
       }}
     >
-      <div className="w-full max-w-md rounded-card bg-surface p-6 shadow-raised">
+      <div ref={modalRef} className="w-full max-w-md rounded-card bg-surface p-6 shadow-raised">
         <h2 id="reset-login-title" className="font-display text-lg italic text-ink">
           {intl.formatMessage({ id: 'admin.resetTitle' }, { name: target.name })}
         </h2>

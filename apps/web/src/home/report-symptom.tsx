@@ -1,7 +1,7 @@
 import { useState, type ReactElement } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button, IconSymptoms } from '@mio/ui';
+import { Button, IconSymptoms, useModalFocus } from '@mio/ui';
 import { useLocaleControls } from '../app/locale-context.js';
 
 /**
@@ -35,6 +35,7 @@ function labelOf(row: TaxonomyRow, locale: string): string {
 }
 
 export function ReportSymptom(): ReactElement {
+  const modalRef = useModalFocus<HTMLDivElement>();
   const intl = useIntl();
   const { locale } = useLocaleControls();
   const queryClient = useQueryClient();
@@ -97,7 +98,7 @@ export function ReportSymptom(): ReactElement {
             if (event.key === 'Escape') close();
           }}
         >
-          <div className="w-full max-w-md rounded-card bg-surface p-6 shadow-raised">
+          <div ref={modalRef} className="w-full max-w-md rounded-card bg-surface p-6 shadow-raised">
             <h2 id="selfreport-title" className="font-display text-lg italic text-ink">
               <FormattedMessage id="selfreport.title" />
             </h2>

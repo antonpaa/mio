@@ -1,5 +1,6 @@
-import { useEffect, useRef, type ReactElement, type ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Button } from './button.js';
+import { useModalFocus } from './use-modal-focus.js';
 
 export interface ConfirmDialogProps {
   title: string;
@@ -28,11 +29,10 @@ export function ConfirmDialog({
   onCancel,
   onConfirm,
 }: ConfirmDialogProps): ReactElement {
-  const boxRef = useRef<HTMLDivElement>(null);
-  // Cancel takes initial focus so Enter never destroys anything by default.
-  useEffect(() => {
-    boxRef.current?.querySelector<HTMLElement>('button')?.focus();
-  }, []);
+  // Cancel is the first focusable, so initial focus lands there and
+  // Enter never destroys anything by default; Tab stays inside and
+  // focus returns to the opener on close (WP-31).
+  const boxRef = useModalFocus<HTMLDivElement>();
   return (
     <div
       role="alertdialog"

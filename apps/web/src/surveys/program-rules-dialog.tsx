@@ -10,7 +10,7 @@ import {
   type SurveyDefinition,
   type TrendRule,
 } from '@mio/survey-schema';
-import { Button, ErrorState, Skeleton, StatusChip } from '@mio/ui';
+import { Button, ErrorState, Skeleton, StatusChip, useModalFocus } from '@mio/ui';
 
 /**
  * The program rules panel (WP-22): template rules are defaults; THIS
@@ -118,6 +118,7 @@ export function ProgramRulesDialog({
   surveyName: string;
   onClose: () => void;
 }): ReactElement {
+  const modalRef = useModalFocus<HTMLDivElement>();
   const intl = useIntl();
   const queryClient = useQueryClient();
   // edits overlay the loaded overrides; until the first edit the loaded
@@ -192,7 +193,10 @@ export function ProgramRulesDialog({
         if (event.key === 'Escape') onClose();
       }}
     >
-      <div className="flex max-h-full w-full max-w-2xl flex-col rounded-card bg-surface shadow-raised">
+      <div
+        ref={modalRef}
+        className="flex max-h-full w-full max-w-2xl flex-col rounded-card bg-surface shadow-raised"
+      >
         <header className="border-b border-hairline px-6 py-4">
           <h2 id="program-rules-title" className="font-display text-lg italic text-ink">
             <FormattedMessage id="rules.title" values={{ survey: surveyName }} />

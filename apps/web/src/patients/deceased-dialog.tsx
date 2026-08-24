@@ -1,7 +1,7 @@
 import { useState, type ReactElement } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button } from '@mio/ui';
+import { Button, useModalFocus } from '@mio/ui';
 
 /**
  * WP-29: recording a death is a care decision with total consequences -
@@ -17,6 +17,7 @@ export function MarkDeceasedButton({
   patientId: string;
   patientName: string;
 }): ReactElement {
+  const modalRef = useModalFocus<HTMLDivElement>();
   const intl = useIntl();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -53,7 +54,7 @@ export function MarkDeceasedButton({
             if (event.key === 'Escape') setOpen(false);
           }}
         >
-          <div className="w-full max-w-md rounded-card bg-surface p-6 shadow-raised">
+          <div ref={modalRef} className="w-full max-w-md rounded-card bg-surface p-6 shadow-raised">
             <h2 id="deceased-title" className="font-display text-lg italic text-ink">
               {intl.formatMessage({ id: 'pp.deceasedTitle' }, { name: patientName })}
             </h2>

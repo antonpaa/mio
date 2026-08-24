@@ -8,7 +8,7 @@ import {
   parseDate,
   type ScheduleSegment,
 } from '@mio/schedule';
-import { Button, StatusChip } from '@mio/ui';
+import { Button, StatusChip, useModalFocus } from '@mio/ui';
 
 /**
  * T4: attach a survey to this treatment and send it now, on a date, or on
@@ -49,6 +49,7 @@ export function AssignSurveyDialog({
   onClose: () => void;
   onAssigned: () => void;
 }): ReactElement {
+  const modalRef = useModalFocus<HTMLDivElement>();
   const intl = useIntl();
   const catalog = useQuery({
     queryKey: ['survey-catalog'],
@@ -139,7 +140,10 @@ export function AssignSurveyDialog({
         if (event.key === 'Escape') onClose();
       }}
     >
-      <div className="max-h-full w-full max-w-lg overflow-y-auto rounded-card bg-surface p-6 shadow-raised">
+      <div
+        ref={modalRef}
+        className="max-h-full w-full max-w-lg overflow-y-auto rounded-card bg-surface p-6 shadow-raised"
+      >
         <h2 id="assign-survey-title" className="font-display text-lg italic text-ink">
           <FormattedMessage id="assign.title" />
         </h2>

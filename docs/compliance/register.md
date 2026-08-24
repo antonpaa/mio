@@ -152,6 +152,16 @@ accessibility statement), given likely public-sector customers?
 A defensible claim needs manual audit. The body map and the recurrence editor
 are the two components most likely to fail.
 
+**Engineering position (WP-31).** The keyboard/ARIA contract is now
+verified: dialog focus management shipped and proven live, the body map
+and recurrence editor passed deep keyboard passes
+([`../accessibility/keyboard-pass-2026-08.md`](../accessibility/keyboard-pass-2026-08.md)),
+and the statement's factual skeleton is drafted at
+[`../accessibility/statement.md`](../accessibility/statement.md). What
+remains for a defensible claim is the assistive-technology session with
+real screen-reader users — that, the publication surface and the FI/SV
+statement text stay with this item's owner.
+
 | Owner | Needed by | Status |
 |---|---|---|
 | TBD | Before public-sector sale | 🟡 Open |

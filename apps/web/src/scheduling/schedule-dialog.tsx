@@ -8,7 +8,7 @@ import {
   parseDate,
   type ScheduleSegment,
 } from '@mio/schedule';
-import { Button, StatusChip } from '@mio/ui';
+import { Button, StatusChip, useModalFocus } from '@mio/ui';
 
 /**
  * T3 recurrence dialog. The SAME expander the server materialises with
@@ -44,6 +44,7 @@ export function ScheduleDialog({
   onClose: () => void;
   onCreated: () => void;
 }): ReactElement {
+  const modalRef = useModalFocus<HTMLDivElement>();
   const intl = useIntl();
   const [mode, setMode] = useState<Mode>('once');
   const [title, setTitle] = useState('');
@@ -150,7 +151,10 @@ export function ScheduleDialog({
         if (event.key === 'Escape') onClose();
       }}
     >
-      <div className="max-h-full w-full max-w-lg overflow-y-auto rounded-card bg-surface p-6 shadow-raised">
+      <div
+        ref={modalRef}
+        className="max-h-full w-full max-w-lg overflow-y-auto rounded-card bg-surface p-6 shadow-raised"
+      >
         <h2 id="schedule-dialog-title" className="font-display text-lg italic text-ink">
           <FormattedMessage id="schedule.dialogTitle" />
         </h2>

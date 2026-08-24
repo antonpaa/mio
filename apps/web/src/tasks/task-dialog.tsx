@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState, type ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button } from '@mio/ui';
+import { Button, useModalFocus } from '@mio/ui';
 import { type StaffOption } from './task-model.js';
 
 const inputClass =
@@ -17,6 +17,7 @@ export function TaskDialog({
   onClose: () => void;
   onCreated: () => void;
 }): ReactElement {
+  const modalRef = useModalFocus<HTMLDivElement>();
   const intl = useIntl();
   const [title, setTitle] = useState('');
   const [detail, setDetail] = useState('');
@@ -63,7 +64,7 @@ export function TaskDialog({
         if (event.key === 'Escape') onClose();
       }}
     >
-      <div className="w-full max-w-md rounded-card bg-surface p-6 shadow-raised">
+      <div ref={modalRef} className="w-full max-w-md rounded-card bg-surface p-6 shadow-raised">
         <h2 id="task-dialog-title" className="font-display text-lg italic text-ink">
           <FormattedMessage id="tasks.dialogTitle" />
         </h2>

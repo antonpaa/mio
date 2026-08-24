@@ -8,6 +8,7 @@ export { Button, type ButtonProps, type ButtonVariant } from './components/butto
 export { BodyMap, type BodyMapProps } from './components/body-map.js';
 export { Card, CardHeader } from './components/card.js';
 export { ConfirmDialog, type ConfirmDialogProps } from './components/confirm-dialog.js';
+export { useModalFocus } from './components/use-modal-focus.js';
 export { SeverityChip, StatusChip, type ChipTone, type Severity } from './components/chips.js';
 export {
   IconAudit,

@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useState, type ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button, ErrorState, Skeleton, StatusChip } from '@mio/ui';
+import { Button, ErrorState, Skeleton, StatusChip, useModalFocus } from '@mio/ui';
 
 /**
  * B1: the survey catalog for clinicians - versions with states, usage,
@@ -26,6 +26,7 @@ const inputClass =
   'mt-1.5 w-full rounded-inner border border-border bg-surface px-3 py-2.5 text-sm text-ink';
 
 export function SurveyCatalogPage(): ReactElement {
+  const modalRef = useModalFocus<HTMLDivElement>();
   const intl = useIntl();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -198,7 +199,7 @@ export function SurveyCatalogPage(): ReactElement {
             if (event.key === 'Escape') setDialogOpen(false);
           }}
         >
-          <div className="w-full max-w-md rounded-card bg-surface p-6 shadow-raised">
+          <div ref={modalRef} className="w-full max-w-md rounded-card bg-surface p-6 shadow-raised">
             <h2 id="new-survey-title" className="font-display text-lg italic text-ink">
               <FormattedMessage id="builder.newSurvey" />
             </h2>

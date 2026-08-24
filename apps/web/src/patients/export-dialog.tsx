@@ -1,7 +1,7 @@
 import { useState, type ReactElement } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button } from '@mio/ui';
+import { Button, useModalFocus } from '@mio/ui';
 
 /**
  * PP5: the clinician-side patient data export. It will not move without
@@ -17,6 +17,7 @@ export function ExportDataButton({
   patientId: string;
   patientName: string;
 }): ReactElement {
+  const modalRef = useModalFocus<HTMLDivElement>();
   const intl = useIntl();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState('');
@@ -67,7 +68,7 @@ export function ExportDataButton({
             if (event.key === 'Escape') close();
           }}
         >
-          <div className="w-full max-w-md rounded-card bg-surface p-6 shadow-raised">
+          <div ref={modalRef} className="w-full max-w-md rounded-card bg-surface p-6 shadow-raised">
             <h2 id="export-title" className="font-display text-lg italic text-ink">
               {intl.formatMessage({ id: 'pp.exportTitle' }, { name: patientName })}
             </h2>

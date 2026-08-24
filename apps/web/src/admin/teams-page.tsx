@@ -1,7 +1,7 @@
 import { useState, type ReactElement } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Avatar, Button, Card, EmptyState, ErrorState, Skeleton } from '@mio/ui';
+import { Avatar, Button, Card, EmptyState, ErrorState, Skeleton, useModalFocus } from '@mio/ui';
 import { postJson, teamsQuery, usersQuery, type TeamRow } from './api.js';
 
 /**
@@ -108,6 +108,7 @@ export function AdminTeamsPage(): ReactElement {
 }
 
 function MembershipDialog({ team, onClose }: { team: TeamRow; onClose: () => void }): ReactElement {
+  const modalRef = useModalFocus<HTMLDivElement>();
   const intl = useIntl();
   const queryClient = useQueryClient();
   const users = useQuery(usersQuery);
@@ -134,7 +135,7 @@ function MembershipDialog({ team, onClose }: { team: TeamRow; onClose: () => voi
         if (event.key === 'Escape') onClose();
       }}
     >
-      <div className="w-full max-w-md rounded-card bg-surface p-6 shadow-raised">
+      <div ref={modalRef} className="w-full max-w-md rounded-card bg-surface p-6 shadow-raised">
         <h2 id="membership-title" className="font-display text-lg italic text-ink">
           {team.name}
         </h2>
