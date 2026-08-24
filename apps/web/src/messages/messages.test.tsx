@@ -1,12 +1,14 @@
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactElement } from 'react';
 import axe from 'axe-core';
 import { docFromText } from '@mio/contracts';
 import { routeTree } from '../routes/route-tree.js';
-import { domToDoc } from './composer.js';
+import { Composer, domToDoc } from './composer.js';
+import { IntlProvider } from 'react-intl';
+import { MESSAGES } from '../i18n/messages.js';
 import * as api from '../lib/api.js';
 
 vi.mock('../lib/api.js', () => ({
@@ -225,5 +227,67 @@ describe('the composer DOM walk', () => {
       ],
     });
     expect(JSON.stringify(doc)).not.toContain('onclick');
+  });
+});
+
+function IntlWrap({ children }: { children: ReactElement }): ReactElement {
+  return (
+    <IntlProvider locale="en" messages={MESSAGES.en} defaultLocale="en">
+      {children}
+    </IntlProvider>
+  );
+}
+
+describe('X3 composer persistence', () => {
+  it('keeps unsent text per draft key across unmount and clears on send', async () => {
+    localStorage.clear();
+    const first = render(
+      <IntlWrap>
+        <Composer
+          label="Write"
+          sendLabel="Send"
+          busy={false}
+          draftKey="acc1:t1:message"
+          onSend={async () => {}}
+        />
+      </IntlWrap>,
+    );
+    const box = first.getByRole('textbox');
+    box.innerHTML = '<div>Halfway through a thought</div>';
+    fireEvent.input(box);
+    first.unmount();
+
+    // a fresh mount with the same key restores the text
+    const second = render(
+      <IntlWrap>
+        <Composer
+          label="Write"
+          sendLabel="Send"
+          busy={false}
+          draftKey="acc1:t1:message"
+          onSend={async () => {}}
+        />
+      </IntlWrap>,
+    );
+    expect(second.getByRole('textbox').textContent).toContain('Halfway through a thought');
+
+    // sending clears the stored draft
+    fireEvent.click(second.getByRole('button', { name: 'Send' }));
+    await waitFor(() => {
+      expect(localStorage.getItem('mio.draft.acc1:t1:message')).toBeNull();
+    });
+    second.unmount();
+    const third = render(
+      <IntlWrap>
+        <Composer
+          label="Write"
+          sendLabel="Send"
+          busy={false}
+          draftKey="acc1:t1:message"
+          onSend={async () => {}}
+        />
+      </IntlWrap>,
+    );
+    expect(third.getByRole('textbox').textContent).toBe('');
   });
 });

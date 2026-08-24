@@ -137,7 +137,7 @@ start-now; none blocks Phase 0.
 
 | Gate | Decision | Blocks | Register |
 |---|---|---|---|
-| D1 | Cloud: Azure or GCP | WP-09 (staging deploy) | ADR-0010 |
+| D1 | Cloud: Azure or GCP — **decided 2026-08-24: GCP**, swap to Azure kept possible (see the decision note in ADR-0010) | WP-09 (staging deploy) | ADR-0010 |
 | D2 | P1 — who creates patient accounts | WP-07 final onboarding UI | P1 |
 | D3 | P4 — patient-facing alert posture sign-off | WP-18/P12 dynamic copy | P4 |
 | D4 | P7 — survey→value binding mechanism | that slice of WP-21 | P7 |

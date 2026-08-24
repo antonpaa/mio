@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactElement, type ReactNode } from 'react';
+import { useCallback, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { useIntl } from 'react-intl';
 import {
   parseMessageDoc,
@@ -77,6 +77,74 @@ export function domToDoc(root: HTMLElement): MessageDoc | null {
   return parseMessageDoc({ type: 'doc', content: blocks });
 }
 
+/**
+ * X3: unsent text survives a session timeout, per account+thread. This
+ * is NOT a managed draft feature - plain localStorage of the structured
+ * doc, restored on return, cleared on send. Storage can be absent or
+ * full; every touch is wrapped, and losing it degrades to an empty
+ * composer.
+ */
+function draftStorageKey(draftKey: string): string {
+  return `mio.draft.${draftKey}`;
+}
+
+function readDraft(draftKey: string | undefined): MessageDoc | null {
+  if (draftKey === undefined) return null;
+  try {
+    const raw = localStorage.getItem(draftStorageKey(draftKey));
+    if (raw === null) return null;
+    return parseMessageDoc(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
+function writeDraft(draftKey: string | undefined, doc: MessageDoc | null): void {
+  if (draftKey === undefined) return;
+  try {
+    if (doc === null) localStorage.removeItem(draftStorageKey(draftKey));
+    else localStorage.setItem(draftStorageKey(draftKey), JSON.stringify(doc));
+  } catch {
+    // storage full or blocked - the composer still works, just unsaved
+  }
+}
+
+/** Rebuild editable DOM from the schema - element construction only,
+ * text lands via textContent, so nothing can smuggle markup back in. */
+function inlineNodes(content: MessageText[]): Node[] {
+  return content.map((piece) => {
+    let node: Node = document.createTextNode(piece.text);
+    for (const mark of piece.marks ?? []) {
+      const wrap = document.createElement(mark === 'bold' ? 'strong' : 'em');
+      wrap.appendChild(node);
+      node = wrap;
+    }
+    return node;
+  });
+}
+
+function restoreDocInto(root: HTMLElement, doc: MessageDoc): void {
+  root.innerHTML = '';
+  for (const block of doc.content) {
+    if (block.type === 'paragraph') {
+      const div = document.createElement('div');
+      inlineNodes(block.content).forEach((node) => div.appendChild(node));
+      if (div.childNodes.length === 0) div.appendChild(document.createElement('br'));
+      root.appendChild(div);
+    } else {
+      const list = document.createElement(block.type === 'bullet_list' ? 'ul' : 'ol');
+      for (const item of block.content) {
+        const li = document.createElement('li');
+        for (const paragraph of item.content) {
+          inlineNodes(paragraph.content).forEach((node) => li.appendChild(node));
+        }
+        list.appendChild(li);
+      }
+      root.appendChild(list);
+    }
+  }
+}
+
 function ToolButton({
   label,
   onApply,
@@ -108,6 +176,7 @@ export function Composer({
   tone = 'message',
   onSend,
   busy,
+  draftKey,
 }: {
   label: string;
   sendLabel: string;
@@ -115,14 +184,39 @@ export function Composer({
   tone?: 'message' | 'note';
   onSend: (doc: MessageDoc) => Promise<void>;
   busy: boolean;
+  /** X3: when set, unsent text persists client-side under this key
+   * (account+thread+lane) and is restored on return. */
+  draftKey?: string;
 }): ReactElement {
   const intl = useIntl();
   const editor = useRef<HTMLDivElement | null>(null);
-  const [empty, setEmpty] = useState(true);
+  const [empty, setEmpty] = useState(() => readDraft(draftKey) === null);
+
+  // restore in the ref callback, not an effect: the DOM write happens
+  // exactly once as the editable attaches
+  const attachEditor = useCallback(
+    (node: HTMLDivElement | null): void => {
+      editor.current = node;
+      if (node !== null && node.dataset['restored'] !== '1') {
+        node.dataset['restored'] = '1';
+        const stored = readDraft(draftKey);
+        if (stored !== null) restoreDocInto(node, stored);
+      }
+    },
+    [draftKey],
+  );
+
+  const persist = (): void => {
+    const root = editor.current;
+    if (root === null) return;
+    const hasText = (root.textContent ?? '').trim().length > 0;
+    writeDraft(draftKey, hasText ? domToDoc(root) : null);
+  };
 
   const exec = (command: string): void => {
     editor.current?.focus();
     document.execCommand(command);
+    persist();
   };
   const send = async (): Promise<void> => {
     const root = editor.current;
@@ -132,6 +226,7 @@ export function Composer({
     await onSend(doc);
     root.innerHTML = '';
     setEmpty(true);
+    writeDraft(draftKey, null);
   };
 
   return (
@@ -196,13 +291,16 @@ export function Composer({
           </p>
         ) : null}
         <div
-          ref={editor}
+          ref={attachEditor}
           role="textbox"
           aria-multiline="true"
           aria-label={label}
           contentEditable
           suppressContentEditableWarning
-          onInput={() => setEmpty((editor.current?.textContent ?? '').trim().length === 0)}
+          onInput={() => {
+            setEmpty((editor.current?.textContent ?? '').trim().length === 0);
+            persist();
+          }}
           className="min-h-20 px-3 py-2.5 text-sm leading-relaxed outline-none"
         />
       </div>

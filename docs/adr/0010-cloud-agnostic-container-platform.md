@@ -39,6 +39,17 @@ Rules that keep the choice open:
 
 No Kubernetes in v1. At this scale it is operational cost without benefit.
 
+## Decision on gate D1 (2026-08-24)
+
+**GCP.** The owner selected Google Cloud for dev, staging and production
+(WP-09). The choice is explicitly revisitable — a swap to Azure remains a
+live possibility — so everything this ADR prescribes stays in force: the
+platform surface remains the portable subset (containers, managed
+Postgres, object storage behind our own port, OTel), GCP-only services
+are still adopted one ADR at a time, and the porting cost stays
+concentrated in the thin identity/networking/KMS layer. Terraform modules
+target GCP first; the module boundary is the swap seam.
+
 ## Consequences
 
 - Choosing Azure or GCP later is a Terraform module swap, not a re-architecture.

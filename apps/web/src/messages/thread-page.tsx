@@ -250,6 +250,7 @@ export function MessageThreadPage(): ReactElement {
             })}
             sendLabel={intl.formatMessage({ id: 'messages.send' })}
             tone={realm === 'staff' && lane === 'note' ? 'note' : 'message'}
+            draftKey={`${myId}:${treatmentId}:${realm === 'staff' && lane === 'note' ? 'note' : 'message'}`}
             busy={post.isPending}
             onSend={async (doc) => {
               await post.mutateAsync({ doc, asNote: realm === 'staff' && lane === 'note' });
