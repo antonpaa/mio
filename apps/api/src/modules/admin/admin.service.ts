@@ -126,6 +126,36 @@ export class AdminService {
     });
   }
 
+  /** P1 (decided 2026-08-24): identity creation is administration, for
+   * patients too. The care side ENROLS an existing account into a
+   * treatment; it never creates one. */
+  async createPatient(
+    staff: StaffPrincipal,
+    input: { email?: string; givenName?: string; familyName?: string; locale?: string },
+  ): Promise<object> {
+    if (!input.email?.includes('@') || !input.givenName?.trim() || !input.familyName?.trim()) {
+      throw new BadRequestException({ status: 'invalid_input' });
+    }
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      await this.decideAndLog(client, staff, 'patient_account', 'create', null);
+      const { accountId } = await this.patientOnboarding.createInvite({
+        email: input.email!,
+        givenName: input.givenName!,
+        familyName: input.familyName!,
+        ...(input.locale !== undefined ? { locale: input.locale as 'en' | 'fi' | 'sv' } : {}),
+      });
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'patient_account.create',
+        resourceType: 'patient_account',
+        resourceId: accountId,
+        patientId: accountId,
+      });
+      return { accountId };
+    });
+  }
+
   /** Step-up: the administrator proves their own password again before
    * any credential-affecting change (matrix note on reset_credentials). */
   private async stepUp(

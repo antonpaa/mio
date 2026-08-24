@@ -33,6 +33,16 @@ export class AdminController {
     return this.admin.createStaff(staff, body);
   }
 
+  @Post('patients')
+  @HttpCode(201)
+  createPatient(
+    @CurrentStaff() staff: StaffPrincipal,
+    @Body()
+    body: { email?: string; givenName?: string; familyName?: string; locale?: string },
+  ) {
+    return this.admin.createPatient(staff, body);
+  }
+
   @Post('users/:realm/:id/deactivate')
   @HttpCode(200)
   deactivate(

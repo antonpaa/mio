@@ -163,11 +163,8 @@ export const ROLE_CAPABILITIES: Record<Role, readonly string[]> = {
     "patient_data_export.request",
     "patient_data_export.download",
     "staff_account.view",
-    "patient_account.create",
     "patient_account.mark_deceased",
     "team.view",
-    "team.create",
-    "team.update_membership",
     "audit_log.view_own_access_history",
     "report.view",
     "own_settings.view",
@@ -605,7 +602,6 @@ export const ACTION_GROUPS: Record<string, readonly string[]> = {
     "grp:administrator:any"
   ],
   "patient_account.create": [
-    "grp:treatment_lead:any",
     "grp:administrator:any"
   ],
   "patient_account.deactivate": [
@@ -626,11 +622,9 @@ export const ACTION_GROUPS: Record<string, readonly string[]> = {
     "grp:administrator:any"
   ],
   "team.create": [
-    "grp:treatment_lead:any",
     "grp:administrator:any"
   ],
   "team.update_membership": [
-    "grp:treatment_lead:any",
     "grp:administrator:any"
   ],
   "audit_log.view_own_access_history": [

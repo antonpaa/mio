@@ -146,6 +146,40 @@ describe('A1 users', () => {
     expect(invite).toBeTruthy();
   });
 
+  it('creates a patient account (P1: administration, not care); a lead cannot', async () => {
+    mailer.mails.length = 0;
+    const created = await inject(
+      'POST',
+      '/api/admin/patients',
+      {
+        email: 'uusi.potilas@patient.example',
+        givenName: 'Uusi',
+        familyName: 'Potilas',
+        locale: 'fi',
+      },
+      adminCookie,
+    );
+    expect(created.statusCode).toBe(201);
+    expect(
+      mailer.mails.some(
+        (mail) =>
+          mail.recipient === 'uusi.potilas@patient.example' && mail.kind === 'welcome_invite',
+      ),
+    ).toBe(true);
+
+    const leadTry = await inject(
+      'POST',
+      '/api/admin/patients',
+      { email: 'x@patient.example', givenName: 'X', familyName: 'Y' },
+      leadCookie,
+    );
+    expect(leadTry.statusCode).toBe(403);
+
+    // the same decision tightened identity teams: administration only
+    const leadTeam = await inject('POST', '/api/admin/teams', { name: 'Rogue unit' }, leadCookie);
+    expect(leadTeam.statusCode).toBe(403);
+  });
+
   it('reset-login demands step-up; with it, sessions die and a fresh invite mails', async () => {
     const noStepUp = await inject(
       'POST',

@@ -82,14 +82,14 @@ the action is permitted; `deny` means no path exists.
 | `staff_account.reactivate` | always | — | — | — | **any** |
 | `staff_account.reset_credentials` | always | — | — | — | **any** |
 | `patient_account.view` | always | — | — | — | **any** |
-| `patient_account.create` | always | — | — | **any** | **any** |
+| `patient_account.create` | always | — | — | — | **any** |
 | `patient_account.deactivate` | always | — | — | — | **any** |
 | `patient_account.reactivate` | always | — | — | — | **any** |
 | `patient_account.mark_deceased` | always | — | — | **care relationship** | — |
 | `patient_account.reset_credentials` | always | — | — | — | **any** |
 | `team.view` | never | — | **any** | **any** | **any** |
-| `team.create` | always | — | — | **any** | **any** |
-| `team.update_membership` | always | — | — | **any** | **any** |
+| `team.create` | always | — | — | — | **any** |
+| `team.update_membership` | always | — | — | — | **any** |
 | `audit_log.view_own_access_history` | never | **self** | **self** | **self** | **self** |
 | `audit_log.view_full` | always | — | — | — | **any** |
 | `report.view` | always | — | **team member** | **team member** | — |

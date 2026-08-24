@@ -834,12 +834,14 @@ resources:
         grants:
           patient: deny
           treatment_member: deny
-          treatment_lead: any
+          treatment_lead: deny
           administrator: any
         notes: >-
-          OPEN QUESTION below — granting this to treatment_lead avoids an
-          administrative bottleneck at enrolment, at the cost of widening
-          who can create identities.
+          DECIDED (owner, 2026-08-24): administrators only. Leads are
+          treatment-specific roles, not cross-system administrators;
+          identity creation is administration. The A1 screen creates
+          patient accounts; enrolment on the care side attaches an
+          EXISTING account to a treatment.
       - id: deactivate
         audit: always
         grants:
@@ -897,14 +899,19 @@ resources:
         grants:
           patient: deny
           treatment_member: deny
-          treatment_lead: any
+          treatment_lead: deny
           administrator: any
+        notes: >-
+          Tightened with the P1 decision (2026-08-24): identity teams are
+          administration (A5). Leads compose a TREATMENT's care team
+          (treatment.manage_team, team_lead-scoped) — they do not define
+          the organisation's staff groups.
       - id: update_membership
         audit: always
         grants:
           patient: deny
           treatment_member: deny
-          treatment_lead: any
+          treatment_lead: deny
           administrator: any
 
   # -- Audit, reporting and self-service -----------------------------------
@@ -1037,15 +1044,6 @@ invariants:
 # Mirrored in docs/compliance/register.md.
 # ---------------------------------------------------------------------------
 open_questions:
-  - id: who_creates_patient_accounts
-    question: >
-      Should treatment_lead be able to create patient accounts, or is that
-      administrator-only?
-    tension: >
-      Administrator-only is a cleaner separation of duties but puts an
-      administrator in the enrolment path for every new patient, which is an
-      operational bottleneck in a clinic. Current draft grants it to both.
-
   - id: audit_log_full_access
     question: Who may read the full audit log?
     tension: >
