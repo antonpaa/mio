@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { EmptyState, ErrorState, Skeleton, StatusChip } from '@mio/ui';
 import { auditQuery, type AuditEvent } from './api.js';
+import { useSession } from '../session/session.js';
 
 /**
  * A3, X4-minimised: who viewed or changed what, when. Staff actors by
@@ -13,7 +14,11 @@ import { auditQuery, type AuditEvent } from './api.js';
 
 export function AdminAuditPage(): ReactElement {
   const intl = useIntl();
+  const session = useSession();
   const audit = useQuery(auditQuery);
+  // P2: the auditor sees full names, so the lede must say so - the
+  // initials promise belongs to the (historical) admin rendering only
+  const auditor = session.realm === 'staff' && session.account?.role === 'auditor';
 
   if (audit.isPending) {
     return (
@@ -46,7 +51,7 @@ export function AdminAuditPage(): ReactElement {
           <FormattedMessage id="nav.audit" />
         </h1>
         <p className="mt-1 text-sm text-secondary">
-          <FormattedMessage id="admin.auditLede" />
+          <FormattedMessage id={auditor ? 'admin.auditLedeAuditor' : 'admin.auditLede'} />
         </p>
       </div>
       {audit.data.events.length === 0 ? (

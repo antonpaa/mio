@@ -107,6 +107,31 @@ Symptom: p95 latency alert; Cloud SQL CPU high.
    WP-29 export job is running and consider partitioning as planned
    work, not an incident action.
 
+## Bootstrap the first administrator (break-glass)
+
+A fresh environment has nobody who can sign in, so the very first
+administrator is created from OUTSIDE the system — the one sanctioned
+out-of-band write path (decided 2026-08-24). It needs the **owner**
+database credentials (the migration role, not `mio_app`):
+
+```bash
+cd apps/api
+DATABASE_URL="postgres://<owner>@<host>/<db>" \
+  node --import @swc-node/register/esm-register src/cli/bootstrap-admin.ts \
+  admin@example.org "Given" "Family" fi --base-url https://mio.example
+```
+
+- Prints a `/welcome/<token>` link: single-use, expires in 7 days,
+  deliberately **not** emailed — hand it over on a trusted channel.
+- Re-running for the same email re-invites (new link, old ones
+  dead-lettered); it refuses deactivated accounts and refuses to
+  escalate an existing non-administrator account.
+- The act lands in `audit.change_event` as a system-actor
+  `staff_account.bootstrap` event with `detail.bootstrap = true` —
+  verify it after use; a break-glass act with no trace is an incident.
+- Every later account is created in A1 by that administrator; this
+  command is for empty systems and lockouts only.
+
 ## Secrets rotation
 
 `database-url` (per env) lives in Secret Manager; the services read it

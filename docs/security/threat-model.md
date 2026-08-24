@@ -94,6 +94,10 @@ generated authz artifacts checked for freshness in CI.
 
 ## Accepted risks and open items
 
+- **Email OTP shares a channel with password reset** (register R6): an
+  attacker with mailbox access holds both factors, so sign-in is closer
+  to one strong factor than true 2FA. **Accepted by the owner
+  (2026-08-24)**; passkeys remain the mitigation path.
 - **In-memory rate limit is per instance.** Horizontal scale multiplies
   the window by instance count. Accepted at pilot scale; move the
   counter to Postgres or the LB if instance count grows past a handful.

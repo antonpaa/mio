@@ -8,23 +8,29 @@ release while open. This list is walked, checked and signed per release
 
 ## Blocked on register owners (no release while open)
 
-- [ ] **R1** MDR classification opinion received and folded in — if
-      Class IIa, this checklist is superseded by the QMS release process.
-- [ ] **R2** Finnish Class B registration (THL) filed; Swedish
-      equivalent assessed.
-- [ ] **R4** DPIA performed by the DPO (engineering input:
-      [`dpia-support.md`](dpia-support.md)); controller/processor
-      contracts signed per hospital.
+- [x] **R1** MDR classification — **decided 2026-08-24: not a medical
+      device**. Reopens only if product claims change.
+- [ ] **R2** Class B **decided 2026-08-24** (no Kanta); the THL
+      registration **filing** remains to be made.
+- [ ] **R4** DPIA — in scope of work outside tracked development
+      (engineering input: [`dpia-support.md`](dpia-support.md));
+      controller/processor contracts per hospital.
 - [ ] **R5** Statutory retention periods entered in
-      `audit.retention_policy` (one row per class; NULL = still open).
-- [ ] **R12** External penetration test performed against the threat
-      model; findings closed or accepted with owners.
-- [ ] **R7** Assistive-technology audit session done; accessibility
-      statement published in-product in EN/FI/SV.
+      `audit.retention_policy` — approach confirmed 2026-08-24 (hold
+      everything); periods come from profession specialists.
+- [ ] **R12** External penetration test — provider decided (external,
+      untracked here); performed with findings closed or accepted.
+- [x] **R7** Accessibility statement — **decided 2026-08-24: not
+      required** (private-sector only). Engineering passes stay in CI.
 - [ ] Final terms of use and privacy notice content approved
       (`CURRENT_TERMS_VERSION` bumped; re-acceptance flow fires).
-- [ ] **R11** only if QLQ-C30 ships: EORTC agreement signed, official
-      FI/SV forms loaded read-only.
+- [x] **R11** Licensed instruments — **decided 2026-08-24: none ship in
+      the platform**; instruments are authored by the adopting
+      organisation, which owns validity and licensing at build time.
+- [x] **R3/R8/R9** decided 2026-08-24: no Swedish deployment (SV locale
+      serves Finland); GCP Hamina, EU-only residency (DPAs pending as an
+      administrative step); NIS2 carried by the adopting enterprise with
+      Mio's supplier material.
 
 ## Engineering — done, re-verify per release
 

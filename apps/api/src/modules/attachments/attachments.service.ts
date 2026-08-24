@@ -234,7 +234,7 @@ export class AttachmentsService {
   async fetch(
     principal: {
       userId: string;
-      role: 'patient' | 'treatment_member' | 'treatment_lead' | 'administrator';
+      role: 'patient' | 'treatment_member' | 'treatment_lead' | 'administrator' | 'auditor';
       realm: 'patient' | 'staff';
     },
     attachmentId: string,

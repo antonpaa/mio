@@ -26,7 +26,7 @@ import {
  * event text, patients as initials.
  */
 
-const STAFF_ROLES = ['treatment_member', 'treatment_lead', 'administrator'] as const;
+const STAFF_ROLES = ['treatment_member', 'treatment_lead', 'administrator', 'auditor'] as const;
 type StaffRole = (typeof STAFF_ROLES)[number];
 
 @Injectable()
@@ -121,6 +121,36 @@ export class AdminService {
         resourceId: accountId,
         patientId: null,
         detail: { role: input.role },
+      });
+      return { accountId };
+    });
+  }
+
+  /** P1 (decided 2026-08-24): identity creation is administration, for
+   * patients too. The care side ENROLS an existing account into a
+   * treatment; it never creates one. */
+  async createPatient(
+    staff: StaffPrincipal,
+    input: { email?: string; givenName?: string; familyName?: string; locale?: string },
+  ): Promise<object> {
+    if (!input.email?.includes('@') || !input.givenName?.trim() || !input.familyName?.trim()) {
+      throw new BadRequestException({ status: 'invalid_input' });
+    }
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      await this.decideAndLog(client, staff, 'patient_account', 'create', null);
+      const { accountId } = await this.patientOnboarding.createInvite({
+        email: input.email!,
+        givenName: input.givenName!,
+        familyName: input.familyName!,
+        ...(input.locale !== undefined ? { locale: input.locale as 'en' | 'fi' | 'sv' } : {}),
+      });
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'patient_account.create',
+        resourceType: 'patient_account',
+        resourceId: accountId,
+        patientId: accountId,
       });
       return { accountId };
     });
@@ -354,12 +384,15 @@ export class AdminService {
   }
 
   /**
-   * A3, X4-minimised: generic event text (action + resource reference),
-   * actors by name (staff identity is not secret to the administrator),
-   * SUBJECTS AS INITIALS - the audit plane shows that patient P.V. was
-   * read, never who P.V. is beyond that.
+   * A3 (P2 decided 2026-08-24): the FULL log belongs to the dedicated
+   * auditor role, and oversight is the role's purpose - so the auditor
+   * sees full patient identities. The X4-minimised rendering (subjects
+   * as initials) remains the shape for any OTHER role the matrix might
+   * ever grant a log view to; today the matrix grants view_full to the
+   * auditor alone, and every view is itself audited.
    */
   async auditLog(staff: StaffPrincipal, limit: number): Promise<object> {
+    const fullIdentities = staff.role === 'auditor';
     return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
       await this.decideAndLog(client, staff, 'audit_log', 'view_full', null);
       const capped = Math.min(Math.max(limit, 1), 500);
@@ -406,7 +439,12 @@ export class AdminService {
           patientIds,
         ]);
         for (const row of patientRows) {
-          initials.set(row.id, `${row.given_name.slice(0, 1)}.${row.family_name.slice(0, 1)}.`);
+          initials.set(
+            row.id,
+            fullIdentities
+              ? `${row.given_name} ${row.family_name}`
+              : `${row.given_name.slice(0, 1)}.${row.family_name.slice(0, 1)}.`,
+          );
         }
       }
       return {

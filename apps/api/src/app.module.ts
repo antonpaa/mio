@@ -13,6 +13,7 @@ import { NotificationsModule } from './modules/notifications/index.js';
 import { SelfServiceModule } from './modules/selfservice/index.js';
 import { AttachmentsModule } from './modules/attachments/index.js';
 import { AdminModule } from './modules/admin/index.js';
+import { ReportingModule } from './modules/reporting/index.js';
 
 /**
  * The modular monolith root (ADR-0002). Every domain module registers here
@@ -35,6 +36,7 @@ import { AdminModule } from './modules/admin/index.js';
     SelfServiceModule,
     AttachmentsModule,
     AdminModule,
+    ReportingModule,
   ],
 })
 export class AppModule {}

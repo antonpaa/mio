@@ -110,22 +110,33 @@ export function generateWorld(profileName: 'demo' | 'perf', seed: number): Synth
   for (let i = 0; i < profile.staff; i++) {
     const person = makePerson(rng);
     const isAdmin = i < profile.administrators;
-    const isLead = !isAdmin && i < profile.administrators + Math.ceil(profile.staff * 0.18);
+    // one auditor per world (P2): the oversight role exists everywhere
+    const isAuditor = !isAdmin && i === profile.administrators;
+    const isLead =
+      !isAdmin && !isAuditor && i < profile.administrators + 1 + Math.ceil(profile.staff * 0.18);
     staff.push({
       id: syntheticId('staff', i),
       givenName: person.givenName,
       familyName: person.familyName,
       email: `${normalizeEmailLocal(person.givenName, person.familyName)}.${i}@staff.example`,
-      role: isAdmin ? 'administrator' : isLead ? 'treatment_lead' : 'treatment_member',
+      role: isAdmin
+        ? 'administrator'
+        : isAuditor
+          ? 'auditor'
+          : isLead
+            ? 'treatment_lead'
+            : 'treatment_member',
       title: isAdmin
         ? 'Administrator'
-        : isLead
-          ? pick(rng, ['Oncologist', 'Chief physician', 'Urologist'] as const)
-          : pick(rng, ['Nurse', 'Care coordinator', 'Physiotherapist', 'Resident'] as const),
+        : isAuditor
+          ? 'Auditor'
+          : isLead
+            ? pick(rng, ['Oncologist', 'Chief physician', 'Urologist'] as const)
+            : pick(rng, ['Nurse', 'Care coordinator', 'Physiotherapist', 'Resident'] as const),
       locale: person.locale,
     });
   }
-  const clinicians = staff.filter((s) => s.role !== 'administrator');
+  const clinicians = staff.filter((s) => s.role !== 'administrator' && s.role !== 'auditor');
   const leads = staff.filter((s) => s.role === 'treatment_lead');
 
   // --- teams -------------------------------------------------------------

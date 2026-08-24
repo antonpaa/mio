@@ -20,7 +20,7 @@ import { postJson, usersQuery, type PatientRow, type StaffRow } from './api.js';
  * password again (step-up), and everything here lands in the audit log.
  */
 
-const STAFF_ROLES = ['treatment_member', 'treatment_lead', 'administrator'] as const;
+const STAFF_ROLES = ['treatment_member', 'treatment_lead', 'administrator', 'auditor'] as const;
 const STATUS_TONE = { invited: 'amber', active: 'teal', deactivated: 'neutral' } as const;
 
 type Tab = 'staff' | 'patients';
@@ -221,24 +221,30 @@ function UserList({
 
 /** "+ New user": staff accounts only - patient accounts are created at
  * enrolment by the care side, never from the admin plane. */
+/** P1 (2026-08-24): identity creation is administration for BOTH
+ * realms - the care side enrols existing accounts, never creates them. */
 function CreateStaffDialog({ onClose }: { onClose: () => void }): ReactElement {
   const modalRef = useModalFocus<HTMLDivElement>();
   const intl = useIntl();
   const queryClient = useQueryClient();
+  const [realm, setRealm] = useState<'staff' | 'patient'>('staff');
   const [email, setEmail] = useState('');
   const [givenName, setGivenName] = useState('');
   const [familyName, setFamilyName] = useState('');
   const [role, setRole] = useState<(typeof STAFF_ROLES)[number]>('treatment_member');
   const [title, setTitle] = useState('');
+  const [locale, setLocale] = useState('fi');
   const create = useMutation({
     mutationFn: () =>
-      postJson('/api/admin/staff', {
-        email,
-        givenName,
-        familyName,
-        role,
-        ...(title.trim() ? { title } : {}),
-      }),
+      realm === 'staff'
+        ? postJson('/api/admin/staff', {
+            email,
+            givenName,
+            familyName,
+            role,
+            ...(title.trim() ? { title } : {}),
+          })
+        : postJson('/api/admin/patients', { email, givenName, familyName, locale }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       onClose();
@@ -263,6 +269,23 @@ function CreateStaffDialog({ onClose }: { onClose: () => void }): ReactElement {
         <p className="mt-1 text-xs text-muted">
           <FormattedMessage id="admin.createLede" />
         </p>
+        <div className="mt-3 flex gap-1.5">
+          {(['staff', 'patient'] as const).map((option) => (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={realm === option}
+              onClick={() => setRealm(option)}
+              className={`rounded-pill border px-3.5 py-1.5 text-sm transition-colors ${
+                realm === option
+                  ? 'border-teal bg-teal-tint font-medium text-teal'
+                  : 'border-border bg-surface text-secondary hover:bg-surface-sunken hover:text-ink'
+              }`}
+            >
+              {intl.formatMessage({ id: `admin.realm.${option}` })}
+            </button>
+          ))}
+        </div>
         <label className="mt-4 block text-sm font-medium text-ink-strong-secondary">
           <FormattedMessage id="admin.field.email" />
           <input
@@ -290,32 +313,49 @@ function CreateStaffDialog({ onClose }: { onClose: () => void }): ReactElement {
             />
           </label>
         </div>
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <label className="block text-sm font-medium text-ink-strong-secondary">
-            <FormattedMessage id="admin.field.role" />
+        {realm === 'staff' ? (
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <label className="block text-sm font-medium text-ink-strong-secondary">
+              <FormattedMessage id="admin.field.role" />
+              <select
+                className={field}
+                value={role}
+                onChange={(event) =>
+                  setRole(event.currentTarget.value as (typeof STAFF_ROLES)[number])
+                }
+              >
+                {STAFF_ROLES.map((option) => (
+                  <option key={option} value={option}>
+                    {intl.formatMessage({ id: `admin.role.${option}` })}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm font-medium text-ink-strong-secondary">
+              <FormattedMessage id="admin.field.title" />
+              <input
+                className={field}
+                value={title}
+                onChange={(event) => setTitle(event.currentTarget.value)}
+              />
+            </label>
+          </div>
+        ) : (
+          <label className="mt-3 block text-sm font-medium text-ink-strong-secondary">
+            <FormattedMessage id="admin.field.locale" />
             <select
               className={field}
-              value={role}
-              onChange={(event) =>
-                setRole(event.currentTarget.value as (typeof STAFF_ROLES)[number])
-              }
+              value={locale}
+              onChange={(event) => setLocale(event.currentTarget.value)}
             >
-              {STAFF_ROLES.map((option) => (
+              {(['fi', 'sv', 'en'] as const).map((option) => (
                 <option key={option} value={option}>
-                  {intl.formatMessage({ id: `admin.role.${option}` })}
+                  {option.toUpperCase()}
                 </option>
               ))}
             </select>
           </label>
-          <label className="block text-sm font-medium text-ink-strong-secondary">
-            <FormattedMessage id="admin.field.title" />
-            <input
-              className={field}
-              value={title}
-              onChange={(event) => setTitle(event.currentTarget.value)}
-            />
-          </label>
-        </div>
+        )}
         {create.isError ? (
           <p className="mt-3 text-sm text-red" role="alert">
             <FormattedMessage id="admin.createFailed" />

@@ -77,19 +77,25 @@ const CLINICIAN_ITEMS: ShellItem[] = [
   { labelId: 'nav.surveys', href: '/surveys', capability: 'survey_template.view' },
   { labelId: 'nav.treatments', href: '/treatments', capability: 'treatment.view' },
   { labelId: 'nav.tasks', href: '/tasks', capability: 'task.view' },
+  // A4 lives here, not in admin (P8 decided 2026-08-24): the metrics
+  // are clinical aggregates, so the nav follows report.view
+  { labelId: 'nav.reporting', href: '/reporting', capability: 'report.view' },
 ];
+
+/** P2: the auditor's whole surface is the audit log. */
+const AUDITOR_ITEMS: ShellItem[] = [{ labelId: 'nav.audit', href: '/' }];
 
 const ADMIN_ITEMS: ShellItem[] = [
   { labelId: 'nav.users', href: '/', capability: 'staff_account.create' },
   { labelId: 'nav.teams', href: '/teams', capability: 'team.create' },
   { labelId: 'nav.roles', href: '/roles' },
   { labelId: 'nav.audit', href: '/audit', capability: 'audit_log.view_full' },
-  { labelId: 'nav.reporting', href: '/reporting' },
 ];
 
 function shellFor(role: Role): { variant: 'patient' | 'clinician' | 'admin'; items: ShellItem[] } {
   if (role === 'patient') return { variant: 'patient', items: PATIENT_ITEMS };
   if (role === 'administrator') return { variant: 'admin', items: ADMIN_ITEMS };
+  if (role === 'auditor') return { variant: 'admin', items: AUDITOR_ITEMS };
   return { variant: 'clinician', items: CLINICIAN_ITEMS };
 }
 

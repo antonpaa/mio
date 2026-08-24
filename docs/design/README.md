@@ -72,6 +72,7 @@ implementation start except X1 for the affected copy.
 | X9 | **MFA cadence**: L2 places the email code inside every sign-in. Spec agrees for v1 (no trusted-device memory designed). | **Resolved (owner, 2026-08-24) as recommended**: no change; passkeys remain the fast-follow. |
 | X10 | **Icon language** (owner-requested, 2026-08-23): the canvases show text-only nav and card headers — no icon system exists beyond the bell, trend arrows and the logo mark. The owner asked for icons where they aid scanning, deliberately *not* the stock-icon-library look. | Implemented as **print-registration icons**: hand-drawn stroke glyphs in `@mio/ui` (no icon dependency, ADR-0009), each carrying the logo's light circle as a tinted layer that rests misregistered low-left — like the lockup — and slides into register on hover/focus and on the current nav page (motion respects `prefers-reduced-motion`). Applied to primary nav (all three shells), the bell, and card headers. Decorative only: always `aria-hidden`, labels stay the accessible name. **Owner approved 2026-08-24 ("until further note").** |
 | X11 | **A-plane deltas from the build (WP-28, 2026-08-24)**: (a) A5 team cards say "used in 18 treatments", but treatment attachment lives in `clinical.*`, which the admin plane cannot read by construction — the count has no lawful source. (b) A1 rows carry a generic "Edit"; v1 identity administration is lifecycle + credential reset (deactivate/reactivate/reset login), with no free-form identity editor. (c) A2's canvas shows a summarised capability grid; the owner-confirmed principle (roles rendered *from* the matrix) makes the build render the full generated capability table instead. | Implemented per the constraints: team cards show member count only; A1 actions are reset login / deactivate / reactivate; A2 renders every generated capability grouped by resource, ✓/· per role. Canvas updates to follow at next sync — or the owner overrules and the deltas become work items. |
+| X12 | **A4 reporting shell placement** (gate P8): the canvas draws A4 inside the administration shell, but its metrics (response rates, open alerts, acknowledge times) are clinical aggregates, and `report.view` is denied to administrators by the same principle that denies them `patient_clinical_profile.view`. | **Resolved (owner, 2026-08-24): "move it" — implemented.** A4 lives in the clinician shell (nav "Reporting", `report.view`-gated), scoped to the caller's own treatments and aggregated in-database; administrators and auditors get no route to it. Canvas moves the screen at next sync. |
 
 ## Open questions the design answers (pending confirmation)
 
@@ -82,13 +83,18 @@ implementation start except X1 for the affected copy.
   takes a closer look. They may contact you today", P12), and a rule author may
   send the patient an authored custom notification (B7). **Owner confirmed the position 2026-08-24.** Clinical sign-off
   still to be scheduled, but the product direction is settled.
-- **P2 — audit log access.** A3 shows administrators reading the audit log
-  with subjects minimised to initials and (per X4) generic event text. The
-  dedicated-auditor-role question stays open; the display posture is decided.
-- **P3 — who authors surveys and rules.** A2's role matrix bundles "manage
-  treatments, templates, surveys & rules" into Treatment Lead, matching the
-  capability matrix's current draft. The dedicated-author question stays open
-  but the default is confirmed.
+- **P2 — audit log access. Decided (owner, 2026-08-24): a dedicated
+  Auditor role.** The full audit log moves from administrators to a new
+  auditor staff role that is "able to actually see the data" — full
+  patient identities, because oversight is its purpose. The admin plane
+  keeps no full-log view; A3's X4-minimised rendering becomes the
+  auditor's screen with names unmasked for that role.
+- **P3 — who authors surveys and rules. Decided (owner, 2026-08-24):
+  keep bundled with Treatment Lead.** The capability separation already
+  exists in the matrix (survey_template.*, configure_program_rules are
+  their own actions), so narrowing authorship to a dedicated role later
+  is a grants edit plus regeneration, not a build — nothing to regret
+  now.
 
 ## Rhythm with the canvases
 
