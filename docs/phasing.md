@@ -138,13 +138,13 @@ start-now; none blocks Phase 0.
 | Gate | Decision | Blocks | Register |
 |---|---|---|---|
 | D1 | Cloud: Azure or GCP — **decided 2026-08-24: GCP**, swap to Azure kept possible (see the decision note in ADR-0010) | WP-09 (staging deploy) | ADR-0010 |
-| D2 | P1 — who creates patient accounts | WP-07 final onboarding UI | P1 |
-| D3 | P4 — patient-facing alert posture sign-off | WP-18/P12 dynamic copy | P4 |
-| D4 | P7 — survey→value binding mechanism | that slice of WP-21 | P7 |
-| D5 | P8 — reporting placement | A4 slice of WP-28 | P8 |
+| D2 | P1 — who creates patient accounts — **decided 2026-08-24: administrators only** (leads are treatment-specific roles) | WP-07 final onboarding UI | P1 |
+| D3 | P4 — patient-facing alert posture — **owner confirmed 2026-08-24: patients never see severities** | WP-18/P12 dynamic copy | P4 |
+| D4 | P7 — survey→value binding — **decided 2026-08-24: explicit per-question binding (X8), shipped** | that slice of WP-21 | P7 |
+| D5 | P8 — reporting placement — **decided 2026-08-24: clinical side**, not the admin shell (admins cannot read the aggregates) | A4 slice of WP-28 | P8 |
 | D6 | X5 — *kysely* vs *lomake* | FI translation pass (continuous) | X5 |
-| D7 | R1 — MDR classification engagement | **starts now**; gates release, revisited at M3 | R1 |
-| D8 | R11 — EORTC agreement | QLQ-C30 in catalog | R11 |
+| D7 | R1 — MDR classification — **decided 2026-08-24: not a medical device** (reopens if claims change) | release | R1 |
+| D8 | R11 — **decided 2026-08-24: no licensed instruments ship**; authoring organisations own validity at build time | — | R11 |
 | D9 | Glossary native clinical review | translation freeze before M4 | Glossary |
 
 ## Parallel lanes

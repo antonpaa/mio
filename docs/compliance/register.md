@@ -17,7 +17,7 @@ relevant subsystem ships; ⚪ track only
 
 ---
 
-## R1 🔴 EU MDR 2017/745 classification
+## R1 ✅ EU MDR 2017/745 classification — decided: not a medical device
 
 **Question.** Is Mio a medical device, and at what class?
 
@@ -40,13 +40,21 @@ the *architecture* from a late Class IIa finding. It does not protect the
 engineering discipline compresses. This has external lead time and should be
 started before build, not alongside it.
 
+**Owner decision (2026-08-24): Mio is not a medical device.** The
+62304-shaped discipline (traceability, evaluation traces, SOUP
+inventory, change control) stays as engineering practice — it was built
+in and costs little to keep — but no QMS, clinical evaluation or
+notified body follows. If the product's claims ever change toward
+diagnosis or therapy decisions, this item reopens before that change
+ships.
+
 | Owner | Needed by | Status |
 |---|---|---|
-| TBD — regulatory advisor | Before alert engine build begins | 🔴 Open |
+| Product owner | — | ✅ Decided 2026-08-24 |
 
 ---
 
-## R2 🟠 Finnish system classification — asiakastietolaki (703/2023)
+## R2 ✅ Finnish system classification — decided: Class B
 
 **Question.** Is Mio a Class A or Class B client and patient data system, and
 what registration and self-declaration obligations follow?
@@ -59,13 +67,19 @@ than accredited certification. Requires confirmation.
 with certification and an information security assessment by an accredited body.
 Out of scope for v1 but it should be a conscious exclusion, not an oversight.
 
+**Owner decision (2026-08-24): Class B — no Kanta connection.** Kanta
+integration is a conceivable future extension but explicitly not on the
+roadmap; if it ever is, this item reopens as a Class A question before
+that work starts. The THL registration filing itself remains an
+administrative step before go-live (release checklist).
+
 | Owner | Needed by | Status |
 |---|---|---|
-| TBD | Before go-live in Finland | 🟠 Open |
+| Product owner | Filing before go-live | ✅ Decided 2026-08-24 (filing pending) |
 
 ---
 
-## R3 🟠 Swedish requirements — Patientdatalagen (2008:355)
+## R3 ✅ Swedish requirements — decided: no Swedish deployment planned
 
 **Question.** What does Patientdatalagen, with Socialstyrelsen's HSLF-FS
 2016:40, require of Mio for Swedish deployment?
@@ -80,9 +94,15 @@ translation. The `AuthenticationProvider` interface
 exists so this is an addition rather than a rewrite — but it is still work that
 must be scheduled rather than discovered.
 
+**Owner decision (2026-08-24): not deployed in Sweden.** The Swedish
+locale exists for Finland's Swedish-speaking users — Finnish and Swedish
+are both official languages in Finland — not for a Swedish market. A
+future Swedish deployment remains theoretically possible; this item
+reopens (e-ID included) before any such plan is made.
+
 | Owner | Needed by | Status |
 |---|---|---|
-| TBD | Before Swedish launch | 🟠 Open |
+| Product owner | Reopens before any Swedish deployment | ✅ Decided 2026-08-24 |
 
 ---
 
@@ -101,9 +121,15 @@ behaviour — in particular who answers a data subject access request and how
 technical measures, rights implementation, residual open items — is
 maintained at [`dpia-support.md`](dpia-support.md) (WP-29).
 
+**Owner decision (2026-08-24): the DPIA is in scope of work conducted
+outside tracked development.** This repository's contribution is the
+support material above, kept current with the code; the assessment
+itself proceeds elsewhere and this item stays open here only as the
+release-blocking checkbox.
+
 | Owner | Needed by | Status |
 |---|---|---|
-| TBD — DPO | Before processing real data | 🟠 Open |
+| Outside tracked development | Before processing real data | 🟠 In progress externally |
 
 ---
 
@@ -122,9 +148,14 @@ class, not a build. Deceased-patient handling (respectful stop of all
 outbound automation, record retained) is implemented; only the "how
 long" is open.
 
+**Owner confirmation (2026-08-24):** the hold-everything default is
+correct for the start. The periods themselves will be worked out
+separately with profession specialists against the data model's
+classes; until then nothing deletes.
+
 | Owner | Needed by | Status |
 |---|---|---|
-| TBD | Before go-live | 🟠 Open |
+| Profession specialists (separate work) | Before go-live | 🟠 Confirmed approach, periods pending |
 
 ---
 
@@ -141,13 +172,16 @@ better patient experience on phones, which is where most patients will be.
 Suomi.fi e-Identification and Swedish BankID in v2. The provider interface is
 already in the design.
 
+**Owner acceptance (2026-08-24):** risk accepted as stated. Also
+recorded in the threat model's accepted-risks section.
+
 | Owner | Needed by | Status |
 |---|---|---|
-| TBD | Reviewed before go-live | 🟠 Accepted, tracked |
+| Product owner | Reviewed at passkey fast-follow | ✅ Accepted 2026-08-24 |
 
 ---
 
-## R7 🟡 Accessibility conformance — WCAG 2.2 AA
+## R7 ✅ Accessibility conformance — decided: no formal statement required
 
 **Question.** Is a formal conformance statement needed (EN 301 549 / an
 accessibility statement), given likely public-sector customers?
@@ -166,13 +200,20 @@ remains for a defensible claim is the assistive-technology session with
 real screen-reader users — that, the publication surface and the FI/SV
 statement text stay with this item's owner.
 
+**Owner decision (2026-08-24): no formal EN 301 549 statement is
+required — customers are private-sector only.** The engineering
+accessibility work (axe in CI, the dialog focus contract, the pass
+records) stays as product quality, not as a conformance claim; the
+statement draft remains internal material. Reopens if a public-sector
+customer ever appears.
+
 | Owner | Needed by | Status |
 |---|---|---|
-| TBD | Before public-sector sale | 🟡 Open |
+| Product owner | Reopens on public-sector interest | ✅ Decided 2026-08-24 |
 
 ---
 
-## R8 🟡 Subprocessors and data residency
+## R8 ✅ Subprocessors and data residency — decided: GCP Hamina, EU only
 
 **Question.** Which subprocessors are permitted, and where may data reside?
 
@@ -183,9 +224,15 @@ clinical content, so exposure there is contact data only — still personal data
 
 Needed: a subprocessor register and a DPA per subprocessor.
 
+**Owner decision (2026-08-24): GCP, Finland region (Hamina —
+`europe-north1`, which the infrastructure already pins); data stays in
+the EU only.** The assumptions above stand confirmed. The subprocessor
+register and per-subprocessor DPAs remain administrative steps before
+go-live.
+
 | Owner | Needed by | Status |
 |---|---|---|
-| TBD | Before go-live | 🟡 Open |
+| Product owner | DPAs before go-live | ✅ Decided 2026-08-24 (DPAs pending) |
 
 ---
 
@@ -194,15 +241,24 @@ Needed: a subprocessor register and a DPA per subprocessor.
 **Question.** Do NIS2 obligations flow down to Mio as a supplier to hospitals,
 which are essential entities?
 
+**Owner position (2026-08-24): somewhat, yes — and the adopting
+enterprise carries it.** Each adopting hospital ensures its NIS2
+compliance the same way it conducts the DPIA; Mio's role is supplier
+support material (threat model, SOUP inventory, runbooks, this
+register), which already exists and stays current.
+
 | Owner | Needed by | Status |
 |---|---|---|
-| TBD | Track | ⚪ Open |
+| Adopting enterprise per deployment | Per adoption | ✅ Positioned 2026-08-24 |
 
 ---
 
 ## R10 ⚪ European Health Data Space
 
 **Question.** What will EHDS require of Mio, and on what timeline?
+
+**Owner position (2026-08-24): genuinely unknown today; researchable at
+a future stage.** Stays parked deliberately.
 
 **Engineering note.** Not a v1 concern. Relevant to how much interoperability
 groundwork is worth laying now — the optional SNOMED CT coded fields on body map
@@ -215,7 +271,7 @@ are cheap insurance of this kind.
 
 ---
 
-## R11 🟠 Licensed survey instruments — EORTC QLQ-C30
+## R11 ✅ Licensed instruments — decided: nothing licensed ships in the platform
 
 **Question.** The designed survey catalog includes *Quality of life (QLQ-30)*
 — the EORTC QLQ-C30. Under what agreement may Mio use it, and what does that
@@ -231,9 +287,19 @@ the builder must be able to mark an instrument read-only.
 **Consequence if unresolved.** QLQ-C30 cannot ship in the catalog; house-built
 surveys are unaffected.
 
+**Owner decision (2026-08-24): instruments are BUILT in the system, not
+hardcoded into it.** A post-treatment follow-up survey of this kind
+(lower-frequency recurrence monitoring — cancers recur) is authored in
+the builder by the adopting organisation, and its validity and any
+licensing are that organisation's responsibility at the moment of
+building. The platform ships no licensed instrument, so no EORTC
+agreement attaches to Mio itself; the shipped synthetic catalog contains
+house-built surveys only (verified). The builder's read-only marking for
+licensed instruments remains a reasonable future aid, not an obligation.
+
 | Owner | Needed by | Status |
 |---|---|---|
-| TBD | Before QLQ-C30 is used with real patients | 🟠 Open |
+| Authoring organisation, at build time | — | ✅ Decided 2026-08-24 |
 
 ---
 
@@ -241,6 +307,10 @@ surveys are unaffected.
 
 **Question.** Who performs the WP-30 penetration test, when, and against
 which environment?
+
+**Owner decision (2026-08-24): an external security-testing provider,
+tracked outside this repository.** The threat model stays the briefing
+document and staging the intended target; findings still land here.
 
 **Engineering position.** The system is ready to be tested: the threat
 model ([`../security/threat-model.md`](../security/threat-model.md)) is

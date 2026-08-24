@@ -82,3 +82,14 @@ the question.
 
 **Defer all regulatory work.** Rejected: traceability and design history cannot
 be reconstructed credibly after the fact.
+
+## Decision arrived (2026-08-24)
+
+The owner determined: **Mio is not a medical device.** The gate this ADR
+was waiting on is closed — no QMS, clinical evaluation or notified body
+follows. The 62304-shaped discipline itself stays as engineering
+practice (it is already built in: traceability, stored evaluation
+traces, the SOUP inventory, change control), both because a clinical
+system warrants it regardless and because it keeps the reopening cost
+low if the product's claims ever move toward diagnosis or therapy
+decisions — the condition under which register item R1 reopens.

@@ -82,13 +82,18 @@ implementation start except X1 for the affected copy.
   takes a closer look. They may contact you today", P12), and a rule author may
   send the patient an authored custom notification (B7). **Owner confirmed the position 2026-08-24.** Clinical sign-off
   still to be scheduled, but the product direction is settled.
-- **P2 — audit log access.** A3 shows administrators reading the audit log
-  with subjects minimised to initials and (per X4) generic event text. The
-  dedicated-auditor-role question stays open; the display posture is decided.
-- **P3 — who authors surveys and rules.** A2's role matrix bundles "manage
-  treatments, templates, surveys & rules" into Treatment Lead, matching the
-  capability matrix's current draft. The dedicated-author question stays open
-  but the default is confirmed.
+- **P2 — audit log access. Decided (owner, 2026-08-24): a dedicated
+  Auditor role.** The full audit log moves from administrators to a new
+  auditor staff role that is "able to actually see the data" — full
+  patient identities, because oversight is its purpose. The admin plane
+  keeps no full-log view; A3's X4-minimised rendering becomes the
+  auditor's screen with names unmasked for that role.
+- **P3 — who authors surveys and rules. Decided (owner, 2026-08-24):
+  keep bundled with Treatment Lead.** The capability separation already
+  exists in the matrix (survey_template.*, configure_program_rules are
+  their own actions), so narrowing authorship to a dedicated role later
+  is a grants edit plus regeneration, not a build — nothing to regret
+  now.
 
 ## Rhythm with the canvases
 

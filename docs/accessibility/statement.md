@@ -1,10 +1,11 @@
 # Accessibility statement (draft — EN 301 549 / WCAG 2.2 AA)
 
-**Status: engineering draft (WP-31).** This is the statement's factual
-skeleton, maintained with the code. Publication — where it appears in
-the product, the FI/SV translations, the feedback contact, and the
-formal conformance wording — is the R7 owner's decision (compliance
-register). Nothing here may be published claiming conformance until the
+**Status: internal quality material.** R7 was decided (owner,
+2026-08-24): customers are private-sector only, so **no formal EN 301
+549 conformance statement is required or published**. This skeleton
+stays as the internal record of the accessibility posture and would
+become the statement's basis if a public-sector customer ever reopens
+R7. Nothing here may be published claiming conformance until the
 assistive-technology session below has happened.
 
 ## Scope
