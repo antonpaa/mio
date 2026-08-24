@@ -156,8 +156,8 @@ export function SignedInShell({ children }: { children: ReactNode }): ReactEleme
       end={
         <div className="flex items-center gap-3">
           {variant === 'clinician' && capabilities.has('alert.view') ? <AlertBell /> : null}
-          {variant === 'patient' && capabilities.has('notification.view') ? (
-            <NotificationBell />
+          {capabilities.has('notification.view') && variant !== 'admin' ? (
+            <NotificationBell realm={variant === 'patient' ? 'patient' : 'staff'} />
           ) : null}
           {variant === 'patient' && capabilities.has('own_settings.update') ? (
             <Link

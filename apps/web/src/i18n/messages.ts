@@ -342,6 +342,10 @@ const en = {
     'Emails only say something is waiting — never health details. Everything you see here stays in Mio.',
   'notifications.empty': 'Nothing here yet.',
   'notifications.newMessage': 'New message — {treatment}',
+  'notifications.staffLede':
+    'Notes a survey rule addressed to your care team. Alerts and tasks have their own places; this is what a rule author wanted you to read.',
+  'notifications.ruleNote': 'From a survey rule',
+  'notifications.aboutPatient': 'About {patient} — {program}',
   'notifications.careTeamNote': 'About your answers',
   'notifications.unreadDot': 'Unread',
   'settings.title': 'Settings',
@@ -1199,6 +1203,10 @@ const fi: Record<MessageId, string> = {
     'Sähköpostit kertovat vain, että jotakin odottaa — eivät koskaan terveystietoja. Kaikki näkemäsi pysyy Miossa.',
   'notifications.empty': 'Ei vielä ilmoituksia.',
   'notifications.newMessage': 'Uusi viesti — {treatment}',
+  'notifications.staffLede':
+    'Kyselysäännön hoitotiimillesi osoittamat viestit. Hälytyksillä ja tehtävillä on omat paikkansa; tämä on se, minkä säännön laatija halusi sinun lukevan.',
+  'notifications.ruleNote': 'Kyselysäännöstä',
+  'notifications.aboutPatient': 'Koskee potilasta {patient} — {program}',
   'notifications.careTeamNote': 'Vastauksistasi',
   'notifications.unreadDot': 'Lukematon',
   'settings.title': 'Asetukset',
@@ -2050,6 +2058,10 @@ const sv: Record<MessageId, string> = {
     'E-post berättar bara att något väntar — aldrig hälsouppgifter. Allt du ser här stannar i Mio.',
   'notifications.empty': 'Inga aviseringar ännu.',
   'notifications.newMessage': 'Nytt meddelande — {treatment}',
+  'notifications.staffLede':
+    'Meddelanden som en enkätregel riktade till ditt vårdteam. Larm och uppgifter har sina egna platser; det här är vad regelförfattaren ville att du skulle läsa.',
+  'notifications.ruleNote': 'Från en enkätregel',
+  'notifications.aboutPatient': 'Gäller {patient} — {program}',
   'notifications.careTeamNote': 'Om dina svar',
   'notifications.unreadDot': 'Oläst',
   'settings.title': 'Inställningar',

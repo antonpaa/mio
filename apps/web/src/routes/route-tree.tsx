@@ -341,14 +341,23 @@ const messageThreadRoute = createRoute({
   component: () => <ShellPage page={<MessageThreadPage />} />,
 });
 
-/** P11 and the P8 slice are patient surfaces; staff land on the shared
- * placeholder until WP-27 gives them a centre of their own. */
+/** Both realms have a centre now: the patient's own (P11) and the staff
+ * one, where a B7 rule's team-addressed notification lands. The admin
+ * plane has neither - it holds no notification capability. */
 function NotificationsIndex(): ReactElement {
   const session = useSession();
   if (session.loading || !session.account) return <Splash />;
+  const role = (session.realm === 'patient' ? 'patient' : session.account.role) as Role;
+  const may = ROLE_CAPABILITIES[role]?.includes('notification.view') ?? false;
   return (
     <SignedInShell>
-      {session.realm === 'patient' ? <NotificationsPage /> : <PlaceholderHome />}
+      {!may ? (
+        <PlaceholderHome />
+      ) : session.realm === 'patient' ? (
+        <NotificationsPage />
+      ) : (
+        <NotificationsPage realm="staff" />
+      )}
     </SignedInShell>
   );
 }
