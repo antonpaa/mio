@@ -144,6 +144,12 @@ export interface Question {
   /** symptom-register mapping (WP-21). Clinician configuration -
    * stripped by patientView(). */
   symptomMap?: SymptomMap;
+  /** X8: this numeric answer writes a value_entry into the patient's
+   * series with this key; dateQuestionId optionally supplies the
+   * measurement date from a date answer in the same response (the PSA
+   * case: value from one question, lab date from its neighbour).
+   * Clinician configuration - stripped by patientView(). */
+  valueBinding?: { seriesKey: string; dateQuestionId?: string };
   /** nested follow-ups - each carries its own condition, usually on the parent */
   followUps?: Question[];
 }

@@ -18,6 +18,49 @@ export interface DerivedObservation {
   regions?: string[];
 }
 
+/** X8: a numeric answer bound to a value series becomes a value_entry
+ * in the same transaction as the submission. */
+export interface DerivedValueEntry {
+  questionId: string;
+  seriesKey: string;
+  value: number;
+  /** ISO date from the bound date question, when answered and visible */
+  measuredAt?: string;
+}
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+export function deriveValueEntries(
+  definition: SurveyDefinition,
+  answers: Answers,
+): DerivedValueEntry[] {
+  const visible = visibleQuestions(definition, answers);
+  const out: DerivedValueEntry[] = [];
+  for (const question of visible) {
+    const binding = question.valueBinding;
+    if (binding === undefined) continue;
+    const answer = answers[question.id];
+    if (typeof answer !== 'number' || !Number.isFinite(answer)) continue;
+    const entry: DerivedValueEntry = {
+      questionId: question.id,
+      seriesKey: binding.seriesKey,
+      value: answer,
+    };
+    if (binding.dateQuestionId !== undefined) {
+      // the date must itself be a VISIBLE answer - a hidden stale date
+      // never becomes provenance, same rule as everything derived
+      const dateAnswer = visible.some((candidate) => candidate.id === binding.dateQuestionId)
+        ? answers[binding.dateQuestionId]
+        : undefined;
+      if (typeof dateAnswer === 'string' && ISO_DATE.test(dateAnswer)) {
+        entry.measuredAt = dateAnswer;
+      }
+    }
+    out.push(entry);
+  }
+  return out;
+}
+
 export function deriveObservations(
   definition: SurveyDefinition,
   answers: Answers,

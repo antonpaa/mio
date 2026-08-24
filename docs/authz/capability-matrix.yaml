@@ -648,6 +648,22 @@ resources:
           administrator: deny
 
   # -- Observations ---------------------------------------------------------
+  - id: value_series
+    schema: clinical
+    patient_scoped: false
+    description: >-
+      Series definitions (name, unit, LOINC) - reference data with no
+      patient content. Listed by the survey builder for the X8
+      per-question binding and joined into every values view.
+    actions:
+      - id: view
+        audit: never
+        grants:
+          patient: deny
+          treatment_member: any
+          treatment_lead: any
+          administrator: deny
+
   - id: value_entry
     schema: clinical
     patient_scoped: true

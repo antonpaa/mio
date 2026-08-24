@@ -148,6 +148,9 @@ beforeEach(() => {
         ]);
       }
       if (url === '/api/staff/surveys/versions/v1') return json(VERSION);
+      if (url === '/api/staff/value-series') {
+        return json([{ id: 'vs1', key: 'psa', name: 'PSA value', unit: 'µg/l', kind: 'numeric' }]);
+      }
       return new Response('{}', { status: 404 });
     }),
   );
@@ -265,5 +268,16 @@ describe('B2/B4/B5 builder', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Publish' }));
     await screen.findByRole('alertdialog', { name: 'Publish this version?' });
     expect(screen.getByText(/immutable/)).toBeTruthy();
+  });
+});
+
+describe('X8 binding select', () => {
+  it('offers the series catalog on numeric questions', async () => {
+    render(appAt('/surveys/builder/v1'));
+    const selects = await screen.findAllByLabelText('Writes to value series', { exact: false });
+    expect(selects.length).toBeGreaterThanOrEqual(1);
+    const options = [...(selects[0] as HTMLSelectElement).options].map((option) => option.text);
+    expect(options).toContain('PSA value (µg/l)');
+    expect(options).toContain('No binding');
   });
 });

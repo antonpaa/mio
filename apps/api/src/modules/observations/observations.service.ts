@@ -327,4 +327,21 @@ export class ObservationsService {
       return { observationId };
     });
   }
+
+  /** X8: series definitions for the builder's binding select. Reference
+   * data - matrix says staff any, audit never. */
+  async seriesCatalog(staff: StaffPrincipal): Promise<object[]> {
+    const decision = authorize({
+      principal: { userId: staff.userId, role: staff.role },
+      action: 'view',
+      resource: { type: 'value_series', id: 'catalog' },
+    }).decision;
+    if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const { rows } = await client.query(
+        `SELECT id, key, name, unit, kind FROM clinical.value_series ORDER BY name`,
+      );
+      return rows as object[];
+    });
+  }
 }

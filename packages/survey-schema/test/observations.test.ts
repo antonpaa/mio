@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { deriveObservations, patientView, type SurveyDefinition } from '../src/index.js';
+import {
+  deriveObservations,
+  deriveValueEntries,
+  validateDefinition,
+  patientView,
+  type SurveyDefinition,
+} from '../src/index.js';
 
 const definition: SurveyDefinition = {
   pages: [
@@ -58,5 +64,81 @@ describe('deriveObservations', () => {
   it('patientView strips the mapping', () => {
     const stripped = patientView(definition);
     expect(stripped.pages[0]!.questions[0]!.symptomMap).toBeUndefined();
+  });
+});
+
+describe('deriveValueEntries', () => {
+  const definition: SurveyDefinition = {
+    pages: [
+      {
+        id: 'p',
+        questions: [
+          {
+            id: 'psa-value',
+            type: 'number',
+            valueBinding: { seriesKey: 'psa', dateQuestionId: 'lab-date' },
+          },
+          { id: 'lab-date', type: 'date' },
+          {
+            id: 'gate',
+            type: 'choice_single',
+            options: [{ id: 'yes' }, { id: 'no' }],
+            followUps: [
+              {
+                id: 'hidden-value',
+                type: 'number',
+                condition: { questionId: 'gate', equals: 'yes' },
+                valueBinding: { seriesKey: 'psa' },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
+  it('maps the bound answer with the lab date; a hidden binding never fires', () => {
+    const entries = deriveValueEntries(definition, {
+      'psa-value': 6.4,
+      'lab-date': '2026-08-20',
+      gate: 'no',
+      'hidden-value': 99, // stale answer behind a closed gate
+    });
+    expect(entries).toEqual([
+      { questionId: 'psa-value', seriesKey: 'psa', value: 6.4, measuredAt: '2026-08-20' },
+    ]);
+    // without a date answer the entry still lands, undated
+    expect(deriveValueEntries(definition, { 'psa-value': 5 })).toEqual([
+      { questionId: 'psa-value', seriesKey: 'psa', value: 5 },
+    ]);
+  });
+
+  it('validation refuses bindings on non-numeric questions and dangling date targets', () => {
+    const bad: SurveyDefinition = {
+      pages: [
+        {
+          id: 'p',
+          questions: [
+            {
+              id: 'q1',
+              type: 'choice_single',
+              options: [{ id: 'a' }],
+              valueBinding: { seriesKey: 'psa' },
+            },
+            {
+              id: 'q2',
+              type: 'number',
+              valueBinding: { seriesKey: 'psa', dateQuestionId: 'nope' },
+            },
+          ],
+        },
+      ],
+    };
+    expect(
+      validateDefinition(bad).filter((issue) => issue.code === 'bad_value_binding'),
+    ).toHaveLength(2);
+    expect(
+      validateDefinition(definition).filter((issue) => issue.code === 'bad_value_binding'),
+    ).toEqual([]);
   });
 });

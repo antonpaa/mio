@@ -78,6 +78,7 @@ export const ROLE_CAPABILITIES: Record<Role, readonly string[]> = {
     "notification.mark_read",
     "attachment.upload",
     "attachment.download",
+    "value_series.view",
     "value_entry.view",
     "value_entry.create",
     "symptom_observation.view",
@@ -152,6 +153,7 @@ export const ROLE_CAPABILITIES: Record<Role, readonly string[]> = {
     "notification.mark_read",
     "attachment.upload",
     "attachment.download",
+    "value_series.view",
     "value_entry.view",
     "value_entry.create",
     "symptom_observation.view",
@@ -250,6 +252,7 @@ export const RESOURCE_ATTRS: Record<string, readonly string[]> = {
     "subjectUser",
     "team"
   ],
+  "value_series": [],
   "value_entry": [
     "careTeam",
     "subjectUser"
@@ -535,6 +538,10 @@ export const ACTION_GROUPS: Record<string, readonly string[]> = {
     "grp:patient:self",
     "grp:treatment_member:care_relationship",
     "grp:treatment_lead:care_relationship"
+  ],
+  "value_series.view": [
+    "grp:treatment_member:any",
+    "grp:treatment_lead:any"
   ],
   "value_entry.view": [
     "grp:patient:self",
@@ -883,6 +890,10 @@ export const ACTION_METADATA: Record<string, { audit: 'always' | 'never'; patien
   "attachment.download": {
     "audit": "always",
     "patientScoped": true
+  },
+  "value_series.view": {
+    "audit": "never",
+    "patientScoped": false
   },
   "value_entry.view": {
     "audit": "always",

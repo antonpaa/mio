@@ -3,11 +3,11 @@ import { DbModule } from '../../shared/db.module.js';
 import { IdentityModule } from '../identity/index.js';
 import { StaffSessionGuard } from '../../shared/staff-session.js';
 import { ObservationsService } from './observations.service.js';
-import { ObservationsController } from './http/observations.controller.js';
+import { ObservationsController, SeriesCatalogController } from './http/observations.controller.js';
 
 @Module({
   imports: [DbModule, IdentityModule],
-  controllers: [ObservationsController],
+  controllers: [ObservationsController, SeriesCatalogController],
   providers: [ObservationsService, StaffSessionGuard],
 })
 export class ObservationsModule {}

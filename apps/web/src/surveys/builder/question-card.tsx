@@ -43,6 +43,8 @@ export function QuestionCard({
   depth,
   nextId,
   nextRuleId,
+  seriesCatalog,
+  dateQuestions,
   onChange,
   onChangeText,
   onRemove,
@@ -58,6 +60,10 @@ export function QuestionCard({
   nextId: () => string;
   /** mints a fresh rule id, unique across the whole survey */
   nextRuleId: () => string;
+  /** X8: the value-series catalog the binding select offers */
+  seriesCatalog: { key: string; name: string; unit: string | null }[];
+  /** date questions anywhere in the definition, for measured-at sourcing */
+  dateQuestions: { id: string; label: string }[];
   onChange: (next: Question) => void;
   onChangeText: (next: QuestionText) => void;
   onRemove: () => void;
@@ -329,6 +335,62 @@ export function QuestionCard({
               }
             />
           </label>
+        </div>
+      ) : null}
+
+      {(question.type === 'number' || question.type === 'scale') && seriesCatalog.length > 0 ? (
+        <div className="mt-3 flex flex-wrap items-end gap-3">
+          <label className="block text-xs font-medium text-secondary">
+            <FormattedMessage id="builder.valueSeries" />
+            <select
+              className={`${smallInput} w-52`}
+              value={question.valueBinding?.seriesKey ?? ''}
+              onChange={(event) => {
+                const key = event.currentTarget.value;
+                patch({
+                  valueBinding:
+                    key === ''
+                      ? undefined
+                      : clean({
+                          seriesKey: key,
+                          dateQuestionId: question.valueBinding?.dateQuestionId,
+                        }),
+                });
+              }}
+            >
+              <option value="">{intl.formatMessage({ id: 'builder.valueSeriesNone' })}</option>
+              {seriesCatalog.map((series) => (
+                <option key={series.key} value={series.key}>
+                  {series.name}
+                  {series.unit !== null && series.unit !== '' ? ` (${series.unit})` : ''}
+                </option>
+              ))}
+            </select>
+          </label>
+          {question.valueBinding !== undefined && dateQuestions.length > 0 ? (
+            <label className="block text-xs font-medium text-secondary">
+              <FormattedMessage id="builder.valueDate" />
+              <select
+                className={`${smallInput} w-52`}
+                value={question.valueBinding.dateQuestionId ?? ''}
+                onChange={(event) =>
+                  patch({
+                    valueBinding: clean({
+                      seriesKey: question.valueBinding!.seriesKey,
+                      dateQuestionId: event.currentTarget.value || undefined,
+                    }),
+                  })
+                }
+              >
+                <option value="">{intl.formatMessage({ id: 'builder.valueDateSubmit' })}</option>
+                {dateQuestions.map((candidate) => (
+                  <option key={candidate.id} value={candidate.id}>
+                    {candidate.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
         </div>
       ) : null}
 

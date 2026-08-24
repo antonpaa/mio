@@ -6,6 +6,19 @@ import {
 } from '../../../shared/staff-session.js';
 import { ObservationsService } from '../observations.service.js';
 
+@Controller('api/staff/value-series')
+@UseGuards(StaffSessionGuard)
+export class SeriesCatalogController {
+  constructor(private readonly observations: ObservationsService) {}
+
+  /** X8: the catalog the builder's binding select lists - reference
+   * data, no patient content. */
+  @Get()
+  catalog(@CurrentStaff() staff: StaffPrincipal) {
+    return this.observations.seriesCatalog(staff);
+  }
+}
+
 @Controller('api/staff/patients/:patientId')
 @UseGuards(StaffSessionGuard)
 export class ObservationsController {
