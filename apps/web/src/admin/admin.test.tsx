@@ -81,6 +81,14 @@ const ROLES = {
 };
 
 const AUDIT = {
+  range: { from: '2026-07-25', to: '2026-08-25' },
+  filters: {
+    actions: ['patient_clinical_profile.view', 'audit_log.view_full'],
+    actors: [
+      { id: 's1', name: 'Elina Koskinen' },
+      { id: 's2', name: 'Jari Vuori' },
+    ],
+  },
   events: [
     {
       occurred_at: '2026-08-24T10:31:00Z',
@@ -145,6 +153,13 @@ beforeEach(() => {
       '/api/admin/teams': TEAMS,
       '/api/admin/roles': ROLES,
       '/api/admin/audit?limit=200': AUDIT,
+      '/api/admin/audit?limit=200&action=audit_log.view_full': {
+        ...AUDIT,
+        events: AUDIT.events.filter((event) => event.action === 'audit_log.view_full'),
+      },
+      '/api/admin/audit/export?limit=200&action=audit_log.view_full': {
+        csv: 'occurred_at,actor\n"2026-08-24T10:29:00Z","Jari Vuori"',
+      },
     };
     if (url in payloads) {
       return new Response(JSON.stringify(payloads[url]), {
@@ -270,9 +285,51 @@ describe('A3 audit view (P2: auditor)', () => {
       },
     });
     render(appAt('/audit'));
-    await screen.findByText('Elina Koskinen');
-    expect(screen.getByText(/Viewed — patient record/)).toBeTruthy();
+    await screen.findByText(/Viewed — patient record/);
     expect(screen.getByText('Patient A.V.')).toBeTruthy();
     expect(screen.getByText('Denied')).toBeTruthy();
+  });
+});
+
+describe('A3 filters and export', () => {
+  it('narrows by event and exports the same view', async () => {
+    URL.createObjectURL = vi.fn(() => 'blob:mock') as never;
+    URL.revokeObjectURL = vi.fn() as never;
+    vi.mocked(api.whoami).mockResolvedValue({
+      realm: 'staff' as const,
+      account: {
+        id: 'au1',
+        givenName: 'Aida',
+        familyName: 'Tarkka',
+        locale: 'en' as const,
+        role: 'auditor',
+      },
+    });
+    render(appAt('/audit'));
+    await screen.findByText(/Viewed — patient record/);
+
+    // the facets came from the range, so both events are offered
+    fireEvent.change(screen.getByLabelText('Event'), {
+      target: { value: 'audit_log.view_full' },
+    });
+    await waitFor(() => {
+      expect(
+        fetchMock.mock.calls.some(
+          ([url]) => String(url) === '/api/admin/audit?limit=200&action=audit_log.view_full',
+        ),
+      ).toBe(true);
+    });
+    // the controls survive the refetch - a filter bar that unmounts
+    // mid-use throws focus away
+    expect(screen.getByLabelText('Event')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Export CSV' }));
+    await waitFor(() => {
+      expect(
+        fetchMock.mock.calls.some(
+          ([url]) => String(url) === '/api/admin/audit/export?limit=200&action=audit_log.view_full',
+        ),
+      ).toBe(true);
+    });
   });
 });

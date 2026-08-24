@@ -74,7 +74,36 @@ export const rolesQuery = {
   queryFn: () => getJson<{ roles: Record<string, string[]> }>('/api/admin/roles'),
 };
 
-export const auditQuery = {
-  queryKey: ['admin-audit'] as const,
-  queryFn: () => getJson<{ events: AuditEvent[] }>('/api/admin/audit?limit=200'),
-};
+export interface AuditFilters {
+  from?: string;
+  to?: string;
+  action?: string;
+  actor?: string;
+}
+
+export interface AuditPayload {
+  events: AuditEvent[];
+  range: { from: string; to: string };
+  filters: { actions: string[]; actors: { id: string; name: string }[] };
+}
+
+export function auditSearch(filters: AuditFilters): string {
+  const params = new URLSearchParams({ limit: '200' });
+  for (const [key, value] of Object.entries(filters)) {
+    if (value !== undefined && value !== '') params.set(key, value);
+  }
+  return params.toString();
+}
+
+export function auditQueryFor(filters: AuditFilters) {
+  const search = auditSearch(filters);
+  return {
+    queryKey: ['admin-audit', search] as const,
+    queryFn: () => getJson<AuditPayload>(`/api/admin/audit?${search}`),
+    // keep the previous page visible while a narrowed one loads: the
+    // filter facets stay populated and the controls keep their values
+    placeholderData: (previous: AuditPayload | undefined) => previous,
+  };
+}
+
+export const auditQuery = auditQueryFor({});

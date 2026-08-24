@@ -100,8 +100,41 @@ export class AdminController {
     return this.admin.roles();
   }
 
+  // A3's own export: the filtered view its reader is looking at. The
+  // bulk, watermarked JSONL export is the WP-29 platform job, not this.
+  @Get('audit/export')
+  auditExport(
+    @CurrentStaff() staff: StaffPrincipal,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('action') action?: string,
+    @Query('actor') actor?: string,
+  ) {
+    return this.admin
+      .auditExport(staff, {
+        ...(from !== undefined && from !== '' ? { from } : {}),
+        ...(to !== undefined && to !== '' ? { to } : {}),
+        ...(action !== undefined && action !== '' ? { action } : {}),
+        ...(actor !== undefined && actor !== '' ? { actor } : {}),
+      })
+      .then((csv) => ({ csv }));
+  }
+
   @Get('audit')
-  audit(@CurrentStaff() staff: StaffPrincipal, @Query('limit') limit?: string) {
-    return this.admin.auditLog(staff, Number(limit ?? 200));
+  audit(
+    @CurrentStaff() staff: StaffPrincipal,
+    @Query('limit') limit?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('action') action?: string,
+    @Query('actor') actor?: string,
+  ) {
+    return this.admin.auditLog(staff, {
+      limit: Number(limit ?? 200),
+      ...(from !== undefined && from !== '' ? { from } : {}),
+      ...(to !== undefined && to !== '' ? { to } : {}),
+      ...(action !== undefined && action !== '' ? { action } : {}),
+      ...(actor !== undefined && actor !== '' ? { actor } : {}),
+    });
   }
 }

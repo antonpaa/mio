@@ -307,6 +307,65 @@ describe('A3 audit view (P2: the auditor role)', () => {
     );
     expect([403, 404]).toContain(clinical.statusCode);
   });
+
+  it('filters by event and person, and exports exactly the filtered view', async () => {
+    await inject('GET', `/api/staff/patients/${patient.id}`, undefined, leadCookie);
+    const all = await inject('GET', '/api/admin/audit?limit=200', undefined, auditorCookie);
+    const body = all.json() as {
+      events: { action: string; actor: string }[];
+      range: { from: string; to: string };
+      filters: { actions: string[]; actors: { id: string; name: string }[] };
+    };
+    // the facets describe the range, so they are a superset of the page
+    expect(body.filters.actions).toContain('patient_clinical_profile.view');
+    expect(body.filters.actors.some((actor) => actor.id === lead.id)).toBe(true);
+    expect(body.range.from < body.range.to).toBe(true);
+
+    const narrowed = await inject(
+      'GET',
+      `/api/admin/audit?action=patient_clinical_profile.view&actor=${lead.id}`,
+      undefined,
+      auditorCookie,
+    );
+    const narrowedBody = narrowed.json() as {
+      events: { action: string }[];
+      filters: { actions: string[] };
+    };
+    expect(narrowedBody.events.length).toBeGreaterThan(0);
+    expect(
+      narrowedBody.events.every((event) => event.action === 'patient_clinical_profile.view'),
+    ).toBe(true);
+    // narrowing must not shrink the filter list you narrow WITH
+    expect(narrowedBody.filters.actions.length).toBe(body.filters.actions.length);
+
+    // an empty window is empty, not everything
+    const empty = await inject(
+      'GET',
+      '/api/admin/audit?from=1990-01-01&to=1990-01-02',
+      undefined,
+      auditorCookie,
+    );
+    expect((empty.json() as { events: unknown[] }).events).toEqual([]);
+
+    // the export is the same filtered view, as a file, still minimised
+    const csv = await inject(
+      'GET',
+      `/api/admin/audit/export?action=patient_clinical_profile.view&actor=${lead.id}`,
+      undefined,
+      auditorCookie,
+    );
+    expect(csv.statusCode).toBe(200);
+    const text = (csv.json() as { csv: string }).csv;
+    expect(text.split('\n')[0]).toBe(
+      'occurred_at,actor,actor_realm,action,resource_type,subject,decision',
+    );
+    expect(text).toContain('patient_clinical_profile.view');
+    expect(text.split('\n').length).toBe(narrowedBody.events.length + 1);
+
+    // and nobody else may export it
+    const adminExport = await inject('GET', '/api/admin/audit/export', undefined, adminCookie);
+    expect(adminExport.statusCode).toBe(403);
+  });
 });
 
 describe('PP5 export with reason', () => {
