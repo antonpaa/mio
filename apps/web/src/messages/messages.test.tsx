@@ -1,12 +1,14 @@
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactElement } from 'react';
 import axe from 'axe-core';
 import { docFromText } from '@mio/contracts';
 import { routeTree } from '../routes/route-tree.js';
-import { domToDoc } from './composer.js';
+import { Composer, domToDoc } from './composer.js';
+import { IntlProvider } from 'react-intl';
+import { MESSAGES } from '../i18n/messages.js';
 import * as api from '../lib/api.js';
 
 vi.mock('../lib/api.js', () => ({
@@ -225,5 +227,145 @@ describe('the composer DOM walk', () => {
       ],
     });
     expect(JSON.stringify(doc)).not.toContain('onclick');
+  });
+});
+
+function IntlWrap({ children }: { children: ReactElement }): ReactElement {
+  return (
+    <IntlProvider locale="en" messages={MESSAGES.en} defaultLocale="en">
+      {children}
+    </IntlProvider>
+  );
+}
+
+describe('X3 composer persistence', () => {
+  it('keeps unsent text per draft key across unmount and clears on send', async () => {
+    localStorage.clear();
+    const first = render(
+      <IntlWrap>
+        <Composer
+          label="Write"
+          sendLabel="Send"
+          busy={false}
+          draftKey="acc1:t1:message"
+          onSend={async () => {}}
+        />
+      </IntlWrap>,
+    );
+    const box = first.getByRole('textbox');
+    box.innerHTML = '<div>Halfway through a thought</div>';
+    fireEvent.input(box);
+    first.unmount();
+
+    // a fresh mount with the same key restores the text
+    const second = render(
+      <IntlWrap>
+        <Composer
+          label="Write"
+          sendLabel="Send"
+          busy={false}
+          draftKey="acc1:t1:message"
+          onSend={async () => {}}
+        />
+      </IntlWrap>,
+    );
+    expect(second.getByRole('textbox').textContent).toContain('Halfway through a thought');
+
+    // sending clears the stored draft
+    fireEvent.click(second.getByRole('button', { name: 'Send' }));
+    await waitFor(() => {
+      expect(localStorage.getItem('mio.draft.acc1:t1:message')).toBeNull();
+    });
+    second.unmount();
+    const third = render(
+      <IntlWrap>
+        <Composer
+          label="Write"
+          sendLabel="Send"
+          busy={false}
+          draftKey="acc1:t1:message"
+          onSend={async () => {}}
+        />
+      </IntlWrap>,
+    );
+    expect(third.getByRole('textbox').textContent).toBe('');
+  });
+});
+
+describe('WP-24 composer attachments', () => {
+  it('uploads, shows scanning, flips to clean, and sends the attachment node', async () => {
+    const sent: unknown[] = [];
+    let polls = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        if (url === '/api/patient/attachments' && init?.method === 'POST') {
+          return new Response(
+            JSON.stringify({ attachmentId: '11111111-2222-4333-8444-555555555555' }),
+            { status: 201, headers: { 'content-type': 'application/json' } },
+          );
+        }
+        if (url.startsWith('/api/patient/attachments/')) {
+          polls += 1;
+          // first poll still scanning, then clean bytes
+          return polls === 1
+            ? new Response('{"state":"quarantined"}', { status: 202 })
+            : new Response(new Uint8Array([1]).buffer, { status: 200 });
+        }
+        return new Response('{}', { status: 404 });
+      }),
+    );
+    vi.useFakeTimers();
+    try {
+      const view = render(
+        <IntlWrap>
+          <Composer
+            label="Write"
+            sendLabel="Send"
+            busy={false}
+            attachmentConfig={{
+              uploadUrl: '/api/patient/attachments',
+              fetchBase: '/api/patient/attachments',
+              treatmentId: 't1',
+            }}
+            onSend={async (doc) => {
+              sent.push(doc);
+            }}
+          />
+        </IntlWrap>,
+      );
+      const input = view.container.querySelector('input[type="file"]')!;
+      const file = new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], 'wound.png', {
+        type: 'image/png',
+      });
+      await vi.waitFor(async () => {
+        fireEvent.change(input, { target: { files: [file] } });
+        await vi.advanceTimersByTimeAsync(50);
+        expect(view.getByText('wound.png')).toBeTruthy();
+      });
+      // scanning chip first
+      expect(view.getByText('Checking…')).toBeTruthy();
+      // two poll ticks: still scanning, then clean
+      await vi.advanceTimersByTimeAsync(1600);
+      await vi.advanceTimersByTimeAsync(1600);
+      await vi.waitFor(() => {
+        expect(view.getByText('✓')).toBeTruthy();
+      });
+      fireEvent.click(view.getByRole('button', { name: 'Send' }));
+      await vi.waitFor(() => {
+        expect(sent).toHaveLength(1);
+      });
+      const doc = sent[0] as { content: { type: string; attachmentId?: string }[] };
+      expect(
+        doc.content.some(
+          (block) =>
+            block.type === 'attachment' &&
+            block.attachmentId === '11111111-2222-4333-8444-555555555555',
+        ),
+      ).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

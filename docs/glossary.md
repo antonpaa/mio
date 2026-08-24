@@ -70,7 +70,7 @@ interface and in translation.
 
 | English | Finnish | Swedish | Note |
 |---|---|---|---|
-| Survey | Kysely ⚠️ | Enkät | ⚠️ The user-supplied Finnish mixes *kysely* (instrument names: "…oirekysely") and *lomake* (nav labels: "Täytetyt lomakkeet", "Täytä lomake"). Owner decision pending — reconciliation X5 in [`design/README.md`](design/README.md). Working rule: *kysely* for the concept, *lomake* only inside the fixed nav labels below |
+| Survey | Kysely | Enkät | Owner decision 2026-08-24 (X5): *kysely* in every context. In Finnish usage *lomake* denotes the blank form — template territory — never the instrument or a response |
 | Question | Kysymys | Fråga | |
 | Response | Vastaus | Svar | |
 | Draft (saved response) | Keskeneräinen vastaus | Påbörjat svar | Distinct from template draft |
@@ -146,23 +146,24 @@ Terms fixed by the brief's naming conventions.
 
 ## Patient profile sub-navigation (clinician side)
 
-Finnish supplied by the product owner — canonical, unlike the drafts above.
+Finnish supplied by the product owner — canonical, unlike the drafts above;
+revised 2026-08-24 per the X5 decision (*kysely* replaces *lomake*).
 Swedish remains draft ⚠️.
 
 | English | Finnish | Swedish |
 |---|---|---|
 | Patient profile | Potilaan profiili | Patientprofil |
 | Patient summary | Potilaan yhteenveto | Patientöversikt |
-| Programs, surveys & care team | Ohjelmat, lomakkeet ja hoitotiimi | Program, enkäter och vårdteam |
+| Programs, surveys & care team | Ohjelmat, kyselyt ja hoitotiimi | Program, enkäter och vårdteam |
 | Patient details | Potilaan tiedot | Patientuppgifter |
 | Health data | Terveystiedot | Hälsodata |
 | Values | Arvot | Värden |
 | Symptoms | Oireet | Symtom |
-| Completed surveys | Täytetyt lomakkeet | Ifyllda enkäter |
+| Completed surveys | Täytetyt kyselyt | Ifyllda enkäter |
 | Data export | Potilaan tietojen vienti | Dataexport |
 | Report | Raportti | Rapport |
 | Report a symptom | Raportoi oire | Rapportera symtom |
-| Fill a survey | Täytä lomake | Fyll i enkät |
+| Fill a survey | Täytä kysely | Fyll i enkät |
 | New value | Uusi arvo | Nytt värde |
 
 ## Symptom taxonomy
@@ -216,7 +217,16 @@ Resolved — Poistunut — Avklingat ⚠️.
 | Password | Salasana | Lösenord | |
 | Verification code | Vahvistuskoodi | Verifieringskod | The email MFA code |
 | Access log | Käyttöloki | Åtkomstlogg | Established FI term |
-| Audit log | Käyttöloki | Granskningslogg | Internal; patients see "access log" |
+| Audit log | Käyttöloki | Åtkomstlogg | Internal; patients see "access log". FI and SV deliberately reuse the access-log term — one word for one concept on both sides (WP-28) |
+| Reset login | Nollaa kirjautuminen | Återställ inloggning | Admin action (A1): new setup link, sessions signed out, data untouched |
+| Deactivate | Poista käytöstä | Avaktivera | Account lifecycle (A1) |
+| Reactivate | Palauta käyttöön | Återaktivera | Inverse of deactivate; restores sign-in only |
+| Capability | Oikeus | Behörighet | A2 role matrix column/row language |
+| Deceased | Menehtynyt | Avliden | ⚠️ Respectful register — FI deliberately *menehtynyt*, never *kuollut*, in UI text (WP-29) |
+| Mark as deceased | Merkitse menehtyneeksi | Markera som avliden | Lead-only care action (WP-29) |
+| Date of death | Kuolinpäivä | Dödsdatum | Dialog field label |
+| Archived (treatment) | Arkistoitu | Arkiverad | Read-only after the quiet period (WP-29) |
+| Retention | Säilytys | Bevarande | Data kept per statutory periods (R5) |
 | Consent | Suostumus | Samtycke | |
 | Terms of use | Käyttöehdot | Användarvillkor | |
 | Privacy notice | Tietosuojaseloste | Integritetspolicy | Established FI term |

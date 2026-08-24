@@ -48,7 +48,12 @@ export {
   validateDefinition,
   type DefinitionIssue,
 } from './definition.js';
-export { deriveObservations, type DerivedObservation } from './observations.js';
+export {
+  deriveObservations,
+  deriveValueEntries,
+  type DerivedObservation,
+  type DerivedValueEntry,
+} from './observations.js';
 export {
   applyOverrides,
   validateOverrides,

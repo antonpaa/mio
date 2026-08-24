@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState, type ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button } from '@mio/ui';
+import { Button, useModalFocus } from '@mio/ui';
 import { type StaffOption, type TaskRow } from './task-model.js';
 
 /** Hand a task to a named colleague on the treatment's team. */
@@ -14,6 +14,7 @@ export function AssignDialog({
   onClose: () => void;
   onAssigned: () => void;
 }): ReactElement {
+  const modalRef = useModalFocus<HTMLDivElement>();
   const intl = useIntl();
   const [assigneeId, setAssigneeId] = useState(task.assignee_id ?? '');
   const staff = useQuery({
@@ -52,7 +53,7 @@ export function AssignDialog({
         if (event.key === 'Escape') onClose();
       }}
     >
-      <div className="w-full max-w-sm rounded-card bg-surface p-6 shadow-raised">
+      <div ref={modalRef} className="w-full max-w-sm rounded-card bg-surface p-6 shadow-raised">
         <h2 id="assign-dialog-title" className="font-display text-lg italic text-ink">
           <FormattedMessage id="tasks.assignDialogTitle" />
         </h2>

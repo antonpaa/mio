@@ -44,11 +44,33 @@ function renderParagraph(paragraph: MessageParagraph, key: string): ReactElement
   );
 }
 
-export function MessageDocView({ doc }: { doc: MessageDoc }): ReactElement {
+export function MessageDocView({
+  doc,
+  attachmentBase,
+  attachmentAlt,
+}: {
+  doc: MessageDoc;
+  /** WP-24: '/api/patient/attachments' or '/api/staff/attachments' -
+   * the serving endpoint authorizes and audits every read */
+  attachmentBase?: string;
+  attachmentAlt?: string;
+}): ReactElement {
   return (
     <div className="flex flex-col gap-1 text-sm leading-relaxed">
       {doc.content.map((block, index) => {
         if (block.type === 'paragraph') return renderParagraph(block, `b${index}`);
+        if (block.type === 'attachment') {
+          if (attachmentBase === undefined) return null;
+          return (
+            <img
+              key={index}
+              src={`${attachmentBase}/${block.attachmentId}`}
+              alt={attachmentAlt ?? ''}
+              loading="lazy"
+              className="max-h-72 max-w-full rounded-inner border border-hairline object-contain"
+            />
+          );
+        }
         const items = block.content.map((item, itemIndex) => (
           <li key={itemIndex}>
             {item.content.map((paragraph, pIndex) =>

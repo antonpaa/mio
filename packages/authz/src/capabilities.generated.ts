@@ -78,6 +78,7 @@ export const ROLE_CAPABILITIES: Record<Role, readonly string[]> = {
     "notification.mark_read",
     "attachment.upload",
     "attachment.download",
+    "value_series.view",
     "value_entry.view",
     "value_entry.create",
     "symptom_observation.view",
@@ -152,6 +153,7 @@ export const ROLE_CAPABILITIES: Record<Role, readonly string[]> = {
     "notification.mark_read",
     "attachment.upload",
     "attachment.download",
+    "value_series.view",
     "value_entry.view",
     "value_entry.create",
     "symptom_observation.view",
@@ -162,6 +164,7 @@ export const ROLE_CAPABILITIES: Record<Role, readonly string[]> = {
     "patient_data_export.download",
     "staff_account.view",
     "patient_account.create",
+    "patient_account.mark_deceased",
     "team.view",
     "team.create",
     "team.update_membership",
@@ -178,9 +181,12 @@ export const ROLE_CAPABILITIES: Record<Role, readonly string[]> = {
     "staff_account.view",
     "staff_account.create",
     "staff_account.deactivate",
+    "staff_account.reactivate",
     "staff_account.reset_credentials",
+    "patient_account.view",
     "patient_account.create",
     "patient_account.deactivate",
+    "patient_account.reactivate",
     "patient_account.reset_credentials",
     "team.view",
     "team.create",
@@ -250,6 +256,7 @@ export const RESOURCE_ATTRS: Record<string, readonly string[]> = {
     "subjectUser",
     "team"
   ],
+  "value_series": [],
   "value_entry": [
     "careTeam",
     "subjectUser"
@@ -263,7 +270,9 @@ export const RESOURCE_ATTRS: Record<string, readonly string[]> = {
     "careTeam"
   ],
   "staff_account": [],
-  "patient_account": [],
+  "patient_account": [
+    "careTeam"
+  ],
   "team": [],
   "audit_log": [
     "subjectUser"
@@ -536,6 +545,10 @@ export const ACTION_GROUPS: Record<string, readonly string[]> = {
     "grp:treatment_member:care_relationship",
     "grp:treatment_lead:care_relationship"
   ],
+  "value_series.view": [
+    "grp:treatment_member:any",
+    "grp:treatment_lead:any"
+  ],
   "value_entry.view": [
     "grp:patient:self",
     "grp:treatment_member:care_relationship",
@@ -582,7 +595,13 @@ export const ACTION_GROUPS: Record<string, readonly string[]> = {
   "staff_account.deactivate": [
     "grp:administrator:any"
   ],
+  "staff_account.reactivate": [
+    "grp:administrator:any"
+  ],
   "staff_account.reset_credentials": [
+    "grp:administrator:any"
+  ],
+  "patient_account.view": [
     "grp:administrator:any"
   ],
   "patient_account.create": [
@@ -591,6 +610,12 @@ export const ACTION_GROUPS: Record<string, readonly string[]> = {
   ],
   "patient_account.deactivate": [
     "grp:administrator:any"
+  ],
+  "patient_account.reactivate": [
+    "grp:administrator:any"
+  ],
+  "patient_account.mark_deceased": [
+    "grp:treatment_lead:care_relationship"
   ],
   "patient_account.reset_credentials": [
     "grp:administrator:any"
@@ -884,6 +909,10 @@ export const ACTION_METADATA: Record<string, { audit: 'always' | 'never'; patien
     "audit": "always",
     "patientScoped": true
   },
+  "value_series.view": {
+    "audit": "never",
+    "patientScoped": false
+  },
   "value_entry.view": {
     "audit": "always",
     "patientScoped": true
@@ -928,15 +957,31 @@ export const ACTION_METADATA: Record<string, { audit: 'always' | 'never'; patien
     "audit": "always",
     "patientScoped": false
   },
+  "staff_account.reactivate": {
+    "audit": "always",
+    "patientScoped": false
+  },
   "staff_account.reset_credentials": {
     "audit": "always",
     "patientScoped": false
+  },
+  "patient_account.view": {
+    "audit": "always",
+    "patientScoped": true
   },
   "patient_account.create": {
     "audit": "always",
     "patientScoped": true
   },
   "patient_account.deactivate": {
+    "audit": "always",
+    "patientScoped": true
+  },
+  "patient_account.reactivate": {
+    "audit": "always",
+    "patientScoped": true
+  },
+  "patient_account.mark_deceased": {
     "audit": "always",
     "patientScoped": true
   },

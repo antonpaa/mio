@@ -3,6 +3,10 @@
 Open regulatory, legal and clinical items. Each needs an owner and a decision
 date. Engineering can frame these; it cannot answer them.
 
+The gate these items feed is
+[`release-checklist.md`](release-checklist.md) (WP-33): no pilot release
+while a blocking R-item is open.
+
 > **This document is not legal or regulatory advice.** It is an engineering
 > record of what needs professional determination, with the reasoning that
 > raised each item. Where a classification is stated, it is a reading of the
@@ -93,6 +97,10 @@ the record of processing activities.
 behaviour — in particular who answers a data subject access request and how
 "download my data" fits into it.
 
+**Engineering position.** Support material for the DPIA — processing map,
+technical measures, rights implementation, residual open items — is
+maintained at [`dpia-support.md`](dpia-support.md) (WP-29).
+
 | Owner | Needed by | Status |
 |---|---|---|
 | TBD — DPO | Before processing real data | 🟠 Open |
@@ -107,7 +115,12 @@ deceased patients' data.
 
 **Engineering position.** The data model supports per-record retention
 classification ([`../architecture/data-model.md`](../architecture/data-model.md)).
-The periods are a legal input.
+The periods are a legal input. As of WP-29 the classes are live in
+`audit.retention_policy` with NULL periods — NULL means hold, never
+delete — so supplying the statutory numbers is a one-row update per
+class, not a build. Deceased-patient handling (respectful stop of all
+outbound automation, record retained) is implemented; only the "how
+long" is open.
 
 | Owner | Needed by | Status |
 |---|---|---|
@@ -142,6 +155,16 @@ accessibility statement), given likely public-sector customers?
 **Engineering note.** Automated tooling covers roughly 40% of WCAG issues.
 A defensible claim needs manual audit. The body map and the recurrence editor
 are the two components most likely to fail.
+
+**Engineering position (WP-31).** The keyboard/ARIA contract is now
+verified: dialog focus management shipped and proven live, the body map
+and recurrence editor passed deep keyboard passes
+([`../accessibility/keyboard-pass-2026-08.md`](../accessibility/keyboard-pass-2026-08.md)),
+and the statement's factual skeleton is drafted at
+[`../accessibility/statement.md`](../accessibility/statement.md). What
+remains for a defensible claim is the assistive-technology session with
+real screen-reader users — that, the publication surface and the FI/SV
+statement text stay with this item's owner.
 
 | Owner | Needed by | Status |
 |---|---|---|
@@ -211,6 +234,27 @@ surveys are unaffected.
 | Owner | Needed by | Status |
 |---|---|---|
 | TBD | Before QLQ-C30 is used with real patients | 🟠 Open |
+
+---
+
+## R12 🟠 External penetration test
+
+**Question.** Who performs the WP-30 penetration test, when, and against
+which environment?
+
+**Engineering position.** The system is ready to be tested: the threat
+model ([`../security/threat-model.md`](../security/threat-model.md)) is
+the briefing document, staging (WP-09) the target environment, and the
+named priority targets are authentication and the attachment pipeline.
+Findings land here with owners; a finding against a runtime dependency
+also lands in the SOUP inventory.
+
+**Consequence if unresolved.** No independent validation of the
+security posture before pilot.
+
+| Owner | Needed by | Status |
+|---|---|---|
+| TBD | Before pilot (M5) | 🟠 Open |
 
 ---
 

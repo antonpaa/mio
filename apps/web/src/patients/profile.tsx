@@ -15,6 +15,10 @@ import {
 import { ValuesCard } from '../observations/values-card.js';
 import { SymptomsCard } from '../observations/symptoms-card.js';
 import { ResponsesCard } from '../surveys/responses-card.js';
+import { ExportDataButton } from './export-dialog.js';
+import { MarkDeceasedButton } from './deceased-dialog.js';
+import { ROLE_CAPABILITIES, type Role } from '@mio/authz';
+import { useSession } from '../session/session.js';
 
 interface PatientProfile {
   patientId: string;
@@ -25,6 +29,7 @@ interface PatientProfile {
   phone: string | null;
   locale: string;
   careTeamSize: number;
+  deceasedOn: string | null;
 }
 
 interface ProgramRow {
@@ -159,6 +164,8 @@ function SubNav(): ReactElement {
 
 export function PatientProfilePage(): ReactElement {
   const { patientId } = useParams({ strict: false }) as { patientId: string };
+  const intl = useIntl();
+  const session = useSession();
   const profile = useQuery({
     queryKey: ['patient', patientId],
     queryFn: () => fetchProfile(patientId),
@@ -177,6 +184,8 @@ export function PatientProfilePage(): ReactElement {
     return <ErrorState onRetry={() => void profile.refetch()} />;
   }
   const patient = profile.data;
+  const role = (session.account?.role ?? 'treatment_member') as Role;
+  const mayMarkDeceased = ROLE_CAPABILITIES[role].includes('patient_account.mark_deceased');
 
   return (
     <div className="flex gap-8">
@@ -190,6 +199,22 @@ export function PatientProfilePage(): ReactElement {
           <div>
             <h1 className="font-display text-xl italic text-ink">
               {patient.givenName} {patient.familyName}
+              {patient.deceasedOn !== null ? (
+                <span className="ml-3 align-middle">
+                  <StatusChip tone="neutral">
+                    {intl.formatMessage(
+                      { id: 'pp.deceased' },
+                      {
+                        date: intl.formatDate(patient.deceasedOn, {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        }),
+                      },
+                    )}
+                  </StatusChip>
+                </span>
+              ) : null}
             </h1>
             <p className="text-sm text-secondary">
               {patient.email}
@@ -198,6 +223,18 @@ export function PatientProfilePage(): ReactElement {
             <p className="text-xs text-muted">
               <FormattedMessage id="pp.careTeam" values={{ count: patient.careTeamSize }} />
             </p>
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            {patient.deceasedOn === null && mayMarkDeceased ? (
+              <MarkDeceasedButton
+                patientId={patientId}
+                patientName={`${patient.givenName} ${patient.familyName}`}
+              />
+            ) : null}
+            <ExportDataButton
+              patientId={patientId}
+              patientName={`${patient.givenName} ${patient.familyName}`}
+            />
           </div>
         </header>
         <div className="flex flex-col gap-4">

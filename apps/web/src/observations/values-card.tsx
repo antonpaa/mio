@@ -1,7 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { Button, Card, CardHeader, ErrorState, IconValues, Skeleton, StatusChip } from '@mio/ui';
+import {
+  Button,
+  Card,
+  CardHeader,
+  ErrorState,
+  IconValues,
+  Skeleton,
+  StatusChip,
+  useModalFocus,
+} from '@mio/ui';
 
 /**
  * PP2: the patient's value series - latest three entries per series with
@@ -135,6 +144,7 @@ function SeriesDialog({
   series: SeriesRow;
   onClose: () => void;
 }): ReactElement {
+  const modalRef = useModalFocus<HTMLDivElement>();
   const intl = useIntl();
   const queryClient = useQueryClient();
   const [value, setValue] = useState('');
@@ -183,7 +193,10 @@ function SeriesDialog({
         if (event.key === 'Escape') onClose();
       }}
     >
-      <div className="flex max-h-full w-full max-w-2xl flex-col rounded-card bg-surface shadow-raised">
+      <div
+        ref={modalRef}
+        className="flex max-h-full w-full max-w-2xl flex-col rounded-card bg-surface shadow-raised"
+      >
         <header className="flex items-baseline justify-between border-b border-hairline px-6 py-4">
           <h2 id="series-title" className="font-display text-lg italic text-ink">
             {series.name} ({series.unit})

@@ -575,10 +575,17 @@ export class SchedulingService {
         email: string;
         locale: 'en' | 'fi' | 'sv';
         email_prefs: Record<string, unknown>;
-      }>(`SELECT email, locale, email_prefs FROM identity.patient_account WHERE id = $1`, [
-        activity.patient_id,
-      ]);
+        deceased_on: string | null;
+      }>(
+        `SELECT email, locale, email_prefs, deceased_on::text AS deceased_on
+           FROM identity.patient_account WHERE id = $1`,
+        [activity.patient_id],
+      );
       const contact = contacts[0]!;
+      // WP-29: no outbound communication to a deceased patient, ever
+      if (contact.deceased_on !== null) {
+        return { sent: false, reason: 'patient_deceased' };
+      }
       if (contact.email_prefs['survey_reminder'] === false) {
         return { sent: false, reason: 'email_declined' };
       }

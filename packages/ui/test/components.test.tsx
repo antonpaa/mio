@@ -243,4 +243,36 @@ describe('kit renders and is axe-clean', () => {
     expect(document.activeElement?.textContent).toBe('Go back');
     expect(await axeViolations(container)).toEqual([]);
   });
+
+  it('confirm dialog: Tab is trapped inside and focus returns to the opener (WP-31)', () => {
+    const opener = document.createElement('button');
+    opener.textContent = 'open';
+    document.body.appendChild(opener);
+    opener.focus();
+
+    const view = render(
+      <ConfirmDialog
+        title="Sure?"
+        cancelLabel="Go back"
+        confirmLabel="Do it"
+        onCancel={() => {}}
+        onConfirm={() => {}}
+      />,
+    );
+    const cancel = screen.getByRole('button', { name: 'Go back' });
+    const confirm = screen.getByRole('button', { name: 'Do it' });
+    expect(document.activeElement).toBe(cancel);
+
+    // Tab past the last focusable wraps to the first
+    confirm.focus();
+    fireEvent.keyDown(confirm, { key: 'Tab' });
+    expect(document.activeElement).toBe(cancel);
+    // Shift+Tab before the first wraps to the last
+    fireEvent.keyDown(cancel, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(confirm);
+
+    view.unmount();
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
+  });
 });

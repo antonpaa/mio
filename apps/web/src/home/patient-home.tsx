@@ -14,6 +14,7 @@ import {
 import { useSession } from '../session/session.js';
 import { useLocaleControls } from '../app/locale-context.js';
 import { threadsQuery } from '../messages/model.js';
+import { ReportSymptom } from './report-symptom.js';
 import { NOTIFICATIONS_QUERY } from '../notifications/model.js';
 
 /**
@@ -139,9 +140,16 @@ export function PatientHomePage(): ReactElement {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4">
-      <h1 className="font-display text-2xl italic text-ink">
-        <FormattedMessage id="home.greeting" values={{ name: session.account?.givenName ?? '' }} />
-      </h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-2xl italic text-ink">
+          <FormattedMessage
+            id="home.greeting"
+            values={{ name: session.account?.givenName ?? '' }}
+          />
+        </h1>
+        {/* X7: the self-report entry point */}
+        <ReportSymptom />
+      </div>
       <div className="grid gap-4 md:grid-cols-2">
         <Widget
           icon={<IconSurveys size={17} />}

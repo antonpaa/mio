@@ -9,9 +9,10 @@ const SEVERITY_STYLES: Record<Severity, { chip: string; dot: string; label: stri
     dot: 'bg-amber',
     label: 'Moderate',
   },
-  // Low has no canvas chip yet (reconciliation X6) - teal outline per the
-  // design-system doc's interim rule.
-  low: { chip: 'border-teal-chip-border bg-teal-tint text-teal', dot: 'bg-teal', label: 'Low' },
+  // The X6 decision (2026-08-24): Low is the teal OUTLINE - surface
+  // background, no tint fill - deliberately quieter than the tinted
+  // High/Moderate chips so severity reads as a hierarchy at a glance.
+  low: { chip: 'border-teal-chip-border bg-surface text-teal', dot: 'bg-teal', label: 'Low' },
 };
 
 /**

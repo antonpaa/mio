@@ -648,6 +648,22 @@ resources:
           administrator: deny
 
   # -- Observations ---------------------------------------------------------
+  - id: value_series
+    schema: clinical
+    patient_scoped: false
+    description: >-
+      Series definitions (name, unit, LOINC) - reference data with no
+      patient content. Listed by the survey builder for the X8
+      per-question binding and joined into every values view.
+    actions:
+      - id: view
+        audit: never
+        grants:
+          patient: deny
+          treatment_member: any
+          treatment_lead: any
+          administrator: deny
+
   - id: value_entry
     schema: clinical
     patient_scoped: true
@@ -777,6 +793,16 @@ resources:
           treatment_member: deny
           treatment_lead: deny
           administrator: any
+      - id: reactivate
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: deny
+          administrator: any
+        notes: >-
+          The inverse of deactivate (A1). Restores sign-in only — sessions
+          stay revoked and credentials stay whatever they were.
       - id: reset_credentials
         audit: always
         grants:
@@ -791,6 +817,18 @@ resources:
     schema: identity
     patient_scoped: true
     actions:
+      - id: view
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: deny
+          administrator: any
+        notes: >-
+          The A1 user list (WP-28): identity metadata only - name, email,
+          locale, status. The administrator plane never sees clinical.*,
+          and this action does not change that; it exists so accounts can
+          be administered at all.
       - id: create
         audit: always
         grants:
@@ -809,6 +847,28 @@ resources:
           treatment_member: deny
           treatment_lead: deny
           administrator: any
+      - id: reactivate
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: deny
+          administrator: any
+        notes: >-
+          The inverse of deactivate (A1). Restores sign-in only — sessions
+          stay revoked and credentials stay whatever they were.
+      - id: mark_deceased
+        audit: always
+        grants:
+          patient: deny
+          treatment_member: deny
+          treatment_lead: care_relationship
+          administrator: deny
+        notes: >-
+          A care decision, not identity administration (WP-29): the lead
+          who knows the patient records the death. Sign-in closes, every
+          outbound automation stops, the record is retained respectfully.
+          The administrator plane deliberately cannot do this.
       - id: reset_credentials
         audit: always
         grants:

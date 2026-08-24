@@ -16,6 +16,8 @@ records the decisions the system will be built on and the questions still open.
 | [`adr/`](adr/) | Why it is built this way |
 | [`authz/capability-matrix.yaml`](authz/capability-matrix.yaml) | Who can do what — the source of truth |
 | [`compliance/register.md`](compliance/register.md) | What is still open, and who must answer it |
+| [`security/threat-model.md`](security/threat-model.md) | STRIDE per surface, mitigations, accepted risks |
+| [`security/soup-inventory.md`](security/soup-inventory.md) | Every shipped dependency, justified (ADR-0009) |
 
 ## Decisions
 

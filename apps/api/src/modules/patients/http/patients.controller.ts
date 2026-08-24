@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
 import {
   CurrentStaff,
   StaffSessionGuard,
@@ -14,6 +14,26 @@ export class PatientsController {
   @Get()
   roster(@CurrentStaff() staff: StaffPrincipal) {
     return this.patients.roster(staff);
+  }
+
+  @Post(':id/export')
+  @HttpCode(200)
+  export(
+    @CurrentStaff() staff: StaffPrincipal,
+    @Param('id') id: string,
+    @Body() body: { reason?: string },
+  ) {
+    return this.patients.exportPatient(staff, id, body.reason);
+  }
+
+  @Post(':id/deceased')
+  @HttpCode(200)
+  markDeceased(
+    @CurrentStaff() staff: StaffPrincipal,
+    @Param('id') id: string,
+    @Body() body: { date?: string },
+  ) {
+    return this.patients.markDeceased(staff, id, body.date);
   }
 
   @Get(':id')

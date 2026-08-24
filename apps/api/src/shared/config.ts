@@ -6,6 +6,11 @@ export interface ApiConfig {
   otpPepper: string;
   cookieSecure: boolean;
   publicBaseUrl: string;
+  /** filesystem storage root (dev/tests); a GCS bucket takes over in
+   * deployments via MIO_GCS_BUCKET + MIO_GCS_KEY_FILE (WP-24) */
+  storageDir: string;
+  gcsBucket: string | null;
+  gcsKeyFile: string | null;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
@@ -21,5 +26,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     otpPepper,
     cookieSecure: env['MIO_COOKIE_SECURE'] !== 'false',
     publicBaseUrl: env['MIO_PUBLIC_BASE_URL'] ?? 'http://localhost:5173',
+    storageDir: env['MIO_STORAGE_DIR'] ?? '.storage-dev',
+    gcsBucket: env['MIO_GCS_BUCKET'] ?? null,
+    gcsKeyFile: env['MIO_GCS_KEY_FILE'] ?? null,
   };
 }

@@ -8,7 +8,7 @@ import {
   type LocaleBundle,
   type SurveyDefinition,
 } from '@mio/survey-schema';
-import { Button, SeverityChip } from '@mio/ui';
+import { Button, SeverityChip, useModalFocus } from '@mio/ui';
 import { QuestionInput } from '../fill.js';
 
 /**
@@ -26,6 +26,7 @@ export function PreviewDialog({
   bundle: LocaleBundle;
   onClose: () => void;
 }): ReactElement {
+  const modalRef = useModalFocus<HTMLDivElement>();
   const intl = useIntl();
   const [answers, setAnswers] = useState<Answers>({});
   const visible = visibleQuestions(definition, answers);
@@ -42,7 +43,10 @@ export function PreviewDialog({
         if (event.key === 'Escape') onClose();
       }}
     >
-      <div className="flex max-h-full w-full max-w-lg flex-col rounded-card bg-surface shadow-raised">
+      <div
+        ref={modalRef}
+        className="flex max-h-full w-full max-w-lg flex-col rounded-card bg-surface shadow-raised"
+      >
         <header className="flex items-baseline justify-between border-b border-hairline px-6 py-4">
           <h2 id="preview-title" className="font-display text-lg italic text-ink">
             <FormattedMessage id="builder.previewTitle" values={{ title: bundle.title }} />

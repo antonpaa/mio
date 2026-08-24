@@ -20,6 +20,7 @@ import {
   BODY_REGION_IDS,
   canonicalJson,
   deriveObservations,
+  deriveValueEntries,
   evaluateResponse,
   evaluateTrends,
   maxSeverity,
@@ -619,6 +620,37 @@ export class SurveysService {
                 entry.severity,
                 JSON.stringify(entry.regions !== undefined ? { regions: entry.regions } : {}),
                 responseId,
+                patient.userId,
+              ],
+            );
+          }
+        }
+        // X8: bound numeric answers land in the patient's value series
+        // in the same transaction - value from the bound question, date
+        // from its date neighbour when present, provenance the patient.
+        // An unknown series key skips silently: a rename must never fail
+        // a submission.
+        const valueWrites = deriveValueEntries(version.definition, result.answers);
+        if (valueWrites.length > 0) {
+          const { rows: seriesRows } = await client.query<{ id: string; key: string }>(
+            `SELECT id, key FROM clinical.value_series WHERE key = ANY($1)`,
+            [valueWrites.map((entry) => entry.seriesKey)],
+          );
+          const seriesByKey = new Map(seriesRows.map((row) => [row.key, row.id]));
+          for (const entry of valueWrites) {
+            const seriesId = seriesByKey.get(entry.seriesKey);
+            if (seriesId === undefined) continue;
+            await client.query(
+              `INSERT INTO clinical.value_entry
+                 (id, series_id, patient_id, value, measured_at, note, entered_by,
+                  on_behalf_of_patient)
+               VALUES ($1, $2, $3, $4, $5, '', $6, false)`,
+              [
+                randomUUID(),
+                seriesId,
+                response.patient_id,
+                entry.value,
+                entry.measuredAt ?? new Date().toISOString().slice(0, 10),
                 patient.userId,
               ],
             );

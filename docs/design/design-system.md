@@ -54,7 +54,7 @@ Verified against actual usage across all current canvases.
 | `red-chip-border` | `#EBC5BC` |
 | `red-tint-soft` | `#FDF6F4` |
 
-Low severity has no canvas chip yet (reconciliation X6); use a teal-outline
+Low severity's chip is the teal outline (X6, owner-decided 2026-08-24): teal-outline
 chip until design supplies one.
 
 ## Typography

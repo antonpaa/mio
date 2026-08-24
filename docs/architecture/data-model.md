@@ -180,6 +180,15 @@ Statutory retention periods for Finland and Sweden are an open item in the
 compliance register. The model supports per-record retention classification;
 the periods themselves are a legal input, not a technical one.
 
+Implemented mechanics (WP-29): retention classes live in
+`audit.retention_policy` with NULL periods until R5 lands (NULL = hold,
+never delete); a daily job stamps `archived_at` on treatments that sat
+completed or discontinued through a 90-day quiet period; a daily export
+copies whole days of audit events to object storage as JSONL behind a
+watermark; and a deceased patient is recorded by their treatment lead
+(`deceased_on`, audited) — sign-in closes and every outbound automation
+checks the flag before sending anything.
+
 ## GDPR access and portability
 
 "Download my data" is available in settings for patients and staff. It runs as

@@ -256,6 +256,25 @@ export class SelfServiceService {
              FROM clinical.notification
             WHERE recipient_id = $1 AND recipient_realm = 'patient' ORDER BY created_at`,
         );
+        // WP-29 finalisation: file metadata (the bytes stay in storage;
+        // the export names what exists and where it hangs)
+        const attachments = await one(
+          `SELECT id, message_id, filename, sniffed_mime, size_bytes,
+                  created_at::text AS created_at
+             FROM clinical.attachment WHERE patient_id = $1 ORDER BY created_at`,
+        );
+        // and the access history the data-model promises the export
+        // includes - read through the audit-reader carrier, the same
+        // X4-shaped rows the settings page shows
+        const { rows: history } = await this.auditReader.query(
+          `SELECT action, resource_type, occurred_at::text AS occurred_at
+             FROM audit.access_event
+            WHERE actor_realm = 'staff' AND decision = 'allow'
+              AND (patient_id = $1
+                   OR (patient_id IS NULL AND context -> 'patientIds' ? $2))
+            ORDER BY occurred_at DESC`,
+          [patient.userId, patient.userId],
+        );
         return {
           format: 'mio-export/v1',
           generatedAt: new Date().toISOString(),
@@ -266,6 +285,8 @@ export class SelfServiceService {
           values,
           symptomObservations: symptoms,
           notifications,
+          attachments,
+          accessHistory: history,
         };
       },
     );

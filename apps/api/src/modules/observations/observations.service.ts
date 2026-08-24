@@ -10,6 +10,7 @@ import type pg from 'pg';
 import { authorize } from '@mio/authz/engine';
 import { withUserContext, writeAccessEvent, writeChangeEvent } from '@mio/db';
 import { APP_POOL } from '../../shared/db.module.js';
+import type { PatientPrincipal } from '../../shared/patient-session.js';
 import type { StaffPrincipal } from '../../shared/staff-session.js';
 
 /**
@@ -326,5 +327,133 @@ export class ObservationsService {
       });
       return { observationId };
     });
+  }
+
+  /** X8: series definitions for the builder's binding select. Reference
+   * data - matrix says staff any, audit never. */
+  async seriesCatalog(staff: StaffPrincipal): Promise<object[]> {
+    const decision = authorize({
+      principal: { userId: staff.userId, role: staff.role },
+      action: 'view',
+      resource: { type: 'value_series', id: 'catalog' },
+    }).decision;
+    if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const { rows } = await client.query(
+        `SELECT id, key, name, unit, kind FROM clinical.value_series ORDER BY name`,
+      );
+      return rows as object[];
+    });
+  }
+
+  /** X7: the patient's own report surface - the taxonomy to pick from
+   * and their recent reports. Their register entry point, not PP3. */
+  async patientSymptomView(patient: PatientPrincipal): Promise<object> {
+    const decision = authorize({
+      principal: { userId: patient.userId, role: 'patient' },
+      action: 'view',
+      resource: {
+        type: 'symptom_observation',
+        id: patient.userId,
+        patientId: patient.userId,
+        subjectUserId: patient.userId,
+      },
+    }).decision;
+    return withUserContext(
+      this.pool,
+      { userId: patient.userId, realm: 'patient' },
+      async (client) => {
+        await writeAccessEvent(client, {
+          actorUserId: patient.userId,
+          actorRealm: 'patient',
+          action: 'symptom_observation.view',
+          resourceType: 'symptom_observation',
+          resourceId: null,
+          patientId: patient.userId,
+          decision,
+        });
+        if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+        const { rows: taxonomy } = await client.query(
+          `SELECT id, code, label_en, label_fi, label_sv
+             FROM clinical.symptom WHERE active ORDER BY label_en`,
+        );
+        const { rows: own } = await client.query(
+          `SELECT o.id, o.severity, o.observed_at::text AS observed_at, o.source,
+                  y.code, y.label_en, y.label_fi, y.label_sv
+             FROM clinical.symptom_observation o
+             JOIN clinical.symptom y ON y.id = o.symptom_id
+            WHERE o.patient_id = $1
+            ORDER BY o.observed_at DESC, o.created_at DESC
+            LIMIT 10`,
+          [patient.userId],
+        );
+        return { taxonomy, own };
+      },
+    );
+  }
+
+  /** X7: a patient reports a symptom themselves - source self_report,
+   * observed now, their own provenance. The register treats it exactly
+   * like every other observation; grading stays the clinician's. */
+  async patientReportSymptom(
+    patient: PatientPrincipal,
+    input: { symptomId?: string; severity?: string; note?: string },
+  ): Promise<{ observationId: string }> {
+    if (!input.symptomId) throw new BadRequestException({ status: 'symptom_required' });
+    if (!['mild', 'moderate', 'severe'].includes(input.severity ?? '')) {
+      throw new BadRequestException({ status: 'severity_required' });
+    }
+    const decision = authorize({
+      principal: { userId: patient.userId, role: 'patient' },
+      action: 'create',
+      resource: {
+        type: 'symptom_observation',
+        id: input.symptomId,
+        patientId: patient.userId,
+        subjectUserId: patient.userId,
+      },
+    }).decision;
+    return withUserContext(
+      this.pool,
+      { userId: patient.userId, realm: 'patient' },
+      async (client) => {
+        await writeAccessEvent(client, {
+          actorUserId: patient.userId,
+          actorRealm: 'patient',
+          action: 'symptom_observation.create',
+          resourceType: 'symptom_observation',
+          resourceId: input.symptomId ?? null,
+          patientId: patient.userId,
+          decision,
+        });
+        if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+        const observationId = randomUUID();
+        const inserted = await client.query(
+          `INSERT INTO clinical.symptom_observation
+             (id, patient_id, symptom_id, severity, detail, observed_at,
+              source, entered_by, on_behalf_of_patient)
+           SELECT $1, $2, y.id, $4, $5, current_date, 'self_report', $2, false
+             FROM clinical.symptom y WHERE y.id = $3 AND y.active`,
+          [
+            observationId,
+            patient.userId,
+            input.symptomId,
+            input.severity,
+            JSON.stringify(input.note?.trim() ? { note: input.note.trim() } : {}),
+          ],
+        );
+        if (inserted.rowCount === 0) throw new NotFoundException({ status: 'unknown_symptom' });
+        await writeChangeEvent(client, {
+          actorUserId: patient.userId,
+          actorRealm: 'patient',
+          action: 'symptom_observation.create',
+          resourceType: 'symptom_observation',
+          resourceId: observationId,
+          patientId: patient.userId,
+          detail: { source: 'self_report' },
+        });
+        return { observationId };
+      },
+    );
   }
 }

@@ -27,6 +27,7 @@ export interface DefinitionIssue {
     | 'unknown_region'
     | 'bad_rule'
     | 'bad_symptom_map'
+    | 'bad_value_binding'
     | 'empty';
 }
 
@@ -47,6 +48,17 @@ export function validateDefinition(definition: SurveyDefinition): DefinitionIssu
     if (seen.has(question.id)) issues.push({ questionId: question.id, code: 'duplicate_id' });
     seen.add(question.id);
     issues.push(...questionIssues(question, seen));
+    // the binding's date source must exist and be a date question - the
+    // reference spans the whole definition, so it validates here
+    if (
+      question.valueBinding?.dateQuestionId !== undefined &&
+      !questions.some(
+        (candidate) =>
+          candidate.id === question.valueBinding?.dateQuestionId && candidate.type === 'date',
+      )
+    ) {
+      issues.push({ questionId: question.id, code: 'bad_value_binding' });
+    }
     for (const rule of question.rules ?? []) {
       if (ruleIds.has(rule.id)) issues.push({ questionId: question.id, code: 'bad_rule' });
       ruleIds.add(rule.id);
@@ -244,6 +256,15 @@ function questionIssues(question: Question, earlier: Set<string>): DefinitionIss
         !grades.includes(map.severity));
     if (mapBad) issues.push({ questionId: question.id, code: 'bad_symptom_map' });
   }
+  if (question.valueBinding !== undefined) {
+    const binding = question.valueBinding;
+    const numeric = question.type === 'number' || question.type === 'scale';
+    const key = binding.seriesKey;
+    if (!numeric || typeof key !== 'string' || key.trim() === '' || key.length > 64) {
+      issues.push({ questionId: question.id, code: 'bad_value_binding' });
+    }
+  }
+
   if (question.rules !== undefined) {
     if (!Array.isArray(question.rules) || question.rules.length > MAX_RULES_PER_QUESTION) {
       issues.push({ questionId: question.id, code: 'bad_rule' });
@@ -306,6 +327,7 @@ export function patientView(definition: SurveyDefinition): SurveyDefinition {
     delete rest.criticalRegions;
     delete rest.rules;
     delete rest.symptomMap;
+    delete rest.valueBinding;
     if (question.followUps) rest.followUps = question.followUps.map(strip);
     return rest;
   };

@@ -77,7 +77,10 @@ export class AlertsService {
           ORDER BY (a.status = 'new') DESC, ${SEVERITY_ORDER} DESC, a.created_at DESC`,
         [staff.userId],
       );
-      for (const row of rows as { id: string; patient_id: string }[]) {
+      // Sampled tripwire (WP-32): the resource is built identically per
+      // row, so a policy/scoping disagreement is systemic and the first
+      // rows trip it - see the roster's twin comment.
+      for (const row of (rows as { id: string; patient_id: string }[]).slice(0, 25)) {
         const decision = authorize({
           principal: { userId: staff.userId, role: staff.role },
           action: 'view',

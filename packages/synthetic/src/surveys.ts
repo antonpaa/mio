@@ -385,6 +385,9 @@ export const SYNTHETIC_SURVEYS: SyntheticSurvey[] = [
               type: 'number',
               required: true,
               validation: { min: 0, max: 10000, decimals: 2, unit: 'µg/l' },
+              // X8: the reported value lands in the patient's PSA series,
+              // dated by the lab date beside it
+              valueBinding: { seriesKey: 'psa', dateQuestionId: 'lab-date' },
             },
             { id: 'lab-date', type: 'date', required: true },
             { id: 'lab-location', type: 'text', validation: { maxLength: 120 } },

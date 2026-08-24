@@ -62,6 +62,8 @@ export async function sweepSurveyOccurrences(
          JOIN clinical.schedule sch ON sch.id = a.schedule_id
          JOIN identity.patient_account p ON p.id = a.patient_id
         WHERE a.kind = 'survey' AND a.status IN ('planned', 'confirmed')
+          -- WP-29: no outbound communication to a deceased patient, ever
+          AND p.deceased_on IS NULL
           -- P8 (WP-25): the survey_reminder email toggle; absent = on
           AND COALESCE((p.email_prefs ->> 'survey_reminder')::boolean, true)
           AND sch.reminder_after_days IS NOT NULL

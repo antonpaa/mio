@@ -64,3 +64,8 @@ jobs:
 
       - name: Web build
         run: pnpm --filter @mio/web build
+
+      # WP-30: a vulnerability in a runtime dependency is a release
+      # blocker until assessed (docs/security/soup-inventory.md)
+      - name: Dependency audit
+        run: pnpm audit --prod

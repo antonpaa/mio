@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import type pg from 'pg';
 import { authorize } from '@mio/authz/engine';
-import { parseMessageDoc, plainTextOf, type MessageDoc } from '@mio/contracts';
+import { attachmentIdsOf, parseMessageDoc, plainTextOf, type MessageDoc } from '@mio/contracts';
 import { withUserContext, writeAccessEvent, writeChangeEvent } from '@mio/db';
 import { APP_POOL } from '../../shared/db.module.js';
 import type { PatientPrincipal } from '../../shared/patient-session.js';
@@ -365,6 +365,22 @@ export class MessagesService {
        VALUES ($1, $2, $3, $4, $5, $6)`,
       [id, thread.id, treatment.patient_id, author.userId, author.realm, JSON.stringify(doc)],
     );
+    // WP-24: attachment references must be the AUTHOR'S own clean,
+    // still-unlinked uploads for THIS patient - anything else refuses
+    // the whole message. Linking happens here, in the send transaction.
+    const attachmentIds = attachmentIdsOf(doc);
+    if (attachmentIds.length > 0) {
+      const { rowCount } = await client.query(
+        `UPDATE clinical.attachment
+            SET message_id = $1
+          WHERE id = ANY($2) AND uploaded_by = $3 AND patient_id = $4
+            AND state = 'clean' AND message_id IS NULL`,
+        [id, attachmentIds, author.userId, treatment.patient_id],
+      );
+      if ((rowCount ?? 0) !== new Set(attachmentIds).size) {
+        throw new BadRequestException({ status: 'invalid_attachment' });
+      }
+    }
     // WP-25 consumes these into the notification centre + contentless
     // email; the payload carries references, never message text
     await client.query(
@@ -432,6 +448,12 @@ export class MessagesService {
       }
       const doc = parseMessageDoc(body);
       if (doc === null) throw new BadRequestException({ status: 'invalid_body' });
+      // WP-24: notes never carry attachments - the attachment read arms
+      // are built around messages, and a note-side file would be a
+      // patient-invisible clinical artifact with no serving story
+      if (attachmentIdsOf(doc).length > 0) {
+        throw new BadRequestException({ status: 'no_note_attachments' });
+      }
       const thread = await this.ensureThread(client, treatment);
       const id = randomUUID();
       await client.query(

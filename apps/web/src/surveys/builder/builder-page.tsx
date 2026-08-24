@@ -101,6 +101,20 @@ function BuilderFrame({
   const bundle = locales.find((entry) => entry.locale === activeLocale)!;
   const page = definition.pages[Math.min(activePage, definition.pages.length - 1)];
   const ordered = allQuestions(definition);
+  // X8: the binding select's catalog - reference data, one fetch
+  const seriesCatalog = useQuery({
+    queryKey: ['value-series'],
+    queryFn: async (): Promise<{ key: string; name: string; unit: string | null }[]> => {
+      const response = await fetch('/api/staff/value-series', { credentials: 'same-origin' });
+      if (!response.ok) throw new Error(`series: ${response.status}`);
+      return (await response.json()) as { key: string; name: string; unit: string | null }[];
+    },
+    staleTime: 300_000,
+    retry: false,
+  });
+  const dateQuestions = ordered
+    .filter((entry) => entry.type === 'date')
+    .map((entry) => ({ id: entry.id, label: bundle.questions[entry.id]?.label || entry.id }));
 
   const save = useMutation({
     mutationFn: async () => {
@@ -181,6 +195,8 @@ function BuilderFrame({
           depth={depth}
           nextId={nextId}
           nextRuleId={nextRuleId}
+          seriesCatalog={seriesCatalog.data ?? []}
+          dateQuestions={dateQuestions}
           onChange={(next) =>
             patchDefinition({
               ...definition,

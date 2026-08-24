@@ -1,6 +1,6 @@
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactElement } from 'react';
 import axe from 'axe-core';
@@ -98,20 +98,43 @@ function appAt(path: string): ReactElement {
 
 beforeEach(() => {
   vi.mocked(api.whoami).mockResolvedValue(PATIENT);
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async (input: RequestInfo | URL) => {
-      const url = String(input);
-      if (url in ROUTES) {
-        return new Response(JSON.stringify(ROUTES[url]), {
-          status: 200,
-          headers: { 'content-type': 'application/json' },
-        });
-      }
-      return new Response('{}', { status: 404 });
-    }),
-  );
+  fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    if (url === '/api/patient/symptoms' && init?.method === 'POST') {
+      return new Response('{"observationId":"o1"}', {
+        status: 201,
+        headers: { 'content-type': 'application/json' },
+      });
+    }
+    if (url === '/api/patient/symptoms') {
+      return new Response(
+        JSON.stringify({
+          taxonomy: [
+            {
+              id: 'sy1',
+              code: 'headache',
+              label_en: 'Headache',
+              label_fi: 'Päänsärky',
+              label_sv: 'Huvudvärk',
+            },
+          ],
+          own: [],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    }
+    if (url in ROUTES) {
+      return new Response(JSON.stringify(ROUTES[url]), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    }
+    return new Response('{}', { status: 404 });
+  });
+  vi.stubGlobal('fetch', fetchMock);
 });
+
+let fetchMock: ReturnType<typeof vi.fn>;
 
 describe('P1/P7 patient landing', () => {
   it('greets and composes the four widgets from existing disclosures', async () => {
@@ -133,5 +156,28 @@ describe('P1/P7 patient landing', () => {
     expect(screen.getByText(/Clinic 2B/)).toBeTruthy();
     const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });
     expect(results.violations.map((violation) => violation.id)).toEqual([]);
+  });
+});
+
+describe('X7 self-report', () => {
+  it('reports a symptom from the landing and lands the calm confirmation', async () => {
+    render(appAt('/'));
+    await screen.findByText('Hello, Anna');
+    fireEvent.click(screen.getByRole('button', { name: /Report a symptom/ }));
+    // wait for the taxonomy to load into the select before choosing
+    await screen.findByRole('option', { name: 'Headache' });
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'sy1' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Moderate' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Send to your care team' }));
+    await waitFor(() => {
+      const post = fetchMock.mock.calls.find(
+        ([url, init]) =>
+          String(url) === '/api/patient/symptoms' &&
+          (init as RequestInit | undefined)?.method === 'POST',
+      );
+      expect(post).toBeTruthy();
+      expect(String((post![1] as RequestInit).body)).toContain('"severity":"moderate"');
+    });
+    await screen.findByText(/Thank you/);
   });
 });
