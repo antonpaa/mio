@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
 import { useIntl } from 'react-intl';
-import { IconBell } from '@mio/ui';
+import { IconBell, IconUpdates } from '@mio/ui';
 import { notificationsQuery, type NotificationRealm } from './model.js';
 
 /** The bell (P11 entry point, and its staff twin): unread count over
@@ -22,7 +22,8 @@ export function NotificationBell({
       aria-label={intl.formatMessage({ id: 'notifications.bellLabel' }, { count: unread })}
       className="relative inline-flex h-9 w-9 items-center justify-center rounded-pill text-secondary transition-colors hover:bg-surface-sunken hover:text-ink"
     >
-      <IconBell size={20} />
+      {/* alerts own the bell; the centre is "something to read" */}
+      {realm === 'staff' ? <IconUpdates size={20} /> : <IconBell size={20} />}
       {unread > 0 ? (
         <span
           aria-hidden
