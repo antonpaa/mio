@@ -26,6 +26,11 @@ variable "region" {
 variable "api_image" { type = string }
 variable "worker_image" { type = string }
 variable "public_base_url" { type = string }
+variable "notification_channels" {
+  type        = list(string)
+  default     = []
+  description = "monitoring channels for the WP-32 alerts; empty keeps them console-only"
+}
 
 provider "google" {
   project = var.project
@@ -66,6 +71,15 @@ module "runtime" {
   api_image           = var.api_image
   worker_image        = var.worker_image
   public_base_url     = var.public_base_url
+}
+
+module "monitoring" {
+  source                = "../../modules/monitoring"
+  project               = var.project
+  env                   = "staging"
+  api_service_name      = "mio-staging-api"
+  api_host              = trimprefix(module.runtime.api_url, "https://")
+  notification_channels = var.notification_channels
 }
 
 output "api_url" { value = module.runtime.api_url }

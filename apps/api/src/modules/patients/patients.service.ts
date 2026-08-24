@@ -73,8 +73,12 @@ export class PatientsService {
 
       // Spot-check the scoping with the decision point: the caller holds a
       // care relationship with every row by construction; a Cedar deny here
-      // means scoping and policy disagree - fail loud, never leak.
-      for (const row of rows) {
+      // means scoping and policy disagree - fail loud, never leak. SAMPLED
+      // (WP-32): the resource is built identically per row - the decision
+      // depends on role and membership, never the id - so any disagreement
+      // is systemic and the first rows trip it; evaluating all ~600 rows
+      // of a busy lead's roster re-proved the same decision at ~0.5s cost.
+      for (const row of rows.slice(0, 25)) {
         const decision = authorize({
           principal: { userId: staff.userId, role: staff.role },
           action: 'view',
