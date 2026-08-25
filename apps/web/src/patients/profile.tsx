@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
-import type { ReactElement, ReactNode } from 'react';
+import { useState, type ReactElement, type ReactNode } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import {
   Avatar,
   Card,
   CardHeader,
   ErrorState,
+  IconAudit,
+  IconPatients,
   IconTreatments,
   ListRow,
   Skeleton,
@@ -117,9 +119,11 @@ async function fetchProfile(patientId: string): Promise<PatientProfile> {
   return (await response.json()) as PatientProfile;
 }
 
-/** The PP sub-navigation (C2): groups are headers, not links; pages land
- * with their work packages and gate on capabilities as they do. */
+/** The PP sub-navigation (C2): every entry is an in-page anchor to its
+ * section - the profile is one scrolling page, so the rail navigates it
+ * rather than pretending to be separate screens. */
 function SubNav(): ReactElement {
+  const [active, setActive] = useState('pp.summary');
   const group = (id: string, items: ReactNode): ReactElement => (
     <div className="mb-4">
       <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
@@ -128,17 +132,21 @@ function SubNav(): ReactElement {
       <ul className="flex flex-col gap-0.5 text-sm">{items}</ul>
     </div>
   );
-  const item = (id: string, active = false): ReactElement => (
+  const item = (id: string, anchor: string): ReactElement => (
     <li key={id}>
-      <span
+      <a
+        href={`#${anchor}`}
+        onClick={() => setActive(id)}
         className={
-          'block rounded-inner px-2 py-1 ' +
-          (active ? 'bg-teal-tint font-medium text-teal' : 'text-ink-strong-secondary')
+          'block rounded-inner px-2 py-1 transition-colors ' +
+          (active === id
+            ? 'bg-teal-tint font-medium text-teal'
+            : 'text-ink-strong-secondary hover:bg-surface-sunken hover:text-ink')
         }
-        {...(active ? { 'aria-current': 'page' } : {})}
+        {...(active === id ? { 'aria-current': 'location' } : {})}
       >
         <FormattedMessage id={id} />
-      </span>
+      </a>
     </li>
   );
   return (
@@ -146,21 +154,84 @@ function SubNav(): ReactElement {
       {group(
         'pp.group.profile',
         <>
-          {item('pp.summary', true)}
-          {item('pp.programs')}
-          {item('pp.details')}
+          {item('pp.summary', 'pp-summary')}
+          {item('pp.programs', 'pp-programs')}
+          {item('pp.details', 'pp-details')}
         </>,
       )}
       {group(
         'pp.group.health',
         <>
-          {item('pp.values')}
-          {item('pp.symptoms')}
-          {item('pp.completedSurveys')}
-          {item('pp.export')}
+          {item('pp.values', 'pp-values')}
+          {item('pp.symptoms', 'pp-symptoms')}
+          {item('pp.completedSurveys', 'pp-responses')}
+          {item('pp.export', 'pp-export')}
         </>,
       )}
     </nav>
+  );
+}
+
+/** PP "Patient details": what is on file, read-only, with the assisted
+ * contact edit beside it - the section the rail's entry points at. */
+function DetailsCard({
+  patientId,
+  patient,
+  mayEditContact,
+}: {
+  patientId: string;
+  patient: PatientProfile;
+  mayEditContact: boolean;
+}): ReactElement {
+  const intl = useIntl();
+  const address = patient.address
+    ? [
+        patient.address['street'],
+        `${patient.address['postalCode'] ?? ''} ${patient.address['city'] ?? ''}`.trim(),
+      ]
+        .filter((part) => part)
+        .join(', ')
+    : null;
+  const row = (label: string, value: string | null): ReactElement => (
+    <div className="flex justify-between gap-4 border-b border-hairline py-2 text-sm last:border-b-0">
+      <dt className="text-secondary">{label}</dt>
+      <dd className="text-right text-ink">{value ?? '—'}</dd>
+    </div>
+  );
+  return (
+    <Card>
+      <CardHeader
+        icon={<IconPatients size={17} />}
+        title={<FormattedMessage id="pp.details" />}
+        action={
+          patient.deceasedOn === null && mayEditContact ? (
+            <EditContactButton
+              patientId={patientId}
+              current={{
+                phone: patient.phone,
+                address: patient.address,
+                locale: patient.locale,
+              }}
+            />
+          ) : undefined
+        }
+      />
+      <dl>
+        {row(
+          intl.formatMessage({ id: 'pp.dob' }),
+          patient.dateOfBirth
+            ? intl.formatDate(patient.dateOfBirth, {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+              })
+            : null,
+        )}
+        {row(intl.formatMessage({ id: 'pp5.phone' }), patient.phone)}
+        {row(intl.formatMessage({ id: 'pp.address' }), address)}
+        {row(intl.formatMessage({ id: 'admin.field.locale' }), patient.locale.toUpperCase())}
+      </dl>
+    </Card>
   );
 }
 
@@ -194,7 +265,10 @@ export function PatientProfilePage(): ReactElement {
     <div className="flex gap-8">
       <SubNav />
       <div className="min-w-0 flex-1">
-        <header className="mb-6 flex items-center gap-4 rounded-card border border-black/5 bg-surface p-5 shadow-resting">
+        <header
+          id="pp-summary"
+          className="mb-6 flex scroll-mt-4 items-center gap-4 rounded-card border border-black/5 bg-surface p-5 shadow-resting"
+        >
           <Avatar
             initials={`${patient.givenName[0] ?? ''}${patient.familyName[0] ?? ''}`}
             label={`${patient.givenName} ${patient.familyName}`}
@@ -228,33 +302,47 @@ export function PatientProfilePage(): ReactElement {
             </p>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            {patient.deceasedOn === null && mayEditContact ? (
-              <EditContactButton
-                patientId={patientId}
-                current={{
-                  phone: patient.phone,
-                  address: patient.address,
-                  locale: patient.locale,
-                }}
-              />
-            ) : null}
             {patient.deceasedOn === null && mayMarkDeceased ? (
               <MarkDeceasedButton
                 patientId={patientId}
                 patientName={`${patient.givenName} ${patient.familyName}`}
               />
             ) : null}
-            <ExportDataButton
-              patientId={patientId}
-              patientName={`${patient.givenName} ${patient.familyName}`}
-            />
           </div>
         </header>
         <div className="flex flex-col gap-4">
-          <ProgramsCard patientId={patientId} />
-          <ValuesCard patientId={patientId} />
-          <SymptomsCard patientId={patientId} />
-          <ResponsesCard patientId={patientId} />
+          <div id="pp-programs" className="scroll-mt-4">
+            <ProgramsCard patientId={patientId} />
+          </div>
+          <div id="pp-details" className="scroll-mt-4">
+            <DetailsCard patientId={patientId} patient={patient} mayEditContact={mayEditContact} />
+          </div>
+          <div id="pp-values" className="scroll-mt-4">
+            <ValuesCard patientId={patientId} />
+          </div>
+          <div id="pp-symptoms" className="scroll-mt-4">
+            <SymptomsCard patientId={patientId} />
+          </div>
+          <div id="pp-responses" className="scroll-mt-4">
+            <ResponsesCard patientId={patientId} />
+          </div>
+          <div id="pp-export" className="scroll-mt-4">
+            <Card>
+              <CardHeader
+                icon={<IconAudit size={17} />}
+                title={<FormattedMessage id="pp.export" />}
+                action={
+                  <ExportDataButton
+                    patientId={patientId}
+                    patientName={`${patient.givenName} ${patient.familyName}`}
+                  />
+                }
+              />
+              <p className="text-sm text-secondary">
+                <FormattedMessage id="pp.exportWhy" />
+              </p>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
