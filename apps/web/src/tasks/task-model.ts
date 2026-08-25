@@ -14,6 +14,8 @@ export interface TaskRow {
   patient_family: string;
   assignee_given: string | null;
   assignee_family: string | null;
+  /** the caller leads this task's treatment (complete is own OR team-lead) */
+  viewer_is_lead?: boolean;
 }
 
 export interface StaffOption {

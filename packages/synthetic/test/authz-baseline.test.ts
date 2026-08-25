@@ -39,7 +39,7 @@ describe('authz at 20k patients', () => {
     let wrong = 0;
     for (const testCase of cases) {
       const result = authorize({
-        principal: { userId: testCase.staffId, role: 'treatment_member' },
+        principal: { userId: testCase.staffId, roles: ['clinician'] },
         action: 'view',
         resource: {
           type: 'patient_clinical_profile',

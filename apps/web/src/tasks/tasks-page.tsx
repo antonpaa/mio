@@ -155,7 +155,7 @@ export function TasksPage(): ReactElement {
                     >
                       <FormattedMessage id="tasks.assign" />
                     </Button>
-                    {task.assignee_id === me || session.account?.role === 'treatment_lead' ? (
+                    {task.assignee_id === me || task.viewer_is_lead === true ? (
                       <Button
                         size="sm"
                         isDisabled={act.isPending}

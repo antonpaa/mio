@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { useState, type ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { ROLE_CAPABILITIES, type Role } from '@mio/authz';
+import { capabilityUnion, sessionRoles } from '../app/shells.js';
 import { Avatar, Button, ConfirmDialog, ErrorState, ListRow, Skeleton, StatusChip } from '@mio/ui';
 import { ActivitiesSection } from '../scheduling/activities-section.js';
 import { TasksSection } from '../tasks/tasks-section.js';
@@ -84,11 +84,12 @@ export function TreatmentDetailPage(): ReactElement {
   if (treatment.isError) return <ErrorState onRetry={() => void treatment.refetch()} />;
   const data = treatment.data;
 
-  const role: Role =
-    session.realm === 'patient'
-      ? 'patient'
-      : ((session.account?.role ?? 'treatment_member') as Role);
-  const mayChangeState = ROLE_CAPABILITIES[role].includes('treatment.change_lifecycle_state');
+  // Lifecycle is a team-lead act on THIS treatment (matrix: team_lead
+  // scope) - the detail payload carries the positions, so the buttons
+  // follow the truth instead of a coarse account capability.
+  const mayChangeState =
+    capabilityUnion(sessionRoles(session)).has('treatment.change_lifecycle_state') &&
+    data.team.some((entry) => entry.role === 'lead' && entry.staff_id === session.account?.id);
 
   return (
     <div className="flex flex-col gap-5">

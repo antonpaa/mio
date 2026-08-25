@@ -9,7 +9,7 @@ export interface StaffRow {
   email: string;
   given_name: string;
   family_name: string;
-  role: 'treatment_member' | 'treatment_lead' | 'administrator';
+  roles: ('clinician' | 'author' | 'administrator' | 'auditor')[];
   title: string | null;
   status: 'invited' | 'active' | 'deactivated';
 }
@@ -26,7 +26,7 @@ export interface PatientRow {
 export interface TeamRow {
   id: string;
   name: string;
-  members: { id: string; given_name: string; family_name: string; role: string }[];
+  members: { id: string; given_name: string; family_name: string; roles: string[] }[];
 }
 
 export interface AuditEvent {

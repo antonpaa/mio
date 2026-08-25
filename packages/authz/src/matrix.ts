@@ -26,7 +26,10 @@ export type Scope = (typeof SCOPES)[number];
 export interface MatrixAction {
   id: string;
   audit: 'always' | 'never';
-  grants: Record<Role, Scope>;
+  /** Normalised: 'deny' is [], a scalar scope is a one-element array,
+   * and a YAML list means the UNION of its scopes (e.g. task.complete's
+   * clinician [own, team_lead]). */
+  grants: Record<Role, readonly Scope[]>;
   notes?: string;
 }
 
@@ -42,17 +45,6 @@ export interface CapabilityMatrix {
   version: number;
   resources: MatrixResource[];
 }
-
-/** Relative strength used ONLY by the lead-superset invariant. */
-const STRENGTH: Record<Scope, number> = {
-  deny: 0,
-  self: 1,
-  own: 1,
-  care_relationship: 2,
-  team_member: 2,
-  team_lead: 3,
-  any: 4,
-};
 
 const READ_ACTIONS = new Set(['view', 'download', 'view_trend']);
 
@@ -72,7 +64,7 @@ export function loadMatrix(filePath: string): CapabilityMatrix {
       actions: {
         id: string;
         audit: string;
-        grants: Record<string, string>;
+        grants: Record<string, string | string[]>;
         notes?: string;
       }[];
     }[];
@@ -91,15 +83,23 @@ export function loadMatrix(filePath: string): CapabilityMatrix {
     patientScoped: r.patient_scoped,
     ...(r.description !== undefined ? { description: r.description } : {}),
     actions: r.actions.map((a) => {
-      const grants: Partial<Record<Role, Scope>> = {};
-      for (const [role, scope] of Object.entries(a.grants)) {
+      const grants: Partial<Record<Role, readonly Scope[]>> = {};
+      for (const [role, raw] of Object.entries(a.grants)) {
         if (!(ROLES as readonly string[]).includes(role)) {
           throw new Error(`Unknown role '${role}' in ${r.id}.${a.id}`);
         }
-        if (!(SCOPES as readonly string[]).includes(scope)) {
-          throw new Error(`Unknown scope '${scope}' in ${r.id}.${a.id} for ${role}`);
+        const listed = Array.isArray(raw) ? raw : [raw];
+        for (const scope of listed) {
+          if (!(SCOPES as readonly string[]).includes(scope)) {
+            throw new Error(`Unknown scope '${scope}' in ${r.id}.${a.id} for ${role}`);
+          }
         }
-        grants[role as Role] = scope as Scope;
+        if (Array.isArray(raw) && (raw.includes('deny') || new Set(raw).size !== raw.length)) {
+          throw new Error(`Invalid scope list in ${r.id}.${a.id} for ${role}`);
+        }
+        grants[role as Role] = (
+          listed[0] === 'deny' ? [] : (listed as Scope[])
+        ) as readonly Scope[];
       }
       if (a.audit !== 'always' && a.audit !== 'never') {
         throw new Error(`Invalid audit '${a.audit}' in ${r.id}.${a.id}`);
@@ -107,7 +107,7 @@ export function loadMatrix(filePath: string): CapabilityMatrix {
       return {
         id: a.id,
         audit: a.audit,
-        grants: grants as Record<Role, Scope>,
+        grants: grants as Record<Role, readonly Scope[]>,
         ...(a.notes !== undefined ? { notes: a.notes } : {}),
       };
     }),
@@ -142,23 +142,21 @@ export function checkInvariants(matrix: CapabilityMatrix): InvariantViolation[] 
         }
       }
 
-      const member = action.grants.treatment_member;
-      const lead = action.grants.treatment_lead;
-      if (member !== undefined && lead !== undefined && STRENGTH[lead] < STRENGTH[member]) {
-        add('superset_lead_member', `${ref}: member=${member} lead=${lead}`);
+      if (resource.patientScoped && (action.grants.author?.length ?? 0) > 0) {
+        add('author_never_patient_scoped', `${ref} = ${action.grants.author?.join('|')}`);
       }
 
-      if (resource.schema === 'clinical' && action.grants.administrator !== 'deny') {
-        add('administrator_no_clinical', `${ref} = ${action.grants.administrator}`);
+      if (resource.schema === 'clinical' && (action.grants.administrator?.length ?? 0) > 0) {
+        add('administrator_no_clinical', `${ref} = ${action.grants.administrator?.join('|')}`);
       }
 
       const patient = action.grants.patient;
-      if (patient !== undefined && patient !== 'deny' && patient !== 'self') {
-        add('patient_self_only', `${ref} = ${patient}`);
+      if (patient !== undefined && patient.some((scope) => scope !== 'self')) {
+        add('patient_self_only', `${ref} = ${patient.join('|')}`);
       }
 
-      if (resource.id === 'internal_note' && patient !== 'deny') {
-        add('internal_notes_never_patient', `${ref} = ${patient}`);
+      if (resource.id === 'internal_note' && (patient?.length ?? 0) > 0) {
+        add('internal_notes_never_patient', `${ref} = ${patient?.join('|')}`);
       }
 
       if (resource.patientScoped && READ_ACTIONS.has(action.id) && action.audit !== 'always') {

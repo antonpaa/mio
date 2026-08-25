@@ -61,7 +61,7 @@ clinical.symptom_observation patient_id, symptom, severity, detail (e.g. body-ma
                             areas), observed_at, source, entered_by, on_behalf
 ```
 
-The taxonomy is reference data managed like the survey catalog (Treatment Lead
+The taxonomy is reference data managed like the survey catalog (author-role
 authoring), not a hard-coded enum — "list may grow" is in the brief.
 
 ### Sources
@@ -106,7 +106,7 @@ are the rule engine's job, not the register's.
 
 Added to the capability matrix: `value_entry` (view / create, patient self and
 care-relationship on-behalf), `symptom_observation` (same shape), and the
-taxonomy under Treatment Lead authoring. Reads are patient-scoped and audited
+taxonomy under author-role authoring. Reads are patient-scoped and audited
 always. Administrators: deny, as for all clinical resources.
 
 ## What this module is not

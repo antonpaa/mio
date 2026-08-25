@@ -33,8 +33,8 @@ let app: NestFastifyApplication;
 let mailer: CapturingMailer;
 
 const world = generateWorld('demo', 42);
-const admin = world.staff.find((s) => s.role === 'administrator')!;
-const auditor = world.staff.find((s) => s.role === 'auditor')!;
+const admin = world.staff.find((s) => s.roles.length === 1 && s.roles[0] === 'administrator')!;
+const auditor = world.staff.find((s) => s.roles.includes('auditor'))!;
 const treatment = world.treatments.find((t) => {
   const team = world.teams.find((candidate) => candidate.id === t.teamId);
   return t.state === 'active' && (team?.leadIds.length ?? 0) > 0;
@@ -136,7 +136,7 @@ describe('A1 users', () => {
         email: 'uusi.hoitaja@staff.example',
         givenName: 'Uusi',
         familyName: 'Hoitaja',
-        role: 'treatment_member',
+        roles: ['clinician'],
         title: 'Nurse',
         locale: 'fi',
       },
@@ -147,6 +147,111 @@ describe('A1 users', () => {
       (mail) => mail.recipient === 'uusi.hoitaja@staff.example' && mail.kind === 'welcome_invite',
     );
     expect(invite).toBeTruthy();
+  });
+
+  it('a staff account can hold SEVERAL roles - and auditor never combines', async () => {
+    const created = await inject(
+      'POST',
+      '/api/admin/staff',
+      {
+        email: 'moni.rooli@staff.example',
+        givenName: 'Moni',
+        familyName: 'Rooli',
+        roles: ['clinician', 'administrator'],
+      },
+      adminCookie,
+    );
+    expect(created.statusCode).toBe(201);
+    const users = await inject('GET', '/api/admin/users', undefined, adminCookie);
+    const staffRows = (users.json() as { staff: { email: string; roles: string[] }[] }).staff;
+    const row = staffRows.find((r) => r.email === 'moni.rooli@staff.example');
+    expect(row?.roles).toEqual(['administrator', 'clinician']);
+
+    const rejected = await inject(
+      'POST',
+      '/api/admin/staff',
+      {
+        email: 'kielletty@staff.example',
+        givenName: 'Kielletty',
+        familyName: 'Yhdistelma',
+        roles: ['auditor', 'clinician'],
+      },
+      adminCookie,
+    );
+    expect(rejected.statusCode).toBe(400);
+    expect(rejected.body).toContain('invalid_roles');
+  });
+
+  it('edits an account role set - audited, never self-targeting, never empty', async () => {
+    const created = await inject(
+      'POST',
+      '/api/admin/staff',
+      {
+        email: 'rooli.muutos@staff.example',
+        givenName: 'Rooli',
+        familyName: 'Muutos',
+        roles: ['clinician'],
+      },
+      adminCookie,
+    );
+    const { accountId } = created.json() as { accountId: string };
+
+    const updated = await inject(
+      'POST',
+      `/api/admin/users/staff/${accountId}/roles`,
+      { roles: ['clinician', 'author'] },
+      adminCookie,
+    );
+    expect(updated.statusCode).toBe(200);
+    expect((updated.json() as { roles: string[] }).roles).toEqual(['author', 'clinician']);
+
+    const emptied = await inject(
+      'POST',
+      `/api/admin/users/staff/${accountId}/roles`,
+      { roles: [] },
+      adminCookie,
+    );
+    expect(emptied.statusCode).toBe(400);
+
+    // never self-targeting: an administrator cannot change their own set
+    const self = await inject(
+      'POST',
+      `/api/admin/users/staff/${admin.id}/roles`,
+      { roles: ['administrator', 'clinician'] },
+      adminCookie,
+    );
+    expect(self.statusCode).toBe(400);
+    expect(self.body).toContain('cannot_target_self');
+
+    const changeEvent = await owner.query(
+      `SELECT detail FROM audit.change_event
+        WHERE action = 'staff_account.update_roles' AND resource_id = $1`,
+      [accountId],
+    );
+    expect(changeEvent.rows[0]?.detail).toMatchObject({
+      before: ['clinician'],
+      after: ['author', 'clinician'],
+    });
+  });
+
+  it('admin acts on OTHERS only: self reset and self team-membership are refused', async () => {
+    const reset = await inject(
+      'POST',
+      `/api/admin/users/staff/${admin.id}/reset-login`,
+      { password: DEMO_PASSWORD },
+      adminCookie,
+    );
+    expect(reset.statusCode).toBe(400);
+    expect(reset.body).toContain('cannot_target_self');
+
+    const membership = await inject(
+      'POST',
+      `/api/admin/teams/${team.id}/membership`,
+      { add: [admin.id] },
+      adminCookie,
+    );
+    expect(membership.statusCode).toBe(400);
+    expect(membership.body).toContain('cannot_target_self');
   });
 
   it('creates a patient account (P1: administration, not care); a lead cannot', async () => {
@@ -210,7 +315,10 @@ describe('A1 users', () => {
 
   it('deactivation kills the account and its sessions', async () => {
     const spareStaff = world.staff.find(
-      (s) => s.role === 'treatment_member' && !team.memberIds.includes(s.id),
+      (s) =>
+        s.roles.includes('clinician') &&
+        !s.roles.includes('administrator') &&
+        !team.memberIds.includes(s.id),
     )!;
     const deactivated = await inject(
       'POST',

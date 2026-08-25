@@ -64,7 +64,9 @@ export function AppShell({
             ) : null}
           </span>
           <nav aria-label={navLabel} className="hidden flex-1 md:block">
-            <ul className="flex items-center justify-center gap-1">
+            {/* wrap, never clip: a dual-capacity account (clinician +
+                administrator) carries more entries than one line holds */}
+            <ul className="flex flex-wrap items-center justify-center gap-x-1 gap-y-0.5">
               {items.map((item) => (
                 <li key={item.href}>{renderLink(item, linkClass(item, false))}</li>
               ))}

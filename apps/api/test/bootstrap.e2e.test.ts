@@ -143,9 +143,13 @@ describe('break-glass bootstrap', () => {
 
     // and it refuses to escalate an existing non-administrator
     await owner.query(
-      `INSERT INTO identity.staff_account (email, given_name, family_name, role)
-       VALUES ('lead@bootstrap.example', 'Some', 'Lead', 'treatment_lead')
-       ON CONFLICT DO NOTHING`,
+      `WITH created AS (
+         INSERT INTO identity.staff_account (email, given_name, family_name)
+         VALUES ('lead@bootstrap.example', 'Some', 'Lead')
+         ON CONFLICT DO NOTHING RETURNING id
+       )
+       INSERT INTO identity.staff_account_role (account_id, role)
+       SELECT id, 'clinician' FROM created`,
     );
     await expect(
       bootstrapAdmin(db.connectionString, {

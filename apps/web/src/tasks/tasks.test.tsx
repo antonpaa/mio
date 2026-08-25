@@ -28,7 +28,7 @@ const MEMBER = {
     givenName: 'Mikael',
     familyName: 'Aho',
     locale: 'en' as const,
-    role: 'treatment_member',
+    roles: ['clinician'],
   },
 };
 

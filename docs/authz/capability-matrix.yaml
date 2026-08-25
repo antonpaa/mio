@@ -13,7 +13,7 @@
 #
 # Changing this file is a reviewed, audited change. It is a compliance artifact.
 
-version: 2
+version: 3
 
 # ---------------------------------------------------------------------------
 # Scope vocabulary
@@ -47,24 +47,38 @@ scopes:
 # Roles
 # ---------------------------------------------------------------------------
 roles:
+  # An account may hold SEVERAL of the staff roles below (grants union) -
+  # decided 2026-08-26 for the small-clinic case. Two hard rules ride
+  # with that: 'auditor' is exclusive (oversight may never share an
+  # account with what it oversees; DB trigger + domain), and
+  # administrator actions may never target the actor's own account or
+  # teams (no self-granting; domain-enforced). Leading a treatment is
+  # NOT a role: it is a position on that treatment's care team, and the
+  # team_lead scope slices are what enforce it.
   - id: patient
     realm: patient
     label: { en: Patient, fi: Potilas, sv: Patient }
 
-  - id: treatment_member
+  - id: clinician
     realm: staff
-    label:
-      { en: Treatment Member, fi: Hoitotiimin jäsen, sv: Vårdteammedlem }
-    description: Clinician working within treatments they are a team member of.
-
-  - id: treatment_lead
-    realm: staff
-    label:
-      { en: Treatment Lead, fi: Hoidon vastuuhenkilö, sv: Behandlingsansvarig }
+    label: { en: Clinician, fi: Kliinikko, sv: Kliniker }
     description: >
-      Clinician with treatment lifecycle, team composition and catalogue
-      authoring rights. Grants are a strict superset of treatment_member —
-      asserted by invariant superset_lead_member below.
+      Care professional. What they may do on a given treatment follows
+      from their position on ITS care team - member or lead - via the
+      team_member/team_lead slices; the role itself carries no
+      org-wide clinical authority. Replaces the former
+      treatment_member/treatment_lead account roles (2026-08-26).
+
+  - id: author
+    realm: staff
+    label: { en: Author, fi: Laatija, sv: Författare }
+    description: >
+      Org-wide authoring of the content every programme runs on: survey
+      templates and their rules, treatment templates, the symptom
+      taxonomy. Split out of the former lead role (P3 reversed,
+      2026-08-26) so that appointing a programme lead never implicitly
+      grants clinic-wide authoring. Holds NO patient-scoped grants -
+      asserted by invariant author_never_patient_scoped.
 
   - id: administrator
     realm: staff
@@ -72,7 +86,8 @@ roles:
     description: >
       Account and team administration only. Holds NO access to clinical data;
       enforced at the database level by the mio_admin role having no grant on
-      clinical.* (ADR-0007), not by these policies alone.
+      clinical.* (ADR-0007), not by these policies alone. Admin actions
+      never target the actor's own account or teams.
 
   - id: auditor
     realm: staff
@@ -82,7 +97,7 @@ roles:
       identities included — that is its purpose — and nothing else. No
       clinical queries, no administration; separated from administrator
       precisely because audit metadata reveals which patients have
-      treatments.
+      treatments. EXCLUSIVE: never combined with another role.
 
 # ---------------------------------------------------------------------------
 # Resources and actions
@@ -100,16 +115,16 @@ resources:
         audit: always
         grants:
           patient: self
-          treatment_member: care_relationship
-          treatment_lead: care_relationship
+          clinician: care_relationship
+          author: deny
           administrator: any
           auditor: deny
       - id: update_contact_details
         audit: always
         grants:
           patient: self
-          treatment_member: care_relationship
-          treatment_lead: care_relationship
+          clinician: care_relationship
+          author: deny
           administrator: any
           auditor: deny
 
@@ -124,8 +139,8 @@ resources:
         audit: always
         grants:
           patient: self
-          treatment_member: care_relationship
-          treatment_lead: care_relationship
+          clinician: care_relationship
+          author: deny
           administrator: deny
           auditor: deny
         notes: >-
@@ -140,8 +155,8 @@ resources:
         audit: always
         grants:
           patient: self
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
         notes: >-
@@ -150,16 +165,16 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: end
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
 
@@ -172,32 +187,39 @@ resources:
         audit: always
         grants:
           patient: self
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: create
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: any
+          clinician: any
+          author: deny
           administrator: deny
           auditor: deny
+        notes: >-
+          2026-08-26: opening a programme for a patient is clinical
+          operations, not content authoring, and no lead position can
+          exist before the treatment does - so this is role-level and
+          now held by every clinician (formerly leads only; a
+          deliberate, documented widening). The creator becomes the
+          treatment's first lead.
       - id: update
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: change_lifecycle_state
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: team_lead
+          clinician: team_lead
+          author: deny
           administrator: deny
           auditor: deny
         notes: >-
@@ -206,24 +228,24 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: team_lead
+          clinician: team_lead
+          author: deny
           administrator: deny
           auditor: deny
       - id: enrol_patient
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: enter_on_behalf_of_patient
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
         notes: >-
@@ -233,8 +255,8 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: team_lead
+          clinician: team_lead
+          author: deny
           administrator: deny
           auditor: deny
         notes: >-
@@ -253,40 +275,40 @@ resources:
         audit: never
         grants:
           patient: deny
-          treatment_member: any
-          treatment_lead: any
+          clinician: any
+          author: any
           administrator: deny
           auditor: deny
       - id: create
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: any
+          clinician: deny
+          author: any
           administrator: deny
           auditor: deny
       - id: update_draft
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: any
+          clinician: deny
+          author: any
           administrator: deny
           auditor: deny
       - id: publish
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: any
+          clinician: deny
+          author: any
           administrator: deny
           auditor: deny
       - id: archive
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: any
+          clinician: deny
+          author: any
           administrator: deny
           auditor: deny
 
@@ -300,32 +322,32 @@ resources:
         audit: always
         grants:
           patient: self
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: create
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: update
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: remind
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
         notes: >-
@@ -337,8 +359,8 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
 
@@ -353,8 +375,8 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
         notes: >-
@@ -366,34 +388,38 @@ resources:
         audit: never
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: claim
         audit: never
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: assign_to_other
         audit: never
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: complete
         audit: never
         grants:
           patient: deny
-          treatment_member: own
-          treatment_lead: team_member
+          clinician: [own, team_lead]
+          author: deny
           administrator: deny
           auditor: deny
+        notes: >-
+          Union scope (2026-08-26): complete your OWN task, or any team
+          task on a treatment you LEAD - the two halves of what the
+          former member/lead role split expressed.
 
   # -- Surveys -------------------------------------------------------------
   - id: survey_template
@@ -406,48 +432,48 @@ resources:
         audit: never
         grants:
           patient: deny
-          treatment_member: any
-          treatment_lead: any
+          clinician: any
+          author: any
           administrator: deny
           auditor: deny
       - id: create
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: any
+          clinician: deny
+          author: any
           administrator: deny
           auditor: deny
       - id: update_draft
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: any
+          clinician: deny
+          author: any
           administrator: deny
           auditor: deny
       - id: publish
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: any
+          clinician: deny
+          author: any
           administrator: deny
           auditor: deny
       - id: archive
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: any
+          clinician: deny
+          author: any
           administrator: deny
           auditor: deny
       - id: configure_alert_rules
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: any
+          clinician: deny
+          author: any
           administrator: deny
           auditor: deny
         notes: >-
@@ -465,40 +491,40 @@ resources:
         audit: always
         grants:
           patient: self
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: create
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: schedule_recurring
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: cancel
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: send_reminder
         audit: never
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
 
@@ -510,32 +536,32 @@ resources:
         audit: always
         grants:
           patient: self
-          treatment_member: care_relationship
-          treatment_lead: care_relationship
+          clinician: care_relationship
+          author: deny
           administrator: deny
           auditor: deny
       - id: save_draft
         audit: never
         grants:
           patient: self
-          treatment_member: deny
-          treatment_lead: deny
+          clinician: deny
+          author: deny
           administrator: deny
           auditor: deny
       - id: submit
         audit: always
         grants:
           patient: self
-          treatment_member: deny
-          treatment_lead: deny
+          clinician: deny
+          author: deny
           administrator: deny
           auditor: deny
       - id: submit_on_behalf_of_patient
         audit: always
         grants:
           patient: deny
-          treatment_member: care_relationship
-          treatment_lead: care_relationship
+          clinician: care_relationship
+          author: deny
           administrator: deny
           auditor: deny
         notes: >-
@@ -544,8 +570,8 @@ resources:
         audit: always
         grants:
           patient: self
-          treatment_member: care_relationship
-          treatment_lead: care_relationship
+          clinician: care_relationship
+          author: deny
           administrator: deny
           auditor: deny
         notes: >-
@@ -562,8 +588,8 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
         notes: >-
@@ -574,8 +600,8 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
         notes: >-
@@ -584,32 +610,32 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: assign
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: comment
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: resolve
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
 
@@ -624,16 +650,16 @@ resources:
         audit: always
         grants:
           patient: self
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: post
         audit: always
         grants:
           patient: self
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
 
@@ -647,8 +673,8 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
         notes: >-
@@ -659,8 +685,8 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
 
@@ -679,16 +705,16 @@ resources:
         audit: always
         grants:
           patient: self
-          treatment_member: self
-          treatment_lead: self
+          clinician: self
+          author: deny
           administrator: deny
           auditor: deny
       - id: mark_read
         audit: never
         grants:
           patient: self
-          treatment_member: self
-          treatment_lead: self
+          clinician: self
+          author: deny
           administrator: deny
           auditor: deny
         notes: >-
@@ -703,16 +729,16 @@ resources:
         audit: always
         grants:
           patient: self
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
       - id: download
         audit: always
         grants:
           patient: self
-          treatment_member: care_relationship
-          treatment_lead: care_relationship
+          clinician: care_relationship
+          author: deny
           administrator: deny
           auditor: deny
 
@@ -729,8 +755,8 @@ resources:
         audit: never
         grants:
           patient: deny
-          treatment_member: any
-          treatment_lead: any
+          clinician: any
+          author: any
           administrator: deny
           auditor: deny
 
@@ -745,16 +771,16 @@ resources:
         audit: always
         grants:
           patient: self
-          treatment_member: care_relationship
-          treatment_lead: care_relationship
+          clinician: care_relationship
+          author: deny
           administrator: deny
           auditor: deny
       - id: create
         audit: always
         grants:
           patient: self
-          treatment_member: care_relationship
-          treatment_lead: care_relationship
+          clinician: care_relationship
+          author: deny
           administrator: deny
           auditor: deny
         notes: >-
@@ -772,16 +798,16 @@ resources:
         audit: always
         grants:
           patient: self
-          treatment_member: care_relationship
-          treatment_lead: care_relationship
+          clinician: care_relationship
+          author: deny
           administrator: deny
           auditor: deny
       - id: create
         audit: always
         grants:
           patient: self
-          treatment_member: care_relationship
-          treatment_lead: care_relationship
+          clinician: care_relationship
+          author: deny
           administrator: deny
           auditor: deny
         notes: >-
@@ -802,16 +828,16 @@ resources:
         audit: never
         grants:
           patient: deny
-          treatment_member: any
-          treatment_lead: any
+          clinician: any
+          author: any
           administrator: deny
           auditor: deny
       - id: manage
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: any
+          clinician: deny
+          author: any
           administrator: deny
           auditor: deny
 
@@ -826,8 +852,8 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: care_relationship
-          treatment_lead: care_relationship
+          clinician: care_relationship
+          author: deny
           administrator: deny
           auditor: deny
         notes: >-
@@ -837,8 +863,8 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: care_relationship
-          treatment_lead: care_relationship
+          clinician: care_relationship
+          author: deny
           administrator: deny
           auditor: deny
 
@@ -851,8 +877,8 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: any
-          treatment_lead: any
+          clinician: any
+          author: deny
           administrator: any
           auditor: deny
         notes: >-
@@ -862,24 +888,24 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: deny
+          clinician: deny
+          author: deny
           administrator: any
           auditor: deny
       - id: deactivate
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: deny
+          clinician: deny
+          author: deny
           administrator: any
           auditor: deny
       - id: reactivate
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: deny
+          clinician: deny
+          author: deny
           administrator: any
           auditor: deny
         notes: >-
@@ -889,12 +915,26 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: deny
+          clinician: deny
+          author: deny
           administrator: any
           auditor: deny
         notes: >-
           Requires step-up re-authentication. Credentials only, never data.
+      - id: update_roles
+        audit: always
+        grants:
+          patient: deny
+          clinician: deny
+          author: deny
+          administrator: any
+          auditor: deny
+        notes: >-
+          Grant or revoke the roles an account HOLDS (2026-08-25
+          restructure). Never self-targeting — an administrator cannot
+          change their own role set. The set must stay non-empty and
+          auditor never combines with another role; the database enforces
+          the exclusivity too.
 
   - id: patient_account
     schema: identity
@@ -904,8 +944,8 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: deny
+          clinician: deny
+          author: deny
           administrator: any
           auditor: deny
         notes: >-
@@ -917,8 +957,8 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: deny
+          clinician: deny
+          author: deny
           administrator: any
           auditor: deny
         notes: >-
@@ -931,16 +971,16 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: deny
+          clinician: deny
+          author: deny
           administrator: any
           auditor: deny
       - id: reactivate
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: deny
+          clinician: deny
+          author: deny
           administrator: any
           auditor: deny
         notes: >-
@@ -950,21 +990,24 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: care_relationship
+          clinician: team_lead
+          author: deny
           administrator: deny
           auditor: deny
         notes: >-
           A care decision, not identity administration (WP-29): the lead
-          who knows the patient records the death. Sign-in closes, every
+          who knows the patient records the death. 2026-08-26:
+          position-based and TIGHTER than before - only a lead of one
+          of the patient's treatments qualifies, where formerly any
+          lead-role holder with a care relationship did. Sign-in closes, every
           outbound automation stops, the record is retained respectfully.
           The administrator plane deliberately cannot do this.
       - id: reset_credentials
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: deny
+          clinician: deny
+          author: deny
           administrator: any
           auditor: deny
         notes: >-
@@ -980,16 +1023,16 @@ resources:
         audit: never
         grants:
           patient: deny
-          treatment_member: any
-          treatment_lead: any
+          clinician: any
+          author: deny
           administrator: any
           auditor: deny
       - id: create
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: deny
+          clinician: deny
+          author: deny
           administrator: any
           auditor: deny
         notes: >-
@@ -1001,8 +1044,8 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: deny
+          clinician: deny
+          author: deny
           administrator: any
           auditor: deny
 
@@ -1015,8 +1058,8 @@ resources:
         audit: never
         grants:
           patient: self
-          treatment_member: self
-          treatment_lead: self
+          clinician: self
+          author: self
           administrator: self
           auditor: self
         notes: >-
@@ -1027,8 +1070,8 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: deny
-          treatment_lead: deny
+          clinician: deny
+          author: deny
           administrator: deny
           auditor: any
         notes: >-
@@ -1049,8 +1092,8 @@ resources:
         audit: always
         grants:
           patient: deny
-          treatment_member: team_member
-          treatment_lead: team_member
+          clinician: team_member
+          author: deny
           administrator: deny
           auditor: deny
         notes: >-
@@ -1069,16 +1112,16 @@ resources:
         audit: never
         grants:
           patient: self
-          treatment_member: self
-          treatment_lead: self
+          clinician: self
+          author: self
           administrator: self
           auditor: self
       - id: update
         audit: always
         grants:
           patient: self
-          treatment_member: self
-          treatment_lead: self
+          clinician: self
+          author: self
           administrator: self
           auditor: self
 
@@ -1092,27 +1135,28 @@ resources:
         audit: always
         grants:
           patient: self
-          treatment_member: self
-          treatment_lead: self
+          clinician: self
+          author: self
           administrator: self
           auditor: self
       - id: download
         audit: always
         grants:
           patient: self
-          treatment_member: self
-          treatment_lead: self
+          clinician: self
+          author: self
           administrator: self
           auditor: self
 # ---------------------------------------------------------------------------
 # Invariants — asserted by generated tests, not by review
 # ---------------------------------------------------------------------------
 invariants:
-  - id: superset_lead_member
+  - id: author_never_patient_scoped
     description: >
-      treatment_lead's grants are a superset of treatment_member's for every
-      action. Catches editing mistakes that would silently reduce a lead's
-      access.
+      author holds no grant on any patient-scoped resource. Authoring is
+      catalog work; an author grant creeping onto clinical data would
+      quietly recreate the clinical super-role the 2026-08-25
+      restructure removed.
 
   - id: administrator_no_clinical
     description: >
@@ -1152,11 +1196,13 @@ open_questions:
     question: >
       Should survey authoring and alert-rule configuration be a separate
       capability rather than bundled into treatment_lead?
-    tension: >
-      Authoring surveys is a specialist activity, and alert-rule configuration
-      is the regulated-adjacent capability in this system (ADR-0009). Bundling
-      it into treatment_lead grants it to every lead. A fifth role, or a
-      capability flag on staff accounts, would narrow it.
+    resolved: >
+      Yes (owner, 2026-08-25): authoring is the 'author' role, held per
+      account alongside others (the same restructure dissolved
+      treatment_lead into the clinician role + the care-team lead
+      position). Former leads were granted author in the migration so no
+      one lost a capability silently; narrowing is a deliberate,
+      audited A1 role edit.
 
   - id: patient_visibility_of_alerts
     question: Should patients see that an alert was raised from their responses?

@@ -33,8 +33,12 @@ export async function bootstrapAdmin(
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const { rows: existing } = await client.query<{ id: string; status: string; role: string }>(
-      `SELECT id, status, role FROM identity.staff_account WHERE lower(email) = lower($1)`,
+    const { rows: existing } = await client.query<{ id: string; status: string; roles: string[] }>(
+      `SELECT id, status,
+              (SELECT coalesce(array_agg(r.role), '{}')
+                 FROM identity.staff_account_role r
+                WHERE r.account_id = identity.staff_account.id) AS roles
+         FROM identity.staff_account WHERE lower(email) = lower($1)`,
       [input.email],
     );
     let accountId: string;
@@ -43,18 +47,22 @@ export async function bootstrapAdmin(
       if (existing[0].status === 'deactivated') {
         throw new Error('account exists and is deactivated - reactivate it in A1 instead');
       }
-      if (existing[0].role !== 'administrator') {
-        throw new Error('account exists with a non-administrator role - refusing to escalate it');
+      if (!existing[0].roles.includes('administrator')) {
+        throw new Error('account exists without the administrator role - refusing to escalate it');
       }
       accountId = existing[0].id;
       reinvited = true;
     } else {
       const { rows } = await client.query<{ id: string }>(
-        `INSERT INTO identity.staff_account (email, given_name, family_name, locale, role, title)
-         VALUES ($1, $2, $3, $4, 'administrator', 'Administrator') RETURNING id`,
+        `INSERT INTO identity.staff_account (email, given_name, family_name, locale, title)
+         VALUES ($1, $2, $3, $4, 'Administrator') RETURNING id`,
         [input.email, input.givenName.trim(), input.familyName.trim(), input.locale ?? 'en'],
       );
       accountId = rows[0]!.id;
+      await client.query(
+        `INSERT INTO identity.staff_account_role (account_id, role) VALUES ($1, 'administrator')`,
+        [accountId],
+      );
     }
     await client.query(
       `UPDATE identity.credential_token SET consumed_at = now()

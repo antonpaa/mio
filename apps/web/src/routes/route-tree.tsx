@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { IntlProvider, useIntl } from 'react-intl';
 import type { Locale } from '@mio/i18n';
 import { Splash } from '@mio/ui';
-import { ROLE_CAPABILITIES, type Role } from '@mio/authz';
 import { MESSAGES } from '../i18n/messages.js';
 import { detectLocale, persistLocale } from '../lib/locale.js';
 import { SessionProvider, SESSION_QUERY, useSession } from '../session/session.js';
@@ -13,7 +12,7 @@ import { SignInPage } from '../auth/sign-in.js';
 import { VerifyPage } from '../auth/verify.js';
 import { WelcomePage } from '../auth/welcome.js';
 import { ForgotPage, ForgotSentPage, ResetPage } from '../auth/forgot.js';
-import { PlaceholderHome, SignedInShell } from '../app/shells.js';
+import { capabilityUnion, PlaceholderHome, sessionRoles, SignedInShell } from '../app/shells.js';
 import { LocaleContext, useLocaleControls, type LocaleControls } from '../app/locale-context.js';
 import { RosterPage } from '../patients/roster.js';
 import { PatientCalendarPage } from '../scheduling/calendar.js';
@@ -93,23 +92,25 @@ function AuthedIndex(): ReactElement {
   // lag one microtask behind the cache, so render the splash - never a
   // redirect - while it catches up.
   if (session.loading || !session.account) return <Splash />;
-  const clinician =
-    session.realm === 'staff' &&
-    session.account.role !== 'administrator' &&
-    session.account.role !== 'auditor';
+  const roles = sessionRoles(session);
   return (
     <SignedInShell>
-      {clinician ? (
-        <ClinicianDashboard />
-      ) : session.realm === 'patient' ? (
+      {session.realm === 'patient' ? (
         // P1/P7 (WP-26): the patient landing widgets
         <PatientHomePage />
-      ) : session.account.role === 'auditor' ? (
+      ) : roles.includes('clinician') ? (
+        // clinical capacity wins the landing (dual-capacity accounts
+        // reach the admin areas from the appended nav entries)
+        <ClinicianDashboard />
+      ) : roles.includes('auditor') ? (
         // P2: the auditor's whole surface is the audit log
         <AdminAuditPage />
-      ) : (
+      ) : roles.includes('administrator') ? (
         // A1 (WP-28): the administrator lands on user management
         <AdminUsersPage />
+      ) : (
+        // a standalone author lands on the catalog they author (B1)
+        <SurveyCatalogPage />
       )}
     </SignedInShell>
   );
@@ -347,8 +348,7 @@ const messageThreadRoute = createRoute({
 function NotificationsIndex(): ReactElement {
   const session = useSession();
   if (session.loading || !session.account) return <Splash />;
-  const role = (session.realm === 'patient' ? 'patient' : session.account.role) as Role;
-  const may = ROLE_CAPABILITIES[role]?.includes('notification.view') ?? false;
+  const may = capabilityUnion(sessionRoles(session)).has('notification.view');
   return (
     <SignedInShell>
       {!may ? (
@@ -392,10 +392,17 @@ const settingsRoute = createRoute({
 function AdminIndex({ page }: { page: ReactElement }): ReactElement {
   const session = useSession();
   if (session.loading || !session.account) return <Splash />;
-  const isAdmin = session.realm === 'staff' && session.account.role === 'administrator';
+  const isAdmin = session.realm === 'staff' && sessionRoles(session).includes('administrator');
   return <SignedInShell>{isAdmin ? page : <PlaceholderHome />}</SignedInShell>;
 }
 
+/** A1 for dual-capacity accounts, whose '/' is the clinician dashboard. */
+const adminUsersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/users',
+  beforeLoad: requireSession,
+  component: () => <AdminIndex page={<AdminUsersPage />} />,
+});
 const adminTeamsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/teams',
@@ -413,8 +420,7 @@ const adminRolesRoute = createRoute({
 function AuditIndex(): ReactElement {
   const session = useSession();
   if (session.loading || !session.account) return <Splash />;
-  const role = (session.realm === 'patient' ? 'patient' : session.account.role) as Role;
-  const may = ROLE_CAPABILITIES[role]?.includes('audit_log.view_full') ?? false;
+  const may = capabilityUnion(sessionRoles(session)).has('audit_log.view_full');
   return <SignedInShell>{may ? <AdminAuditPage /> : <PlaceholderHome />}</SignedInShell>;
 }
 
@@ -429,8 +435,7 @@ const adminAuditRoute = createRoute({
 function ReportingIndex(): ReactElement {
   const session = useSession();
   if (session.loading || !session.account) return <Splash />;
-  const role = (session.realm === 'patient' ? 'patient' : session.account.role) as Role;
-  const may = ROLE_CAPABILITIES[role]?.includes('report.view') ?? false;
+  const may = capabilityUnion(sessionRoles(session)).has('report.view');
   return <SignedInShell>{may ? <ReportingPage /> : <PlaceholderHome />}</SignedInShell>;
 }
 
@@ -489,6 +494,7 @@ export const routeTree = rootRoute.addChildren([
   messageThreadRoute,
   notificationsRoute,
   settingsRoute,
+  adminUsersRoute,
   adminTeamsRoute,
   adminRolesRoute,
   adminAuditRoute,

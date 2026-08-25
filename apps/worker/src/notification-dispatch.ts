@@ -200,16 +200,17 @@ export async function dispatchNotifications(
         }
       }
       if (rule.recipients.includes('team') || rule.recipients.includes('lead')) {
-        const { rows: staff } = await client.query<{ staff_id: string; role: string }>(
-          `SELECT ts.staff_id, sa.role
-             FROM app.treatment_staff($1) ts
-             JOIN identity.staff_account sa ON sa.id = ts.staff_id`,
+        // 'lead' means THIS treatment's care-team leads (the position on
+        // the team), not any account attribute - the 2026-08-25 role
+        // restructure made that distinction structural.
+        const { rows: staff } = await client.query<{ staff_id: string; is_lead: boolean }>(
+          `SELECT ts.staff_id, ts.is_lead FROM app.treatment_staff($1) ts`,
           [rule.treatment_id],
         );
         const wanted = staff.filter(
           (member) =>
             rule.recipients.includes('team') ||
-            (rule.recipients.includes('lead') && member.role === 'treatment_lead'),
+            (rule.recipients.includes('lead') && member.is_lead),
         );
         for (const member of wanted) {
           await insertRow(client, {

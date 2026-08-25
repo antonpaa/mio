@@ -145,7 +145,9 @@ function MembershipDialog({ team, onClose }: { team: TeamRow; onClose: () => voi
               <span className="text-ink">
                 {member.given_name} {member.family_name}
                 <span className="ml-2 text-xs text-muted">
-                  {intl.formatMessage({ id: `admin.role.${member.role}` })}
+                  {member.roles
+                    .map((role) => intl.formatMessage({ id: `admin.role.${role}` }))
+                    .join(' + ')}
                 </span>
               </span>
               <Button

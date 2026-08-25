@@ -59,7 +59,14 @@ export class AdminResetController {
 
     const session = await this.staffAuth.validateSession(readSessionCookie(request, 'staff'));
     if (session.status !== 'active') throw new UnauthorizedException({ status: 'none' });
-    const actorRole = (session.account.role ?? 'treatment_member') as Role;
+    const actorRoles = (session.account.roles ?? []) as Role[];
+    if (actorRoles.length === 0) throw new UnauthorizedException({ status: 'none' });
+    if (realm === 'staff' && accountId === session.account.id) {
+      // Never self-targeting (2026-08-25): the admin plane cannot mint a
+      // fresh credential link for the very session using it. 'Forgot
+      // password' is the personal path.
+      throw new ForbiddenException({ status: 'cannot_target_self' });
+    }
 
     // Step-up: the administrator proves presence with their password again.
     const stepUpOk =
@@ -67,7 +74,7 @@ export class AdminResetController {
       (await verifyPassword(session.account.password_hash, body.currentPassword ?? ''));
 
     const decision = authorize({
-      principal: { userId: session.account.id, role: actorRole },
+      principal: { userId: session.account.id, roles: actorRoles },
       action: 'reset_credentials',
       resource: { type: `${realm}_account`, id: accountId },
     });
@@ -138,12 +145,12 @@ export class AdminResetController {
     // existing account), mailed with the admin-reset wording.
     const onboarding = realm === 'patient' ? this.patientOnboarding : this.staffOnboarding;
     const target = await this.lookupEmail(realm, accountId);
+    // The invite path reuses the existing account; roles stay untouched.
     await onboarding.createInvite({
       email: target.email,
       givenName: target.given_name,
       familyName: target.family_name,
       locale: target.locale,
-      ...(realm === 'staff' ? { role: target.role as never } : {}),
     });
     return { status: 'reset' };
   }
@@ -156,7 +163,6 @@ export class AdminResetController {
     given_name: string;
     family_name: string;
     locale: 'en' | 'fi' | 'sv';
-    role?: string;
   }> {
     const auth = realm === 'patient' ? this.patientAuth : this.staffAuth;
     const client = await this.pool.connect();

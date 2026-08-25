@@ -97,7 +97,7 @@ export class SchedulingService {
       const context = await this.treatmentContext(client, treatmentId);
       if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'create',
         resource: {
           type: 'activity',
@@ -164,7 +164,7 @@ export class SchedulingService {
       const context = await this.treatmentContext(client, treatmentId);
       if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'view',
         resource: {
           type: 'activity',
@@ -218,7 +218,7 @@ export class SchedulingService {
       if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
       const action = to === 'cancelled' ? 'cancel' : 'update';
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action,
         resource: {
           type: 'activity',
@@ -272,7 +272,7 @@ export class SchedulingService {
       const context = await this.treatmentContext(client, treatmentId);
       if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'create',
         resource: {
           type: 'activity',
@@ -376,7 +376,7 @@ export class SchedulingService {
       const context = await this.treatmentContext(client, schedule.treatment_id);
       if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'update',
         resource: {
           type: 'activity',
@@ -499,7 +499,7 @@ export class SchedulingService {
       );
       for (const row of rows as { id: string; patient_id: string }[]) {
         const decision = authorize({
-          principal: { userId: staff.userId, role: staff.role },
+          principal: { userId: staff.userId, roles: staff.roles },
           action: 'view',
           resource: {
             type: 'activity',
@@ -551,7 +551,7 @@ export class SchedulingService {
         throw new BadRequestException({ status: 'not_remindable' });
       }
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'remind',
         resource: {
           type: 'activity',

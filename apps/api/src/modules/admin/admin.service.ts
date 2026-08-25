@@ -14,6 +14,7 @@ import type { StaffPrincipal } from '../../shared/staff-session.js';
 import {
   PATIENT_ONBOARDING,
   STAFF_ONBOARDING,
+  validateStaffRoles,
   verifyPassword,
   type OnboardingService,
 } from '../identity/index.js';
@@ -26,9 +27,6 @@ import {
  * event text, patients as initials.
  */
 
-const STAFF_ROLES = ['treatment_member', 'treatment_lead', 'administrator', 'auditor'] as const;
-type StaffRole = (typeof STAFF_ROLES)[number];
-
 @Injectable()
 export class AdminService {
   constructor(
@@ -40,7 +38,7 @@ export class AdminService {
 
   private decide(staff: StaffPrincipal, resource: string, action: string): 'allow' | 'deny' {
     return authorize({
-      principal: { userId: staff.userId, role: staff.role },
+      principal: { userId: staff.userId, roles: staff.roles },
       action,
       resource: { type: resource, id: 'admin' },
     }).decision;
@@ -73,7 +71,10 @@ export class AdminService {
       await this.decideAndLog(client, staff, 'staff_account', 'view', null);
       await this.decideAndLog(client, staff, 'patient_account', 'view', null);
       const { rows: staffRows } = await client.query(
-        `SELECT id, email, given_name, family_name, role, title, status
+        `SELECT id, email, given_name, family_name, title, status,
+                (SELECT coalesce(array_agg(r.role ORDER BY r.role), '{}')
+                   FROM identity.staff_account_role r
+                  WHERE r.account_id = identity.staff_account.id) AS roles
            FROM identity.staff_account ORDER BY family_name, given_name`,
       );
       const { rows: patientRows } = await client.query(
@@ -90,26 +91,22 @@ export class AdminService {
       email?: string;
       givenName?: string;
       familyName?: string;
-      role?: string;
+      roles?: string[];
       title?: string;
       locale?: string;
     },
   ): Promise<object> {
-    if (
-      !input.email?.includes('@') ||
-      !input.givenName?.trim() ||
-      !input.familyName?.trim() ||
-      !STAFF_ROLES.includes((input.role ?? '') as StaffRole)
-    ) {
+    if (!input.email?.includes('@') || !input.givenName?.trim() || !input.familyName?.trim()) {
       throw new BadRequestException({ status: 'invalid_input' });
     }
+    const roles = this.checkedRoles(input.roles ?? []);
     return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
       await this.decideAndLog(client, staff, 'staff_account', 'create', null);
       const { accountId } = await this.staffOnboarding.createInvite({
         email: input.email!,
         givenName: input.givenName!,
         familyName: input.familyName!,
-        role: input.role! as StaffRole,
+        roles,
         ...(input.title !== undefined ? { title: input.title } : {}),
         ...(input.locale !== undefined ? { locale: input.locale as 'en' | 'fi' | 'sv' } : {}),
       });
@@ -120,9 +117,74 @@ export class AdminService {
         resourceType: 'staff_account',
         resourceId: accountId,
         patientId: null,
-        detail: { role: input.role },
+        detail: { roles },
       });
       return { accountId };
+    });
+  }
+
+  /** The role-set rules as a 400, not a 500 - the dialog shows the reason. */
+  private checkedRoles(roles: string[]): ReturnType<typeof validateStaffRoles> {
+    try {
+      return validateStaffRoles(roles);
+    } catch (error) {
+      throw new BadRequestException({
+        status: 'invalid_roles',
+        message: error instanceof Error ? error.message : 'invalid roles',
+      });
+    }
+  }
+
+  /**
+   * The 2026-08-25 restructure's A1 verb: edit the role SET an account
+   * holds. Never self-targeting - changing your own authority is the
+   * classic escalation path, so the platform simply has no such move.
+   * The rules (non-empty, auditor exclusive) hold here AND in a database
+   * trigger; the change event records before and after.
+   */
+  async updateStaffRoles(
+    staff: StaffPrincipal,
+    accountId: string,
+    rolesInput: string[] | undefined,
+  ): Promise<object> {
+    if (accountId === staff.userId) {
+      throw new BadRequestException({ status: 'cannot_target_self' });
+    }
+    const roles = this.checkedRoles(rolesInput ?? []);
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      await this.decideAndLog(client, staff, 'staff_account', 'update_roles', accountId);
+      const { rows: exists } = await client.query(
+        `SELECT id FROM identity.staff_account WHERE id = $1`,
+        [accountId],
+      );
+      if (exists.length === 0) throw new NotFoundException({ status: 'unknown_account' });
+      const { rows } = await client.query<{ roles: string[] }>(
+        `SELECT coalesce(array_agg(role ORDER BY role), '{}') AS roles
+           FROM identity.staff_account_role WHERE account_id = $1`,
+        [accountId],
+      );
+      const before = rows[0]?.roles ?? [];
+      // Delete-then-insert inside the transaction; the exclusivity
+      // trigger sees the final set because removals land first.
+      await client.query(`DELETE FROM identity.staff_account_role WHERE account_id = $1`, [
+        accountId,
+      ]);
+      for (const role of roles) {
+        await client.query(
+          `INSERT INTO identity.staff_account_role (account_id, role) VALUES ($1, $2)`,
+          [accountId, role],
+        );
+      }
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'staff_account.update_roles',
+        resourceType: 'staff_account',
+        resourceId: accountId,
+        patientId: null,
+        detail: { before, after: roles },
+      });
+      return { roles };
     });
   }
 
@@ -259,6 +321,12 @@ export class AdminService {
     accountId: string,
     adminPassword: string | undefined,
   ): Promise<object> {
+    if (realm === 'staff' && accountId === staff.userId) {
+      // Never self-targeting: resetting your own credentials through the
+      // admin plane would let a compromised session mint a fresh invite
+      // link for itself. The personal path is 'forgot password'.
+      throw new BadRequestException({ status: 'cannot_target_self' });
+    }
     const resource = realm === 'staff' ? 'staff_account' : 'patient_account';
     const table = realm === 'staff' ? 'identity.staff_account' : 'identity.patient_account';
     const sessions = realm === 'staff' ? 'identity.staff_session' : 'identity.patient_session';
@@ -280,12 +348,11 @@ export class AdminService {
         [accountId],
       );
       const onboarding = realm === 'staff' ? this.staffOnboarding : this.patientOnboarding;
+      // The invite path reuses the existing account; roles are untouched.
       await onboarding.createInvite({
         email: account.email,
         givenName: account.given_name,
         familyName: account.family_name,
-        // role is ignored for existing accounts - the invite path reuses them
-        role: 'treatment_member',
       });
       await writeChangeEvent(client, {
         actorUserId: staff.userId,
@@ -307,7 +374,9 @@ export class AdminService {
       `SELECT t.id, t.name,
               COALESCE(json_agg(json_build_object(
                 'id', s.id, 'given_name', s.given_name, 'family_name', s.family_name,
-                'role', s.role) ORDER BY s.family_name)
+                'roles', (SELECT coalesce(json_agg(r.role ORDER BY r.role), '[]'::json)
+                            FROM identity.staff_account_role r
+                           WHERE r.account_id = s.id)) ORDER BY s.family_name)
                 FILTER (WHERE s.id IS NOT NULL), '[]') AS members
          FROM identity.team t
          LEFT JOIN identity.team_membership m ON m.team_id = t.id
@@ -343,6 +412,12 @@ export class AdminService {
     add: string[],
     remove: string[],
   ): Promise<object> {
+    if (add.includes(staff.userId) || remove.includes(staff.userId)) {
+      // Never self-targeting: an administrator granting themselves team
+      // membership would be the first step of self-escalation into the
+      // clinical plane. Another administrator has to do it.
+      throw new BadRequestException({ status: 'cannot_target_self' });
+    }
     return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
       await this.decideAndLog(client, staff, 'team', 'update_membership', teamId, {
         add: add.length,
@@ -392,7 +467,7 @@ export class AdminService {
    * auditor alone, and every view is itself audited.
    */
   async auditLog(staff: StaffPrincipal, query: AuditQuery): Promise<object> {
-    const fullIdentities = staff.role === 'auditor';
+    const fullIdentities = staff.roles.includes('auditor');
     const range = auditRange(query);
     return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
       await this.decideAndLog(client, staff, 'audit_log', 'view_full', null);

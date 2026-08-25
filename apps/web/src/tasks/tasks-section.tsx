@@ -101,7 +101,7 @@ export function TasksSection({ treatmentId }: { treatmentId: string }): ReactEle
                     <FormattedMessage id="tasks.claim" />
                   </Button>
                 </>
-              ) : task.assignee_id === me || session.account?.role === 'treatment_lead' ? (
+              ) : task.assignee_id === me || task.viewer_is_lead === true ? (
                 <Button
                   variant="quiet"
                   size="sm"

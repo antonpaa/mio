@@ -56,7 +56,7 @@ describe('L1 sign in', () => {
     const { element } = appAt('/login');
     const { container } = render(element);
 
-    await screen.findByRole('heading', { name: 'Welcome back' });
+    await screen.findByRole('heading', { name: 'Welcome' });
     await expectAxeClean(container);
 
     await userEvent.type(screen.getByLabelText('Email'), 'anna@patient.example');
@@ -80,9 +80,9 @@ describe('L1 sign in', () => {
   it('language switcher swaps every visible string and persists', async () => {
     const { element } = appAt('/login');
     render(element);
-    await screen.findByRole('heading', { name: 'Welcome back' });
+    await screen.findByRole('heading', { name: 'Welcome' });
     await userEvent.click(screen.getByRole('button', { name: 'fi' }));
-    await screen.findByRole('heading', { name: 'Tervetuloa takaisin' });
+    await screen.findByRole('heading', { name: 'Tervetuloa' });
     expect(localStorage.getItem('mio.locale')).toBe('fi');
   });
 });
@@ -154,7 +154,7 @@ describe('signed-in shells', () => {
         givenName: 'Elina',
         familyName: 'Koskinen',
         locale: 'en',
-        role: 'treatment_lead',
+        roles: ['clinician', 'author'],
       },
     });
     const { element } = appAt('/');
@@ -173,7 +173,7 @@ describe('signed-in shells', () => {
         givenName: 'Hanna',
         familyName: 'Korpela',
         locale: 'en',
-        role: 'administrator',
+        roles: ['administrator'],
       },
     });
     const { element } = appAt('/');

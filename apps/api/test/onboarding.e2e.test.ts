@@ -217,13 +217,13 @@ describe('administrator reset (the first live Cedar decision point)', () => {
       email: 'hanna.korpela@staff.example',
       givenName: 'Hanna',
       familyName: 'Korpela',
-      role: 'administrator',
+      roles: ['administrator'],
     });
     const member = await staffOnboarding.createInvite({
       email: 'mikael.aho@staff.example',
       givenName: 'Mikael',
       familyName: 'Aho',
-      role: 'treatment_member',
+      roles: ['clinician'],
     });
     await staffAuth.setPassword(admin.accountId, PASSWORD, []);
     await staffAuth.setPassword(member.accountId, PASSWORD, []);

@@ -40,9 +40,14 @@ let app: NestFastifyApplication;
 let mailer: CapturingMailer;
 
 const world = generateWorld('demo', 42);
-const member = world.staff.find((s) => s.role === 'treatment_member')!;
-const admin = world.staff.find((s) => s.role === 'administrator')!;
-const auditor = world.staff.find((s) => s.role === 'auditor')!;
+const member = world.staff.find(
+  (s) =>
+    s.roles.includes('clinician') &&
+    !s.roles.includes('author') &&
+    !s.roles.includes('administrator'),
+)!;
+const admin = world.staff.find((s) => s.roles.length === 1 && s.roles[0] === 'administrator')!;
+const auditor = world.staff.find((s) => s.roles.includes('auditor'))!;
 const patient = world.patients[0]!;
 
 // the member's lawful slice, computed independently from the world:

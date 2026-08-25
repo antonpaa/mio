@@ -81,7 +81,7 @@ export class PatientsService {
       // of a busy lead's roster re-proved the same decision at ~0.5s cost.
       for (const row of rows.slice(0, 25)) {
         const decision = authorize({
-          principal: { userId: staff.userId, role: staff.role },
+          principal: { userId: staff.userId, roles: staff.roles },
           action: 'view',
           resource: {
             type: 'patient_identity',
@@ -138,7 +138,7 @@ export class PatientsService {
         const careTeam = careRows[0]?.team ?? [];
 
         const decision = authorize({
-          principal: { userId: staff.userId, role: staff.role },
+          principal: { userId: staff.userId, roles: staff.roles },
           action: 'view',
           resource: {
             type: 'patient_clinical_profile',
@@ -237,18 +237,24 @@ export class PatientsService {
       throw new BadRequestException({ status: 'invalid_date' });
     }
     return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
-      const { rows: careRows } = await client.query<{ team: string[] }>(
-        `SELECT app.care_team_of($1) AS team`,
+      // mark_deceased is a team-lead act (matrix): the leads of THIS
+      // patient's treatments, not any care-relationship holder.
+      const { rows: leadRows } = await client.query<{ staff_id: string }>(
+        `SELECT DISTINCT ts.staff_id
+           FROM clinical.treatment t, app.treatment_staff(t.id) ts
+          WHERE t.patient_id = $1 AND ts.is_lead`,
         [patientId],
       );
+      const leadUserIds = leadRows.map((row) => row.staff_id);
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'mark_deceased',
         resource: {
           type: 'patient_account',
           id: patientId,
           patientId,
-          careTeamUserIds: careRows[0]?.team ?? [],
+          teamUserIds: leadUserIds,
+          leadUserIds,
         },
       }).decision;
       await writeAccessEvent(client, {
@@ -326,7 +332,7 @@ export class PatientsService {
         [patientId],
       );
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'update_contact_details',
         resource: {
           type: 'patient_identity',
@@ -398,7 +404,7 @@ export class PatientsService {
       const careTeam = careRows[0]?.team ?? [];
       for (const action of ['request', 'download'] as const) {
         const decision = authorize({
-          principal: { userId: staff.userId, role: staff.role },
+          principal: { userId: staff.userId, roles: staff.roles },
           action,
           resource: {
             type: 'patient_data_export',

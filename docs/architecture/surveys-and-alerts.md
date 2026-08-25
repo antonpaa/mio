@@ -150,7 +150,7 @@ and the same answers behave differently in another program (PP3). The
 **effective rule set** for evaluation is template rules + program overrides,
 both versioned; the response detail (C7) shows each answer against the
 program's rules ("Above expected" / "Expected in this program" / "Critical
-area") plus the program's rule summary. Editing overrides is Treatment Lead
+area") plus the program's rule summary. Editing overrides is a team-lead act
 capability (`treatment.configure_program_rules`), the same regulated-adjacent
 tier as template rule authoring.
 

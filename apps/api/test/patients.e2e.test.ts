@@ -92,7 +92,7 @@ async function signIn(realm: 'patient' | 'staff', email: string): Promise<string
 /** A clinician with patients, one of their patients, and an outsider patient. */
 function pickActors(): { clinician: (typeof world.staff)[number]; own: string; foreign: string } {
   for (const staff of world.staff) {
-    if (staff.role === 'administrator') continue;
+    if (staff.roles.includes('administrator')) continue;
     const own = [...world.careRelationships.entries()].find(([, team]) => team.includes(staff.id));
     const foreign = [...world.careRelationships.entries()].find(
       ([, team]) => !team.includes(staff.id),

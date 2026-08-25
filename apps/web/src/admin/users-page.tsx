@@ -12,6 +12,7 @@ import {
   useModalFocus,
 } from '@mio/ui';
 import { postJson, usersQuery, type PatientRow, type StaffRow } from './api.js';
+import { useSession } from '../session/session.js';
 
 /**
  * A1: user management. The administrator sees accounts - name, email,
@@ -20,7 +21,45 @@ import { postJson, usersQuery, type PatientRow, type StaffRow } from './api.js';
  * password again (step-up), and everything here lands in the audit log.
  */
 
-const STAFF_ROLES = ['treatment_member', 'treatment_lead', 'administrator', 'auditor'] as const;
+const STAFF_ROLES = ['clinician', 'author', 'administrator', 'auditor'] as const;
+type StaffRoleOption = (typeof STAFF_ROLES)[number];
+
+/** Auditor is exclusive (segregation of duties): choosing it clears the
+ * rest, choosing anything else clears it. */
+function toggleRole(current: StaffRoleOption[], role: StaffRoleOption): StaffRoleOption[] {
+  if (current.includes(role)) return current.filter((held) => held !== role);
+  if (role === 'auditor') return ['auditor'];
+  return [...current.filter((held) => held !== 'auditor'), role];
+}
+
+function RoleCheckboxes({
+  value,
+  onChange,
+}: {
+  value: StaffRoleOption[];
+  onChange: (next: StaffRoleOption[]) => void;
+}): ReactElement {
+  const intl = useIntl();
+  return (
+    <fieldset>
+      <legend className="text-sm font-medium text-ink-strong-secondary">
+        <FormattedMessage id="admin.field.role" />
+      </legend>
+      <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1">
+        {STAFF_ROLES.map((option) => (
+          <label key={option} className="flex items-center gap-2 text-sm text-ink">
+            <input
+              type="checkbox"
+              checked={value.includes(option)}
+              onChange={() => onChange(toggleRole(value, option))}
+            />
+            {intl.formatMessage({ id: `admin.role.${option}` })}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
 const STATUS_TONE = { invited: 'amber', active: 'teal', deactivated: 'neutral' } as const;
 
 type Tab = 'staff' | 'patients';
@@ -35,6 +74,7 @@ export function AdminUsersPage(): ReactElement {
     id: string;
     name: string;
   } | null>(null);
+  const [rolesTarget, setRolesTarget] = useState<StaffRow | null>(null);
   const users = useQuery(usersQuery);
 
   if (users.isPending) {
@@ -106,7 +146,11 @@ export function AdminUsersPage(): ReactElement {
       {tab === 'staff' ? (
         <UserList
           rows={staffRows}
-          detail={(row) => intl.formatMessage({ id: `admin.role.${(row as StaffRow).role}` })}
+          detail={(row) =>
+            (row as StaffRow).roles
+              .map((role) => intl.formatMessage({ id: `admin.role.${role}` }))
+              .join(' + ')
+          }
           onReset={(row) =>
             setResetTarget({
               realm: 'staff',
@@ -114,6 +158,7 @@ export function AdminUsersPage(): ReactElement {
               name: `${row.given_name} ${row.family_name}`,
             })
           }
+          onEditRoles={(row) => setRolesTarget(row)}
         />
       ) : (
         <UserList
@@ -133,6 +178,9 @@ export function AdminUsersPage(): ReactElement {
       {resetTarget ? (
         <ResetLoginDialog target={resetTarget} onClose={() => setResetTarget(null)} />
       ) : null}
+      {rolesTarget ? (
+        <EditRolesDialog target={rolesTarget} onClose={() => setRolesTarget(null)} />
+      ) : null}
     </div>
   );
 }
@@ -141,15 +189,18 @@ function UserList({
   rows,
   detail,
   onReset,
+  onEditRoles,
 }: {
   rows: (StaffRow | PatientRow)[];
   detail: (row: StaffRow | PatientRow) => string;
   onReset: (row: StaffRow | PatientRow) => void;
+  onEditRoles?: (row: StaffRow) => void;
 }): ReactElement {
   const intl = useIntl();
+  const session = useSession();
   const queryClient = useQueryClient();
   const realmOf = (row: StaffRow | PatientRow): 'staff' | 'patient' =>
-    'role' in row ? 'staff' : 'patient';
+    'roles' in row ? 'staff' : 'patient';
   const lifecycle = useMutation({
     mutationFn: ({ row, verb }: { row: StaffRow | PatientRow; verb: string }) =>
       postJson(`/api/admin/users/${realmOf(row)}/${row.id}/${verb}`, {}),
@@ -174,6 +225,13 @@ function UserList({
               <StatusChip tone={STATUS_TONE[row.status]}>
                 {intl.formatMessage({ id: `admin.status.${row.status}` })}
               </StatusChip>
+              {onEditRoles && 'roles' in row && row.id !== session.account?.id ? (
+                // never self-targeting: your own roles are another
+                // administrator's to change
+                <Button size="sm" variant="quiet" onPress={() => onEditRoles(row)}>
+                  <FormattedMessage id="admin.editRoles" />
+                </Button>
+              ) : null}
               <Button size="sm" variant="quiet" onPress={() => onReset(row)}>
                 <FormattedMessage id="admin.resetLogin" />
               </Button>
@@ -231,7 +289,7 @@ function CreateStaffDialog({ onClose }: { onClose: () => void }): ReactElement {
   const [email, setEmail] = useState('');
   const [givenName, setGivenName] = useState('');
   const [familyName, setFamilyName] = useState('');
-  const [role, setRole] = useState<(typeof STAFF_ROLES)[number]>('treatment_member');
+  const [roles, setRoles] = useState<StaffRoleOption[]>(['clinician']);
   const [title, setTitle] = useState('');
   const [locale, setLocale] = useState('fi');
   const create = useMutation({
@@ -241,7 +299,7 @@ function CreateStaffDialog({ onClose }: { onClose: () => void }): ReactElement {
             email,
             givenName,
             familyName,
-            role,
+            roles,
             ...(title.trim() ? { title } : {}),
           })
         : postJson('/api/admin/patients', { email, givenName, familyName, locale }),
@@ -314,23 +372,8 @@ function CreateStaffDialog({ onClose }: { onClose: () => void }): ReactElement {
           </label>
         </div>
         {realm === 'staff' ? (
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <label className="block text-sm font-medium text-ink-strong-secondary">
-              <FormattedMessage id="admin.field.role" />
-              <select
-                className={field}
-                value={role}
-                onChange={(event) =>
-                  setRole(event.currentTarget.value as (typeof STAFF_ROLES)[number])
-                }
-              >
-                {STAFF_ROLES.map((option) => (
-                  <option key={option} value={option}>
-                    {intl.formatMessage({ id: `admin.role.${option}` })}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="mt-3 flex flex-col gap-3">
+            <RoleCheckboxes value={roles} onChange={setRoles} />
             <label className="block text-sm font-medium text-ink-strong-secondary">
               <FormattedMessage id="admin.field.title" />
               <input
@@ -369,7 +412,11 @@ function CreateStaffDialog({ onClose }: { onClose: () => void }): ReactElement {
             size="sm"
             onPress={() => create.mutate()}
             isDisabled={
-              !email.includes('@') || !givenName.trim() || !familyName.trim() || create.isPending
+              !email.includes('@') ||
+              !givenName.trim() ||
+              !familyName.trim() ||
+              (realm === 'staff' && roles.length === 0) ||
+              create.isPending
             }
           >
             <FormattedMessage id="admin.createSend" />
@@ -462,6 +509,73 @@ function ResetLoginDialog({
             </div>
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+/** The 2026-08-25 restructure's A1 verb: edit the role SET an account
+ * holds. The server refuses self-targeting, empty sets and any auditor
+ * combination; the checkboxes mirror those rules so the refusal is
+ * rarely seen. */
+function EditRolesDialog({
+  target,
+  onClose,
+}: {
+  target: StaffRow;
+  onClose: () => void;
+}): ReactElement {
+  const modalRef = useModalFocus<HTMLDivElement>();
+  const intl = useIntl();
+  const queryClient = useQueryClient();
+  const [roles, setRoles] = useState<StaffRoleOption[]>(target.roles);
+  const save = useMutation({
+    mutationFn: () => postJson(`/api/admin/users/staff/${target.id}/roles`, { roles }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      onClose();
+    },
+  });
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-roles-title"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/30 p-4"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') onClose();
+      }}
+    >
+      <div ref={modalRef} className="w-full max-w-md rounded-card bg-surface p-6 shadow-raised">
+        <h2 id="edit-roles-title" className="font-display text-lg italic text-ink">
+          {intl.formatMessage(
+            { id: 'admin.editRolesTitle' },
+            { name: `${target.given_name} ${target.family_name}` },
+          )}
+        </h2>
+        <p className="mt-1 text-xs text-muted">
+          <FormattedMessage id="admin.editRolesNote" />
+        </p>
+        <div className="mt-4">
+          <RoleCheckboxes value={roles} onChange={setRoles} />
+        </div>
+        {save.isError ? (
+          <p className="mt-3 text-sm text-red" role="alert">
+            <FormattedMessage id="admin.editRolesFailed" />
+          </p>
+        ) : null}
+        <div className="mt-5 flex justify-end gap-2">
+          <Button size="sm" variant="quiet" onPress={onClose}>
+            <FormattedMessage id="common.cancel" />
+          </Button>
+          <Button
+            size="sm"
+            onPress={() => save.mutate()}
+            isDisabled={roles.length === 0 || save.isPending}
+          >
+            <FormattedMessage id="admin.rolesSave" />
+          </Button>
+        </div>
       </div>
     </div>
   );

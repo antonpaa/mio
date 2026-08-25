@@ -41,7 +41,7 @@ export function AdminAuditPage(): ReactElement {
   };
   // P2: the auditor sees full names, so the lede must say so - the
   // initials promise belongs to the (historical) admin rendering only
-  const auditor = session.realm === 'staff' && session.account?.role === 'auditor';
+  const auditor = session.realm === 'staff' && (session.account?.roles ?? []).includes('auditor');
 
   // Only the FIRST paint blanks. Once the controls exist, a refetch
   // under a changed filter swaps the table alone - a filter bar that

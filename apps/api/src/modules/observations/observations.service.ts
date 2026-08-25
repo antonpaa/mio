@@ -72,7 +72,7 @@ export class ObservationsService {
     // out-of-care staff get the same 404 as an unknown patient id
     if (rows.length === 0) throw new NotFoundException({ status: 'unknown_patient' });
     const decision = authorize({
-      principal: { userId: staff.userId, role: staff.role },
+      principal: { userId: staff.userId, roles: staff.roles },
       action,
       resource: {
         type: resourceType,
@@ -333,7 +333,7 @@ export class ObservationsService {
    * data - matrix says staff any, audit never. */
   async seriesCatalog(staff: StaffPrincipal): Promise<object[]> {
     const decision = authorize({
-      principal: { userId: staff.userId, role: staff.role },
+      principal: { userId: staff.userId, roles: staff.roles },
       action: 'view',
       resource: { type: 'value_series', id: 'catalog' },
     }).decision;
@@ -350,7 +350,7 @@ export class ObservationsService {
    * and their recent reports. Their register entry point, not PP3. */
   async patientSymptomView(patient: PatientPrincipal): Promise<object> {
     const decision = authorize({
-      principal: { userId: patient.userId, role: 'patient' },
+      principal: { userId: patient.userId, roles: ['patient'] },
       action: 'view',
       resource: {
         type: 'symptom_observation',
@@ -404,7 +404,7 @@ export class ObservationsService {
       throw new BadRequestException({ status: 'severity_required' });
     }
     const decision = authorize({
-      principal: { userId: patient.userId, role: 'patient' },
+      principal: { userId: patient.userId, roles: ['patient'] },
       action: 'create',
       resource: {
         type: 'symptom_observation',

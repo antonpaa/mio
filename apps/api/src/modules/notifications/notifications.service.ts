@@ -24,7 +24,7 @@ export class NotificationsService {
 
   private decide(patient: PatientPrincipal, action: 'view' | 'mark_read'): 'allow' | 'deny' {
     return authorize({
-      principal: { userId: patient.userId, role: 'patient' },
+      principal: { userId: patient.userId, roles: ['patient'] },
       action,
       resource: {
         type: 'notification',
@@ -45,7 +45,7 @@ export class NotificationsService {
    */
   private decideStaff(staff: StaffPrincipal, action: 'view' | 'mark_read'): 'allow' | 'deny' {
     return authorize({
-      principal: { userId: staff.userId, role: staff.role },
+      principal: { userId: staff.userId, roles: staff.roles },
       action,
       resource: {
         type: 'notification',
@@ -157,7 +157,7 @@ export class NotificationsService {
 
   private decideSettings(patient: PatientPrincipal, action: 'view' | 'update'): 'allow' | 'deny' {
     return authorize({
-      principal: { userId: patient.userId, role: 'patient' },
+      principal: { userId: patient.userId, roles: ['patient'] },
       action,
       resource: {
         type: 'own_settings',

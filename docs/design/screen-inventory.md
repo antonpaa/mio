@@ -105,9 +105,8 @@ value). Group headers are labels, not links.
 
 Note: A4's metrics are clinical aggregates. The canvas places reporting in the
 admin shell; the capability matrix denies `report.view` to administrators.
-Resolution: the reporting screen belongs to Treatment Lead in the clinician
-shell, or its metrics must be de-identified counts served without `clinical.*`
-access — decide with reconciliation X4's owner. Tracked as P8 in the register.
+Resolution (P8, decided 2026-08-24): the reporting screen lives in the
+clinician shell for `report.view` holders. Tracked as P8 in the register.
 
 ## Cross-cutting states — `Mio States.dc.html`
 

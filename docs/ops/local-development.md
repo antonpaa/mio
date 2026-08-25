@@ -62,12 +62,13 @@ Every seeded account signs in with the password
 **`demo-password-mio-42`**. Emails are deterministic for the demo
 profile (seed 42); useful ones:
 
-| Role | Email |
+| Roles | Email |
 |---|---|
 | Administrator | `satu.jokinen.0@staff.example` |
+| Administrator + Clinician | `greta.lindstrom.1@staff.example` |
 | Auditor | `nils.jonsson.2@staff.example` |
-| Treatment Lead | `eetu.virtanen.5@staff.example` |
-| Treatment member | `elias.heikkinen.9@staff.example` |
+| Clinician + Author (leads a team) | `eetu.virtanen.5@staff.example` |
+| Clinician | `elias.heikkinen.9@staff.example` |
 | Patient | `sampo.jarvinen.1@patient.example` |
 
 (Any account you see in A1 works the same way; the OTP at sign-in
@@ -98,10 +99,16 @@ system-actor `staff_account.bootstrap` change event.
 
 ## 4. Run the apps
 
-Three terminals from the repo root (API and worker share the same
-environment; `MIO_STORAGE_DIR` must be the **same absolute path** for
-both, or the worker will scan a different attachment store than the
-API writes to):
+Three terminals from the repo root, **each left open and running** -
+these are long-lived processes, not steps: you finish this section
+with three windows running side by side (plus Docker's two
+containers). Skipping one is the classic first-run miss: without the
+web terminal the browser gets connection-refused on :5173, and
+without the API terminal the page loads but nothing answers on
+:3000. API and worker share the same environment, and
+`MIO_STORAGE_DIR` must be the **same absolute path** for both, or the
+worker will scan a different attachment store than the API writes
+to:
 
 ```bash
 # terminal 1 — API on :3000

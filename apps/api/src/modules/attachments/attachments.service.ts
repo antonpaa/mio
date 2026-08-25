@@ -8,6 +8,7 @@ import {
   UnsupportedMediaTypeException,
 } from '@nestjs/common';
 import type pg from 'pg';
+import type { Role } from '@mio/authz';
 import { authorize } from '@mio/authz/engine';
 import { withUserContext, writeAccessEvent, writeChangeEvent } from '@mio/db';
 import { sniffImageMime, type ObjectStorage } from '@mio/storage';
@@ -137,7 +138,7 @@ export class AttachmentsService {
         );
         if (rows.length === 0) throw new NotFoundException({ status: 'unknown_treatment' });
         const decision = authorize({
-          principal: { userId: patient.userId, role: 'patient' },
+          principal: { userId: patient.userId, roles: ['patient'] },
           action: 'upload',
           resource: {
             type: 'attachment',
@@ -188,7 +189,7 @@ export class AttachmentsService {
       const treatment = rows[0];
       if (!treatment) throw new NotFoundException({ status: 'unknown_treatment' });
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'upload',
         resource: {
           type: 'attachment',
@@ -234,7 +235,7 @@ export class AttachmentsService {
   async fetch(
     principal: {
       userId: string;
-      role: 'patient' | 'treatment_member' | 'treatment_lead' | 'administrator' | 'auditor';
+      roles: readonly Role[];
       realm: 'patient' | 'staff';
     },
     attachmentId: string,
@@ -255,7 +256,7 @@ export class AttachmentsService {
         const row = rows[0];
         if (!row) throw new NotFoundException({ status: 'unknown_attachment' });
         const decision = authorize({
-          principal: { userId: principal.userId, role: principal.role },
+          principal: { userId: principal.userId, roles: principal.roles },
           action: 'download',
           resource: {
             type: 'attachment',

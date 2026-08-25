@@ -40,7 +40,8 @@ export interface AccountRow {
   password_hash: string | null;
   failed_login_count: number;
   next_login_allowed_at: Date | null;
-  role?: string;
+  /** Staff realm only: every role the account holds (sorted, non-empty). */
+  roles?: string[];
 }
 
 export type BeginLoginResult =
@@ -68,9 +69,19 @@ export class AuthService {
     return this.tables.realm;
   }
 
+  /** Staff accounts carry their role set; the patient realm has no roles
+   * table - being a patient IS the role. */
+  private rolesColumn(): string {
+    return this.tables.realm === 'staff'
+      ? `, (SELECT coalesce(array_agg(r.role ORDER BY r.role), '{}')
+             FROM identity.staff_account_role r WHERE r.account_id = a.id) AS roles`
+      : '';
+  }
+
   async findByEmail(client: pg.ClientBase, email: string): Promise<AccountRow | undefined> {
     const { rows } = await client.query<AccountRow>(
-      `SELECT * FROM ${this.tables.accountTable} WHERE lower(email) = lower($1)`,
+      `SELECT a.*${this.rolesColumn()} FROM ${this.tables.accountTable} a
+       WHERE lower(a.email) = lower($1)`,
       [email],
     );
     return rows[0];
@@ -78,7 +89,7 @@ export class AuthService {
 
   async findById(client: pg.ClientBase, id: string): Promise<AccountRow | undefined> {
     const { rows } = await client.query<AccountRow>(
-      `SELECT * FROM ${this.tables.accountTable} WHERE id = $1`,
+      `SELECT a.*${this.rolesColumn()} FROM ${this.tables.accountTable} a WHERE a.id = $1`,
       [id],
     );
     return rows[0];

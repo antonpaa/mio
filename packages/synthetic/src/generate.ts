@@ -107,37 +107,48 @@ export function generateWorld(profileName: 'demo' | 'perf', seed: number): Synth
 
   // --- staff -------------------------------------------------------------
   const staff: SyntheticStaff[] = [];
+  const leadPool: SyntheticStaff[] = [];
   for (let i = 0; i < profile.staff; i++) {
     const person = makePerson(rng);
     const isAdmin = i < profile.administrators;
     // one auditor per world (P2): the oversight role exists everywhere
     const isAuditor = !isAdmin && i === profile.administrators;
-    const isLead =
+    // seniors who take the lead POSITION on care teams; they also hold the
+    // author role, mirroring the pre-restructure backfill
+    const isSenior =
       !isAdmin && !isAuditor && i < profile.administrators + 1 + Math.ceil(profile.staff * 0.18);
-    staff.push({
+    // the LAST administrator also practises - the dual-capacity account the
+    // multi-role model exists for (roles union; A1 shows both)
+    const isDualCapacity =
+      isAdmin && i === profile.administrators - 1 && profile.administrators > 1;
+    const member: SyntheticStaff = {
       id: syntheticId('staff', i),
       givenName: person.givenName,
       familyName: person.familyName,
       email: `${normalizeEmailLocal(person.givenName, person.familyName)}.${i}@staff.example`,
-      role: isAdmin
-        ? 'administrator'
+      roles: isAdmin
+        ? isDualCapacity
+          ? ['administrator', 'clinician']
+          : ['administrator']
         : isAuditor
-          ? 'auditor'
-          : isLead
-            ? 'treatment_lead'
-            : 'treatment_member',
+          ? ['auditor']
+          : isSenior
+            ? ['clinician', 'author']
+            : ['clinician'],
       title: isAdmin
         ? 'Administrator'
         : isAuditor
           ? 'Auditor'
-          : isLead
+          : isSenior
             ? pick(rng, ['Oncologist', 'Chief physician', 'Urologist'] as const)
             : pick(rng, ['Nurse', 'Care coordinator', 'Physiotherapist', 'Resident'] as const),
       locale: person.locale,
-    });
+    };
+    staff.push(member);
+    if (isSenior) leadPool.push(member);
   }
-  const clinicians = staff.filter((s) => s.role !== 'administrator' && s.role !== 'auditor');
-  const leads = staff.filter((s) => s.role === 'treatment_lead');
+  const clinicians = staff.filter((s) => s.roles.includes('clinician'));
+  const leads = leadPool;
 
   // --- teams -------------------------------------------------------------
   const teams: SyntheticTeam[] = [];

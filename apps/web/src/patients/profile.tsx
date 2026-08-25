@@ -18,7 +18,7 @@ import { EditContactButton } from './contact-dialog.js';
 import { ResponsesCard } from '../surveys/responses-card.js';
 import { ExportDataButton } from './export-dialog.js';
 import { MarkDeceasedButton } from './deceased-dialog.js';
-import { ROLE_CAPABILITIES, type Role } from '@mio/authz';
+import { capabilityUnion, sessionRoles } from '../app/shells.js';
 import { useSession } from '../session/session.js';
 
 interface PatientProfile {
@@ -186,11 +186,9 @@ export function PatientProfilePage(): ReactElement {
     return <ErrorState onRetry={() => void profile.refetch()} />;
   }
   const patient = profile.data;
-  const role = (session.account?.role ?? 'treatment_member') as Role;
-  const mayMarkDeceased = ROLE_CAPABILITIES[role].includes('patient_account.mark_deceased');
-  const mayEditContact = ROLE_CAPABILITIES[role].includes(
-    'patient_identity.update_contact_details',
-  );
+  const capabilities = capabilityUnion(sessionRoles(session));
+  const mayMarkDeceased = capabilities.has('patient_account.mark_deceased');
+  const mayEditContact = capabilities.has('patient_identity.update_contact_details');
 
   return (
     <div className="flex gap-8">

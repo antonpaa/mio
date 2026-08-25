@@ -77,6 +77,18 @@ this document; its named priority targets are marked ⊕.
 | E: admin reading clinical data | No clinical grants for the role, no clinical queries in the module, patients as initials in A3 (X4) |
 | E: stolen admin session resetting credentials | Step-up: the administrator re-enters their own password; failures are audited denials |
 
+### Separation of duties (role restructure, 2026-08-25)
+
+An account holds a SET of roles (grants union), which makes two rules
+load-bearing rather than implicit:
+
+| Threat | Mitigation |
+|---|---|
+| E: one account accumulating oversight AND operation | **Auditor is exclusive** — the application refuses the combination and a database trigger refuses it again (`identity.enforce_auditor_exclusivity`), so nobody who acts in the system reads the full audit log, and the log's reader holds no operational grant |
+| E: an administrator escalating themselves | **Admin actions are never self-targeting**: no editing your own role set, no adding yourself to a team (the door into clinical visibility), no resetting your own credentials through the admin plane. Each refusal is a 400 before any decision point; changing an administrator takes a second administrator |
+| E: platform-wide lead power | "Treatment lead" is no longer an account role but a position on ONE treatment's care team; `team_lead`-scoped actions (lifecycle, membership, overrides, mark-deceased) check the position per treatment |
+| T: a role edit hiding its history | `staff_account.update_roles` is matrix-gated, audited as an access event AND a change event recording before/after sets |
+
 ### HTTP layer (WP-30, `shared/hardening.ts`)
 
 | Threat | Mitigation |
@@ -104,9 +116,11 @@ generated authz artifacts checked for freshness in CI.
 - **Style CSP allows `'unsafe-inline'`** for React Aria's positioning
   styles. Script CSP does not; residual risk is CSS-only injection,
   which the structured message doc gives no path to.
-- **P2 (open):** should a dedicated auditor/DPO role replace
-  administrator access to the full audit log? Matrix change when
-  decided.
+- **P2 (decided 2026-08-24):** the dedicated auditor role holds the
+  full audit log; administrators lost it. Since the 2026-08-25 role
+  restructure the auditor role is **exclusive** (never combined with
+  another role on one account) and administrator actions are never
+  self-targeting — see "Separation of duties" below.
 - **Container runs TypeScript via a dev loader** (WP-09 choice). The
   loader is part of the runtime SOUP surface and is pinned; a compiled
   image is a later hardening step.

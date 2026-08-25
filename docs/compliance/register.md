@@ -336,9 +336,9 @@ engineering guess.
 
 | # | Question | Needs |
 |---|---|---|
-| P1 | Should Treatment Leads create patient accounts, or administrators only? | Operational decision — separation of duties versus an enrolment bottleneck |
-| P2 | Who may read the full audit log? A dedicated auditor/DPO role? | DPO input — audit metadata reveals which patients have treatments. Design position: admin view shows initials-only subjects and generic event text (reconciliation X4) |
-| P3 | Should survey authoring and alert-rule configuration be a separate capability? | Product decision — this is the regulated-adjacent capability (R1). Design's role matrix (A2) confirms the Treatment Lead default |
+| P1 | Should Treatment Leads create patient accounts, or administrators only? | **Decided (owner, 2026-08-24): administrators only — implemented.** The care side enrols existing accounts into treatments; identity creation is administration for both realms |
+| P2 | Who may read the full audit log? A dedicated auditor/DPO role? | **Decided (owner, 2026-08-24): a dedicated auditor role — implemented**, with full identities (oversight is the role's purpose). Since 2026-08-25 the role is **exclusive**: it never combines with any other role on one account (segregation of duties, enforced in the application and by a database trigger) |
+| P3 | Should survey authoring and alert-rule configuration be a separate capability? | **Decided (owner, 2026-08-25): yes — the `author` role.** Reverses the earlier Treatment-Lead default: authoring survey/treatment templates, taxonomy and alert rules is its own account role, held alongside clinician where appropriate. The migration granted author to every former lead, so narrowing is a deliberate, audited act |
 | P4 | Should patients see that an alert was raised from their responses? | **Clinical opinion.** Design position now on record: never severities or critical areas; a plain-language "closer look" note on submission, plus rule-authored patient notifications ([`../design/README.md`](../design/README.md)) — needs clinical sign-off |
 | P5 | Is break-glass access outside a care relationship required? | Clinical and legal input |
 | P6 | Patient-initiated symptom self-report: the data model and designs imply it (source "self-report", PP3/PP6), but no patient-side flow is designed | Product decision — design the flow or descope self-report to v1.1 (reconciliation X7) |

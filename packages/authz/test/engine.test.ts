@@ -9,7 +9,7 @@ describe('the decision engine', () => {
   it('fails closed and loudly on an action outside the matrix', () => {
     expect(() =>
       authorize({
-        principal: { userId: 'u1', role: 'treatment_member' },
+        principal: { userId: 'u1', roles: ['clinician'] },
         action: 'frobnicate',
         resource: { type: 'treatment', id: 't1' },
       }),
@@ -20,16 +20,33 @@ describe('the decision engine', () => {
     // internal_note's scopes only need `team`; a subjectUserId in the slice
     // must be dropped, not rejected - callers pass broad slices.
     const result = authorize({
-      principal: { userId: 'u-pat', role: 'patient' },
+      principal: { userId: 'u-pat', roles: ['patient'] },
       action: 'view',
       resource: { type: 'internal_note', id: 'n1', subjectUserId: 'u-pat', teamUserIds: ['u-doc'] },
     });
     expect(result.decision).toBe('deny');
   });
 
+  it('a multi-role principal gets the UNION of its roles', () => {
+    // survey_template.publish: author any, clinician deny, administrator deny.
+    const resource = { type: 'survey_template', id: 'tpl-1' } as const;
+    const alone = authorize({
+      principal: { userId: 'u-adm', roles: ['administrator'] },
+      action: 'publish',
+      resource,
+    });
+    expect(alone.decision).toBe('deny');
+    const withAuthor = authorize({
+      principal: { userId: 'u-adm', roles: ['administrator', 'author'] },
+      action: 'publish',
+      resource,
+    });
+    expect(withAuthor.decision).toBe('allow');
+  });
+
   it('returns the audit obligation and a ready access-event row - denials included', () => {
     const result = authorize({
-      principal: { userId: 'u-doc', role: 'treatment_member' },
+      principal: { userId: 'u-doc', roles: ['clinician'] },
       action: 'view',
       resource: {
         type: 'patient_clinical_profile',

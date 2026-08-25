@@ -82,7 +82,7 @@ export class AlertsService {
       // rows trip it - see the roster's twin comment.
       for (const row of (rows as { id: string; patient_id: string }[]).slice(0, 25)) {
         const decision = authorize({
-          principal: { userId: staff.userId, role: staff.role },
+          principal: { userId: staff.userId, roles: staff.roles },
           action: 'view',
           resource: {
             type: 'alert',
@@ -133,7 +133,7 @@ export class AlertsService {
     team: string[],
   ): Promise<void> {
     const decision = authorize({
-      principal: { userId: staff.userId, role: staff.role },
+      principal: { userId: staff.userId, roles: staff.roles },
       action,
       resource: { type: 'alert', id: alert.id, patientId: alert.patient_id, teamUserIds: team },
     });

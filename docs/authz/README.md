@@ -62,10 +62,17 @@ The six invariants run inside the test suite (`src/matrix.ts`).
       audit: always
       grants:
         patient: self
-        treatment_member: care_relationship
-        treatment_lead: care_relationship
+        clinician: care_relationship
+        author: deny
         administrator: deny
+        auditor: deny
 ```
+
+An account may hold SEVERAL roles (2026-08-25 restructure); the decision is
+the union of its roles' grants. A grant may also be a list of scopes — e.g.
+`task.complete` for clinician is `[own, team_lead]`: your own task, or any
+task on a treatment you lead. Being a treatment's lead is a care-team
+position (`team_lead` slices), never an account role.
 
 A grant is never simply "yes" — it is the **condition** under which the action
 is permitted. `care_relationship` means the clinician is on a team treating that
@@ -94,7 +101,7 @@ in the direction of disclosure.
 | Invariant | Guards against |
 |---|---|
 | `exhaustive` | Silent defaults. Every triple is explicit; a missing grant fails the build. |
-| `superset_lead_member` | An edit accidentally narrowing a lead's access below a member's. |
+| `author_never_patient_scoped` | Authoring is catalog work; the author role holding any grant on patient-scoped data would quietly recreate a clinical super-role. |
 | `administrator_no_clinical` | The brief's clearest requirement eroding over time. |
 | `patient_self_only` | Any path by which a patient could reach another patient's data. |
 | `internal_notes_never_patient` | The single worst disclosure this system could make. |
