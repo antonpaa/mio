@@ -501,6 +501,10 @@ function BodyMapInput({
         front: intl.formatMessage({ id: 'bodymap.front' }),
         back: intl.formatMessage({ id: 'bodymap.back' }),
       }}
+      sideLabels={{
+        left: intl.formatMessage({ id: 'bodymap.side.left' }),
+        right: intl.formatMessage({ id: 'bodymap.side.right' }),
+      }}
       legendLabel={intl.formatMessage({ id: 'bodymap.legend' })}
       summary={summary}
     />

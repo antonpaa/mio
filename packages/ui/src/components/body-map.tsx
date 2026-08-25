@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { BODY_VIEWBOX, FRONT_REGIONS, BACK_REGIONS, type RegionPath } from './body-map-geometry.js';
 
 /**
  * The body map (docs/architecture/surveys-and-alerts.md): front and back
@@ -9,62 +10,10 @@ import type { ReactElement } from 'react';
  * text, so the interaction is confirmable without the picture. The
  * component knows geometry only - region ids, labels and criticality all
  * come from the caller (and patients are never handed criticality).
+ *
+ * The figures themselves live in body-map-geometry.ts: organic
+ * silhouettes whose regions tile the body, per the B3/P4 reference.
  */
-
-type Shape =
-  | { kind: 'rect'; x: number; y: number; w: number; h: number; rx: number }
-  | { kind: 'ellipse'; cx: number; cy: number; rx: number; ry: number };
-
-interface Placement {
-  id: string;
-  shape: Shape;
-}
-
-// The FRONT view faces the viewer: the patient's LEFT is on the viewer's
-// right. The BACK view is seen from behind: patient's left = viewer's left.
-const FRONT: Placement[] = [
-  { id: 'head', shape: { kind: 'ellipse', cx: 100, cy: 34, rx: 21, ry: 25 } },
-  { id: 'neck', shape: { kind: 'rect', x: 90, y: 60, w: 20, h: 14, rx: 6 } },
-  { id: 'shoulder-right', shape: { kind: 'rect', x: 46, y: 76, w: 32, h: 17, rx: 8 } },
-  { id: 'shoulder-left', shape: { kind: 'rect', x: 122, y: 76, w: 32, h: 17, rx: 8 } },
-  { id: 'chest', shape: { kind: 'rect', x: 76, y: 76, w: 48, h: 40, rx: 10 } },
-  { id: 'abdomen', shape: { kind: 'rect', x: 78, y: 118, w: 44, h: 38, rx: 10 } },
-  { id: 'pelvis', shape: { kind: 'rect', x: 76, y: 158, w: 48, h: 26, rx: 10 } },
-  { id: 'upper-arm-right', shape: { kind: 'rect', x: 42, y: 95, w: 19, h: 48, rx: 9 } },
-  { id: 'upper-arm-left', shape: { kind: 'rect', x: 139, y: 95, w: 19, h: 48, rx: 9 } },
-  { id: 'forearm-right', shape: { kind: 'rect', x: 40, y: 146, w: 17, h: 44, rx: 8 } },
-  { id: 'forearm-left', shape: { kind: 'rect', x: 143, y: 146, w: 17, h: 44, rx: 8 } },
-  { id: 'hand-right', shape: { kind: 'ellipse', cx: 48, cy: 204, rx: 11, ry: 13 } },
-  { id: 'hand-left', shape: { kind: 'ellipse', cx: 152, cy: 204, rx: 11, ry: 13 } },
-  { id: 'thigh-right', shape: { kind: 'rect', x: 77, y: 186, w: 21, h: 62, rx: 10 } },
-  { id: 'thigh-left', shape: { kind: 'rect', x: 102, y: 186, w: 21, h: 62, rx: 10 } },
-  { id: 'lower-leg-right', shape: { kind: 'rect', x: 79, y: 251, w: 18, h: 58, rx: 8 } },
-  { id: 'lower-leg-left', shape: { kind: 'rect', x: 103, y: 251, w: 18, h: 58, rx: 8 } },
-  { id: 'foot-right', shape: { kind: 'rect', x: 74, y: 312, w: 23, h: 13, rx: 6 } },
-  { id: 'foot-left', shape: { kind: 'rect', x: 103, y: 312, w: 23, h: 13, rx: 6 } },
-];
-
-const BACK: Placement[] = [
-  { id: 'head', shape: { kind: 'ellipse', cx: 100, cy: 34, rx: 21, ry: 25 } },
-  { id: 'neck', shape: { kind: 'rect', x: 90, y: 60, w: 20, h: 14, rx: 6 } },
-  { id: 'shoulder-left', shape: { kind: 'rect', x: 46, y: 76, w: 32, h: 17, rx: 8 } },
-  { id: 'shoulder-right', shape: { kind: 'rect', x: 122, y: 76, w: 32, h: 17, rx: 8 } },
-  { id: 'upper-back', shape: { kind: 'rect', x: 76, y: 76, w: 48, h: 44, rx: 10 } },
-  { id: 'lower-back', shape: { kind: 'rect', x: 78, y: 122, w: 44, h: 32, rx: 10 } },
-  { id: 'buttocks', shape: { kind: 'rect', x: 76, y: 156, w: 48, h: 28, rx: 10 } },
-  { id: 'upper-arm-left', shape: { kind: 'rect', x: 42, y: 95, w: 19, h: 48, rx: 9 } },
-  { id: 'upper-arm-right', shape: { kind: 'rect', x: 139, y: 95, w: 19, h: 48, rx: 9 } },
-  { id: 'forearm-left', shape: { kind: 'rect', x: 40, y: 146, w: 17, h: 44, rx: 8 } },
-  { id: 'forearm-right', shape: { kind: 'rect', x: 143, y: 146, w: 17, h: 44, rx: 8 } },
-  { id: 'hand-left', shape: { kind: 'ellipse', cx: 48, cy: 204, rx: 11, ry: 13 } },
-  { id: 'hand-right', shape: { kind: 'ellipse', cx: 152, cy: 204, rx: 11, ry: 13 } },
-  { id: 'thigh-left', shape: { kind: 'rect', x: 77, y: 186, w: 21, h: 62, rx: 10 } },
-  { id: 'thigh-right', shape: { kind: 'rect', x: 102, y: 186, w: 21, h: 62, rx: 10 } },
-  { id: 'lower-leg-left', shape: { kind: 'rect', x: 79, y: 251, w: 18, h: 58, rx: 8 } },
-  { id: 'lower-leg-right', shape: { kind: 'rect', x: 103, y: 251, w: 18, h: 58, rx: 8 } },
-  { id: 'foot-left', shape: { kind: 'rect', x: 74, y: 312, w: 23, h: 13, rx: 6 } },
-  { id: 'foot-right', shape: { kind: 'rect', x: 103, y: 312, w: 23, h: 13, rx: 6 } },
-];
 
 export interface BodyMapProps {
   selected: readonly string[];
@@ -72,6 +21,10 @@ export interface BodyMapProps {
   /** region id -> localized label */
   labels: Record<string, string>;
   viewLabels: { front: string; back: string };
+  /** "Right" / "Left" shown above the figure halves, as the reference
+   * draws them - the front view faces the viewer, so the patient's
+   * right appears on the viewer's left; the back view un-mirrors. */
+  sideLabels?: { left: string; right: string };
   /** accessible name of the parallel checkbox group */
   legendLabel: string;
   /** "2 areas selected — chest, left forearm" - composed by the caller */
@@ -79,50 +32,51 @@ export interface BodyMapProps {
 }
 
 function Figure({
-  placements,
+  regions,
   title,
+  viewerLeft,
+  viewerRight,
   selected,
   onToggle,
 }: {
-  placements: Placement[];
+  regions: readonly RegionPath[];
   title: string;
+  viewerLeft?: string;
+  viewerRight?: string;
   selected: ReadonlySet<string>;
   onToggle: (regionId: string) => void;
 }): ReactElement {
   return (
-    <figure className="m-0 text-center">
-      <svg viewBox="0 0 200 335" width={150} height={251} aria-hidden focusable="false">
-        {placements.map(({ id, shape }) => {
-          const cls = selected.has(id)
-            ? 'cursor-pointer fill-teal stroke-teal-hover'
-            : 'cursor-pointer fill-surface-sunken stroke-border hover:fill-teal-tint';
-          return shape.kind === 'rect' ? (
-            <rect
-              key={id}
-              x={shape.x}
-              y={shape.y}
-              width={shape.w}
-              height={shape.h}
-              rx={shape.rx}
-              strokeWidth={1.5}
-              className={cls}
-              onClick={() => onToggle(id)}
-            />
-          ) : (
-            <ellipse
-              key={id}
-              cx={shape.cx}
-              cy={shape.cy}
-              rx={shape.rx}
-              ry={shape.ry}
-              strokeWidth={1.5}
-              className={cls}
-              onClick={() => onToggle(id)}
-            />
-          );
-        })}
+    <figure className="m-0 w-[150px] text-center">
+      <figcaption className="mb-1">
+        <span className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted">
+          <span aria-hidden className="h-px flex-1 bg-hairline" />
+          {title}
+          <span aria-hidden className="h-px flex-1 bg-hairline" />
+        </span>
+        {viewerLeft !== undefined && viewerRight !== undefined ? (
+          <span aria-hidden className="mt-0.5 flex justify-between px-3 text-[11px] text-muted">
+            <span>{viewerLeft}</span>
+            <span>{viewerRight}</span>
+          </span>
+        ) : null}
+      </figcaption>
+      <svg viewBox={BODY_VIEWBOX} width={150} height={255} aria-hidden focusable="false">
+        {regions.map(({ id, d }) => (
+          <path
+            key={id}
+            d={d}
+            strokeWidth={1.4}
+            strokeLinejoin="round"
+            className={
+              selected.has(id)
+                ? 'cursor-pointer fill-teal stroke-teal-hover'
+                : 'cursor-pointer fill-surface-sunken stroke-border hover:fill-teal-tint'
+            }
+            onClick={() => onToggle(id)}
+          />
+        ))}
       </svg>
-      <figcaption className="text-xs uppercase tracking-wide text-muted">{title}</figcaption>
     </figure>
   );
 }
@@ -132,23 +86,30 @@ export function BodyMap({
   onToggle,
   labels,
   viewLabels,
+  sideLabels,
   legendLabel,
   summary,
 }: BodyMapProps): ReactElement {
   const selectedSet = new Set(selected);
-  const allRegionIds = [...new Set([...FRONT, ...BACK].map((placement) => placement.id))];
+  const allRegionIds = [...new Set([...FRONT_REGIONS, ...BACK_REGIONS].map((region) => region.id))];
   return (
     <div>
       <div className="flex justify-center gap-6">
         <Figure
-          placements={FRONT}
+          regions={FRONT_REGIONS}
           title={viewLabels.front}
+          {...(sideLabels !== undefined
+            ? { viewerLeft: sideLabels.right, viewerRight: sideLabels.left }
+            : {})}
           selected={selectedSet}
           onToggle={onToggle}
         />
         <Figure
-          placements={BACK}
+          regions={BACK_REGIONS}
           title={viewLabels.back}
+          {...(sideLabels !== undefined
+            ? { viewerLeft: sideLabels.left, viewerRight: sideLabels.right }
+            : {})}
           selected={selectedSet}
           onToggle={onToggle}
         />
