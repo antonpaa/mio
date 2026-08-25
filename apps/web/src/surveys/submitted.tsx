@@ -72,7 +72,10 @@ export function SurveySubmittedPage(): ReactElement {
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-5">
       <header className="rounded-card border border-black/5 bg-surface p-6 text-center shadow-resting">
-        <p aria-hidden className="text-3xl">
+        <p
+          aria-hidden
+          className="mx-auto flex h-14 w-14 items-center justify-center rounded-pill bg-teal-tint text-2xl text-teal"
+        >
           ✓
         </p>
         <h1 className="mt-1 font-display text-2xl italic text-ink">

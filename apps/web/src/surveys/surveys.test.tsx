@@ -174,7 +174,8 @@ describe('P3 minimal list', () => {
     await screen.findByText('Weekly symptom survey');
     await screen.findByText('1 of 3');
     await screen.findByText('Veckovis symtomenkät');
-    expect(screen.getByText('Overdue')).toBeTruthy();
+    // the canvas chip counts the lateness (the fixture is years past due)
+    expect(screen.getByText(/days overdue/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Fill in' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Start' })).toBeTruthy();
     const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });

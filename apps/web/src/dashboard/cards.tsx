@@ -64,7 +64,7 @@ function CardShell({
     >
       <header className="flex items-center gap-2 border-b border-hairline px-5 py-3">
         <span className="text-teal">{icon}</span>
-        <h2 id={`${titleId}-heading`} className="flex-1 text-sm font-semibold text-ink">
+        <h2 id={`${titleId}-heading`} className="flex-1 font-display text-lg italic text-ink">
           <FormattedMessage id={titleId} />
         </h2>
         {to !== undefined && linkId !== undefined ? (

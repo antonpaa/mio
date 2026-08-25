@@ -378,6 +378,8 @@ const en = {
   'notifications.bellLabel':
     '{count, plural, =0 {Notifications} one {Notifications — # unread} other {Notifications — # unread}}',
   'notifications.markAllRead': 'Mark all as read',
+  'notifications.groupToday': 'Today',
+  'notifications.groupEarlier': 'Earlier',
   'notifications.emailExplainer':
     'Emails only say something is waiting — never health details. Everything you see here stays in Mio.',
   'notifications.empty': 'Nothing here yet.',
@@ -597,6 +599,12 @@ const en = {
   'surveys.backHome': 'Back to home',
   'surveys.dueHeading': 'Due',
   'surveys.overdue': 'Overdue',
+  'surveys.dueToday': 'Due today',
+  'surveys.overdueDays': '{count, plural, one {# day overdue} other {# days overdue}}',
+  'surveys.dueOn': 'Due {date}',
+  'surveys.saveNote':
+    'Your answers save as you go — you can pause and continue any time. Not answering also tells your care team something, so a gentle reminder follows.',
+  'surveys.view': 'View',
   'surveys.fill': 'Fill in',
   'assign.title': 'Assign survey',
   'assign.sectionTitle': 'Surveys',
@@ -1281,6 +1289,8 @@ const fi: Record<MessageId, string> = {
   'notifications.bellLabel':
     '{count, plural, =0 {Ilmoitukset} one {Ilmoitukset — # lukematon} other {Ilmoitukset — # lukematonta}}',
   'notifications.markAllRead': 'Merkitse kaikki luetuiksi',
+  'notifications.groupToday': 'Tänään',
+  'notifications.groupEarlier': 'Aiemmat',
   'notifications.emailExplainer':
     'Sähköpostit kertovat vain, että jotakin odottaa — eivät koskaan terveystietoja. Kaikki näkemäsi pysyy Miossa.',
   'notifications.empty': 'Ei vielä ilmoituksia.',
@@ -1499,6 +1509,12 @@ const fi: Record<MessageId, string> = {
   'surveys.backHome': 'Takaisin etusivulle',
   'surveys.dueHeading': 'Täytettävänä',
   'surveys.overdue': 'Myöhässä',
+  'surveys.dueToday': 'Viimeistään tänään',
+  'surveys.overdueDays': '{count, plural, one {# päivän myöhässä} other {# päivää myöhässä}}',
+  'surveys.dueOn': 'Viimeistään {date}',
+  'surveys.saveNote':
+    'Vastauksesi tallentuvat sitä mukaa kuin etenet — voit keskeyttää ja jatkaa milloin vain. Vastaamatta jättäminenkin kertoo hoitotiimillesi jotakin, joten siitä seuraa ystävällinen muistutus.',
+  'surveys.view': 'Näytä',
   'surveys.fill': 'Täytä',
   'assign.title': 'Osoita kysely',
   'assign.sectionTitle': 'Kyselyt',
@@ -2182,6 +2198,8 @@ const sv: Record<MessageId, string> = {
   'notifications.bellLabel':
     '{count, plural, =0 {Aviseringar} one {Aviseringar — # oläst} other {Aviseringar — # olästa}}',
   'notifications.markAllRead': 'Markera alla som lästa',
+  'notifications.groupToday': 'Idag',
+  'notifications.groupEarlier': 'Tidigare',
   'notifications.emailExplainer':
     'E-post berättar bara att något väntar — aldrig hälsouppgifter. Allt du ser här stannar i Mio.',
   'notifications.empty': 'Inga aviseringar ännu.',
@@ -2400,6 +2418,12 @@ const sv: Record<MessageId, string> = {
   'surveys.backHome': 'Tillbaka till startsidan',
   'surveys.dueHeading': 'Att fylla i',
   'surveys.overdue': 'Försenad',
+  'surveys.dueToday': 'Senast idag',
+  'surveys.overdueDays': '{count, plural, one {# dag försenad} other {# dagar försenad}}',
+  'surveys.dueOn': 'Senast {date}',
+  'surveys.saveNote':
+    'Dina svar sparas medan du fyller i — du kan pausa och fortsätta när som helst. Att inte svara berättar också något för ditt vårdteam, så en vänlig påminnelse följer.',
+  'surveys.view': 'Visa',
   'surveys.fill': 'Fyll i',
   'assign.title': 'Tilldela enkät',
   'assign.sectionTitle': 'Enkäter',

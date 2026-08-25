@@ -42,7 +42,7 @@ export function MyTasksCard(): ReactElement {
   return (
     <section className="rounded-card border border-black/5 bg-surface px-5 py-4 shadow-resting">
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
+        <h2 className="flex items-center gap-2 font-display text-lg italic text-ink">
           <span className="text-teal">
             <IconTasks size={16} />
           </span>

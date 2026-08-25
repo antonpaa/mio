@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { EmptyState, ErrorState, Skeleton, StatusChip } from '@mio/ui';
+import { Button, EmptyState, ErrorState, Skeleton, StatusChip } from '@mio/ui';
+import { useFillOccurrence } from '../surveys/start.js';
 
 /**
  * P9: the patient's consolidated calendar - every planned or confirmed
@@ -32,6 +33,7 @@ function localDay(row: CalendarRow): string {
 
 export function PatientCalendarPage(): ReactElement {
   const intl = useIntl();
+  const fill = useFillOccurrence();
   const calendar = useQuery({
     queryKey: ['calendar'],
     queryFn: async () => {
@@ -122,7 +124,19 @@ export function PatientCalendarPage(): ReactElement {
                         {row.location ? ` — ${row.location}` : ''}
                       </p>
                     </div>
-                    {row.status === 'confirmed' ? (
+                    {/* the canvas mixes survey due dates into the calendar
+                        as actionable rows - Start opens the fill. Future
+                        occurrences stay inert; their window is not open. */}
+                    {row.kind === 'survey' && (isPast || isToday) ? (
+                      <Button
+                        size="sm"
+                        variant="quiet"
+                        isDisabled={fill.isPending}
+                        onPress={() => void fill.mutate(row.id)}
+                      >
+                        <FormattedMessage id="surveys.start" />
+                      </Button>
+                    ) : row.status === 'confirmed' ? (
                       <StatusChip tone="teal">
                         {intl.formatMessage({ id: 'activity.status.confirmed' })}
                       </StatusChip>

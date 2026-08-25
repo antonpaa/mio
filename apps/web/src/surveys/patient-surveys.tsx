@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button, EmptyState, ErrorState, ListRow, Skeleton, StatusChip } from '@mio/ui';
@@ -8,6 +8,16 @@ import { useFillOccurrence } from './start.js';
 
 /** P3 (minimal, WP-14): what can be filled now, open drafts, recent
  * submissions. Due dates and occurrences ride WP-17. */
+
+function isoToday(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+function daysLate(dueDate: string): number {
+  const ms =
+    new Date(`${isoToday()}T12:00:00`).getTime() - new Date(`${dueDate}T12:00:00`).getTime();
+  return Math.max(1, Math.round(ms / 86_400_000));
+}
 
 interface SurveyList {
   due: {
@@ -92,7 +102,7 @@ export function PatientSurveysPage(): ReactElement {
 
       {data.due.length > 0 ? (
         <section className="rounded-card border border-black/5 bg-surface px-5 py-4 shadow-resting">
-          <h2 className="mb-1 text-sm font-semibold text-ink">
+          <h2 className="mb-1 font-display text-lg italic text-ink">
             <FormattedMessage id="surveys.dueHeading" />
           </h2>
           {data.due.map((entry) => (
@@ -102,15 +112,27 @@ export function PatientSurveysPage(): ReactElement {
                 <div className="flex items-center gap-2">
                   {entry.overdue ? (
                     <StatusChip tone="red">
-                      {intl.formatMessage({ id: 'surveys.overdue' })}
+                      {intl.formatMessage(
+                        { id: 'surveys.overdueDays' },
+                        { count: daysLate(entry.dueDate) },
+                      )}
+                    </StatusChip>
+                  ) : entry.dueDate === isoToday() ? (
+                    <StatusChip tone="amber">
+                      {intl.formatMessage({ id: 'surveys.dueToday' })}
                     </StatusChip>
                   ) : (
-                    <StatusChip tone="neutral">
-                      {intl.formatDate(`${entry.dueDate}T12:00:00`, {
-                        day: 'numeric',
-                        month: 'short',
-                      })}
-                    </StatusChip>
+                    <span className="text-xs text-secondary">
+                      {intl.formatMessage(
+                        { id: 'surveys.dueOn' },
+                        {
+                          date: intl.formatDate(`${entry.dueDate}T12:00:00`, {
+                            day: 'numeric',
+                            month: 'short',
+                          }),
+                        },
+                      )}
+                    </span>
                   )}
                   <Button
                     size="sm"
@@ -128,12 +150,16 @@ export function PatientSurveysPage(): ReactElement {
               <p className="text-xs text-secondary">{entry.treatmentName}</p>
             </ListRow>
           ))}
+          {/* the canvas's reassurance line - what pausing and silence mean */}
+          <p className="mt-2 border-t border-hairline pt-2.5 text-xs leading-relaxed text-muted">
+            <FormattedMessage id="surveys.saveNote" />
+          </p>
         </section>
       ) : null}
 
       {data.drafts.length > 0 ? (
         <section className="rounded-card border border-black/5 bg-surface px-5 py-4 shadow-resting">
-          <h2 className="mb-1 text-sm font-semibold text-ink">
+          <h2 className="mb-1 font-display text-lg italic text-ink">
             <FormattedMessage id="surveys.continueHeading" />
           </h2>
           {data.drafts.map((draft) => (
@@ -168,7 +194,7 @@ export function PatientSurveysPage(): ReactElement {
 
       {data.fillable.length > 0 ? (
         <section className="rounded-card border border-black/5 bg-surface px-5 py-4 shadow-resting">
-          <h2 className="mb-1 text-sm font-semibold text-ink">
+          <h2 className="mb-1 font-display text-lg italic text-ink">
             <FormattedMessage id="surveys.toFill" />
           </h2>
           {data.fillable.map((entry) => (
@@ -197,19 +223,26 @@ export function PatientSurveysPage(): ReactElement {
 
       {data.submitted.length > 0 ? (
         <section className="rounded-card border border-black/5 bg-surface px-5 py-4 shadow-resting">
-          <h2 className="mb-1 text-sm font-semibold text-ink">
+          <h2 className="mb-1 font-display text-lg italic text-ink">
             <FormattedMessage id="surveys.recentlySubmitted" />
           </h2>
           {data.submitted.map((entry) => (
             <ListRow
               key={entry.responseId}
               trailing={
-                <StatusChip tone="teal">
-                  {intl.formatDate(entry.submittedAt, { day: 'numeric', month: 'short' })}
-                </StatusChip>
+                <Link
+                  to="/surveys/done/$responseId"
+                  params={{ responseId: entry.responseId }}
+                  className="text-sm font-medium text-teal underline underline-offset-4 hover:text-teal-hover"
+                >
+                  <FormattedMessage id="surveys.view" />
+                </Link>
               }
             >
               <p className="text-sm text-ink">{entry.title}</p>
+              <p className="text-xs text-secondary">
+                {intl.formatDate(entry.submittedAt, { day: 'numeric', month: 'long' })}
+              </p>
             </ListRow>
           ))}
         </section>
