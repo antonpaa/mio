@@ -16,7 +16,7 @@ codes, invitations, notification nudges — lands in Mailpit's inbox at
 
 ```bash
 pnpm install
-pnpm dev:services       # Postgres 17 on :5432, Mailpit on :8025 (UI) / :1025 (SMTP)
+pnpm dev:services       # Postgres 17 on :15432, Mailpit on :8025 (UI) / :1025 (SMTP)
 ```
 
 The compose file creates the database `mio` with the **owner** user
@@ -25,10 +25,20 @@ migrations and the bootstrap CLI only; the running apps drop to the
 restricted carrier roles (`mio_app`, `mio_worker`) that the first
 migration creates.
 
+Postgres is published on **15432**, not 5432, on purpose: the
+well-known port collides with whatever PostgreSQL your machine
+already runs, and Windows randomly reserves blocks of the high port
+range for Hyper-V/WSL2. Mio's services never fight yours. If 15432 is
+somehow taken too, override any published port without editing
+tracked files - put a line like `MIO_PG_PORT=25432` (or
+`MIO_MAILPIT_UI_PORT=...` / `MIO_MAILPIT_SMTP_PORT=...`) in a
+repo-root `.env` file (gitignored, read by compose automatically) and
+use that port in the connection strings below.
+
 ## 2. Migrate
 
 ```bash
-DATABASE_URL="postgres://mio:mio-local-only@localhost:5432/mio" pnpm migrate
+DATABASE_URL="postgres://mio:mio-local-only@localhost:15432/mio" pnpm migrate
 ```
 
 Forward-only SQL migrations from `packages/db/migrations/` — schemas,
@@ -44,7 +54,7 @@ seeder refuses to run against a database holding any non-`.example`
 account (the E8 tripwire).
 
 ```bash
-DATABASE_URL="postgres://mio:mio-local-only@localhost:5432/mio" \
+DATABASE_URL="postgres://mio:mio-local-only@localhost:15432/mio" \
   pnpm --filter @mio/synthetic seed
 ```
 
@@ -72,7 +82,7 @@ the sanctioned break-glass path (see
 
 ```bash
 cd apps/api
-DATABASE_URL="postgres://mio:mio-local-only@localhost:5432/mio" \
+DATABASE_URL="postgres://mio:mio-local-only@localhost:15432/mio" \
   node --import @swc-node/register/esm-register src/cli/bootstrap-admin.ts \
   you@example.org "Your" "Name" en --base-url http://localhost:5173
 ```
@@ -95,7 +105,7 @@ API writes to):
 
 ```bash
 # terminal 1 — API on :3000
-MIO_DATABASE_URL="postgres://mio:mio-local-only@localhost:5432/mio" \
+MIO_DATABASE_URL="postgres://mio:mio-local-only@localhost:15432/mio" \
 MIO_OTP_PEPPER="local-dev-pepper-0123456789" \
 MIO_COOKIE_SECURE=false \
 MIO_SMTP_URL="smtp://localhost:1025" \
@@ -108,7 +118,7 @@ pnpm --filter @mio/web dev
 # terminal 3 — worker (reminders, notification fan-out, survey sweeps,
 # attachment scanning, retention; optional for a quick look, needed for
 # anything scheduled to actually happen)
-MIO_DATABASE_URL="postgres://mio:mio-local-only@localhost:5432/mio" \
+MIO_DATABASE_URL="postgres://mio:mio-local-only@localhost:15432/mio" \
 MIO_SMTP_URL="smtp://localhost:1025" \
 MIO_STORAGE_DIR="$PWD/.storage-dev" \
   pnpm --filter @mio/worker dev
@@ -147,8 +157,55 @@ truncate and reseed:
 
 ```bash
 docker compose exec postgres createdb -U mio mio_test
-MIO_TEST_DATABASE_URL="postgres://mio:mio-local-only@localhost:5432/mio_test" pnpm check
+MIO_TEST_DATABASE_URL="postgres://mio:mio-local-only@localhost:15432/mio_test" pnpm check
 ```
+
+## Windows notes
+
+Everything above works natively on Windows; only the shell syntax for
+environment variables differs (or use WSL2, where the guide applies
+verbatim - clone inside the WSL filesystem, not `/mnt/c`, and enable
+Docker Desktop's WSL integration).
+
+In **cmd.exe**, replace the inline `VAR=value command` prefixes with
+`set` lines - the `set "VAR=value"` form, quotes around the whole
+assignment, no spaces around the `=`. Variables persist for that
+window, so each terminal sets its own once:
+
+```bat
+set "DATABASE_URL=postgres://mio:mio-local-only@localhost:15432/mio"
+pnpm migrate
+pnpm --filter @mio/synthetic seed
+
+rem API terminal - run from the repo root so %CD% is the repo
+set "MIO_DATABASE_URL=postgres://mio:mio-local-only@localhost:15432/mio"
+set "MIO_OTP_PEPPER=local-dev-pepper-0123456789"
+set "MIO_COOKIE_SECURE=false"
+set "MIO_SMTP_URL=smtp://localhost:1025"
+set "MIO_STORAGE_DIR=%CD%\.storage-dev"
+pnpm --filter @mio/api dev
+```
+
+The worker terminal follows the same pattern (`MIO_DATABASE_URL`,
+`MIO_SMTP_URL`, and the **same** `MIO_STORAGE_DIR`), as does
+`MIO_TEST_DATABASE_URL` for `pnpm check`. In **PowerShell** the
+equivalent is `$env:MIO_DATABASE_URL = "..."`.
+
+Two one-time footnotes:
+
+- If `corepack enable` fails with a permission error, run that one
+  command in an Administrator terminal - it writes shims next to
+  `node.exe` under Program Files.
+- Line endings are pinned to LF by `.gitattributes`, so fresh clones
+  just work. A clone made **before** that file existed with
+  `core.autocrlf=true` has CRLF files on disk and `pnpm format` will
+  flag all of them; with your work committed or stashed, renormalise
+  the working tree once:
+
+  ```bat
+  git rm -rf --cached . >nul
+  git reset --hard
+  ```
 
 ## Resetting
 

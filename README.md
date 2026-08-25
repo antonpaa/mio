@@ -26,8 +26,8 @@ decided ([`docs/adr/`](docs/adr/)); the approved design canvases live in
 
 ```bash
 pnpm install
-pnpm dev:services   # Postgres 17 + Mailpit (http://localhost:8025)
-DATABASE_URL="postgres://mio:mio-local-only@localhost:5432/mio" pnpm migrate
+pnpm dev:services   # Postgres 17 on :15432 + Mailpit (http://localhost:8025)
+DATABASE_URL="postgres://mio:mio-local-only@localhost:15432/mio" pnpm migrate
 ```
 
 Then seed the synthetic demo world **or** bootstrap your own first
