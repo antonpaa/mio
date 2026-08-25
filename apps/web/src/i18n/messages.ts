@@ -605,6 +605,7 @@ const en = {
   'surveys.dueHeading': 'Due',
   'surveys.overdue': 'Overdue',
   'surveys.dueToday': 'Due today',
+  'surveys.dueBadge': '{count, plural, one {# survey due} other {# surveys due}}',
   'surveys.overdueDays': '{count, plural, one {# day overdue} other {# days overdue}}',
   'surveys.dueOn': 'Due {date}',
   'surveys.saveNote':
@@ -1520,6 +1521,7 @@ const fi: Record<MessageId, string> = {
   'surveys.dueHeading': 'Täytettävänä',
   'surveys.overdue': 'Myöhässä',
   'surveys.dueToday': 'Viimeistään tänään',
+  'surveys.dueBadge': '{count, plural, one {# täytettävä kysely} other {# täytettävää kyselyä}}',
   'surveys.overdueDays': '{count, plural, one {# päivän myöhässä} other {# päivää myöhässä}}',
   'surveys.dueOn': 'Viimeistään {date}',
   'surveys.saveNote':
@@ -2434,6 +2436,7 @@ const sv: Record<MessageId, string> = {
   'surveys.dueHeading': 'Att fylla i',
   'surveys.overdue': 'Försenad',
   'surveys.dueToday': 'Senast idag',
+  'surveys.dueBadge': '{count, plural, one {# enkät att fylla i} other {# enkäter att fylla i}}',
   'surveys.overdueDays': '{count, plural, one {# dag försenad} other {# dagar försenad}}',
   'surveys.dueOn': 'Senast {date}',
   'surveys.saveNote':

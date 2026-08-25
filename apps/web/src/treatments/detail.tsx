@@ -162,7 +162,7 @@ export function TreatmentDetailPage(): ReactElement {
       <SurveysSection treatmentId={treatmentId} />
 
       <section className="rounded-card border border-black/5 bg-surface px-5 py-4 shadow-resting">
-        <h2 className="mb-2 text-sm font-semibold text-ink">
+        <h2 className="mb-2 font-display text-lg italic text-ink">
           <FormattedMessage id="treatment.team" />
         </h2>
         {data.team.map((entry) => (
