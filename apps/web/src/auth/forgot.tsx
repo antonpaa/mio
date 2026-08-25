@@ -104,6 +104,10 @@ export function ResetPage(): ReactElement {
         label={intl.formatMessage({ id: 'welcome.password' })}
         autoComplete="new-password"
         isRequired
+        reveal={{
+          show: intl.formatMessage({ id: 'login.showPassword' }),
+          hide: intl.formatMessage({ id: 'login.hidePassword' }),
+        }}
       />
       {error !== null ? (
         <p role="alert" className="rounded-inner bg-red-tint px-3 py-2 text-sm text-red">
