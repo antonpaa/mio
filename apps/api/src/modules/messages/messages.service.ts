@@ -162,6 +162,8 @@ export class MessagesService {
                 p.given_name AS patient_given, p.family_name AS patient_family,
                 lm.body AS last_body, lm.created_at::text AS last_at,
                 lm.author_realm AS last_author_realm,
+                lm.author_id AS last_author_id,
+                lm.author_given AS last_author_given,
                 COALESCE((SELECT count(*)::int FROM clinical.message m
                   WHERE m.thread_id = th.id AND m.author_id <> $1
                     AND m.created_at > COALESCE(tr.last_read_at, 'epoch'::timestamptz)), 0)
@@ -174,7 +176,13 @@ export class MessagesService {
            LEFT JOIN clinical.message_thread th ON th.treatment_id = t.id
            LEFT JOIN clinical.thread_read tr ON tr.thread_id = th.id AND tr.user_id = $1
            LEFT JOIN LATERAL (
-             SELECT body, created_at, author_realm FROM clinical.message m
+             SELECT m.body, m.created_at, m.author_realm, m.author_id,
+                    COALESCE(sa.given_name, pa.given_name) AS author_given
+               FROM clinical.message m
+               LEFT JOIN identity.staff_account sa
+                 ON sa.id = m.author_id AND m.author_realm = 'staff'
+               LEFT JOIN identity.patient_account pa
+                 ON pa.id = m.author_id AND m.author_realm = 'patient'
               WHERE m.thread_id = th.id ORDER BY m.created_at DESC LIMIT 1
            ) lm ON true
           WHERE t.state <> 'draft'
@@ -236,8 +244,13 @@ export class MessagesService {
         [treatmentId],
       );
       const { rows: alerts } = await client.query(
-        `SELECT id, severity, status, created_at::text AS created_at
-           FROM clinical.alert WHERE treatment_id = $1 ORDER BY created_at`,
+        `SELECT a.id, a.severity, a.status, a.created_at::text AS created_at,
+                s.name AS survey_name
+           FROM clinical.alert a
+           LEFT JOIN clinical.survey_response r ON r.id = a.survey_response_id
+           LEFT JOIN clinical.survey_version v ON v.id = r.survey_version_id
+           LEFT JOIN clinical.survey s ON s.id = v.survey_id
+          WHERE a.treatment_id = $1 ORDER BY a.created_at`,
         [treatmentId],
       );
       type TimelineRow = Record<string, unknown> & { created_at: string };
@@ -281,6 +294,12 @@ export class MessagesService {
           `SELECT t.id AS treatment_id, t.name AS treatment_name, t.state,
                   lm.body AS last_body, lm.created_at::text AS last_at,
                   lm.author_realm AS last_author_realm,
+                  lm.author_id AS last_author_id,
+                  lm.author_given AS last_author_given,
+                  (SELECT it.name FROM clinical.treatment_care_team tct
+                     JOIN identity.team it ON it.id = tct.team_id
+                    WHERE tct.treatment_id = t.id AND tct.removed_at IS NULL
+                    ORDER BY it.name LIMIT 1) AS team_name,
                   COALESCE((SELECT count(*)::int FROM clinical.message m
                     WHERE m.thread_id = th.id AND m.author_id <> $1
                       AND m.created_at > COALESCE(tr.last_read_at, 'epoch'::timestamptz)), 0)
@@ -289,7 +308,13 @@ export class MessagesService {
              LEFT JOIN clinical.message_thread th ON th.treatment_id = t.id
              LEFT JOIN clinical.thread_read tr ON tr.thread_id = th.id AND tr.user_id = $1
              LEFT JOIN LATERAL (
-               SELECT body, created_at, author_realm FROM clinical.message m
+               SELECT m.body, m.created_at, m.author_realm, m.author_id,
+                      COALESCE(sa.given_name, pa.given_name) AS author_given
+                 FROM clinical.message m
+                 LEFT JOIN identity.staff_account sa
+                   ON sa.id = m.author_id AND m.author_realm = 'staff'
+                 LEFT JOIN identity.patient_account pa
+                   ON pa.id = m.author_id AND m.author_realm = 'patient'
                 WHERE m.thread_id = th.id ORDER BY m.created_at DESC LIMIT 1
              ) lm ON true
             WHERE t.state <> 'draft' AND t.patient_id = $1

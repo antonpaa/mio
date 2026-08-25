@@ -12,6 +12,11 @@ export interface ThreadRow {
   last_preview: string | null;
   last_at: string | null;
   last_author_realm: 'patient' | 'staff' | null;
+  /** X17(d): who wrote the previewed message - the lists prefix it */
+  last_author_id: string | null;
+  last_author_given: string | null;
+  /** patient list only: the treatment's care team, for P10's line */
+  team_name?: string | null;
   patient_id?: string;
   patient_given?: string;
   patient_family?: string;
@@ -40,7 +45,13 @@ export interface ThreadDetail {
   };
   readOnly: boolean;
   items: TimelineItem[];
-  alerts?: { id: string; severity: 'low' | 'moderate' | 'high'; created_at: string }[];
+  alerts?: {
+    id: string;
+    severity: 'low' | 'moderate' | 'high';
+    status: string;
+    created_at: string;
+    survey_name: string | null;
+  }[];
 }
 
 export function messagesBase(realm: 'patient' | 'staff'): string {

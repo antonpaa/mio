@@ -149,17 +149,37 @@ describe('the thread lifecycle', () => {
     const inbox = await inject('GET', '/api/staff/messages', undefined, leadCookie);
     expect(inbox.statusCode).toBe(200);
     const row = (
-      inbox.json() as { treatment_id: string; unread: number; last_preview: string | null }[]
+      inbox.json() as {
+        treatment_id: string;
+        unread: number;
+        last_preview: string | null;
+        last_author_id: string | null;
+        last_author_given: string | null;
+        last_author_realm: string | null;
+      }[]
     ).find((entry) => entry.treatment_id === treatment.id)!;
     expect(row.unread).toBe(beforeRow.unread + 1);
     expect(row.last_preview).toContain('nausea got worse');
+    // X17(d): the preview names its author
+    expect(row.last_author_realm).toBe('patient');
+    expect(row.last_author_id).toBe(patient.id);
+    expect(row.last_author_given).toBe(patient.givenName);
 
     const own = await inject('GET', '/api/patient/messages', undefined, patientCookie);
-    const ownRow = (own.json() as { treatment_id: string; unread: number }[]).find(
-      (entry) => entry.treatment_id === treatment.id,
-    )!;
+    const ownRow = (
+      own.json() as {
+        treatment_id: string;
+        unread: number;
+        last_author_id: string | null;
+        team_name: string | null;
+      }[]
+    ).find((entry) => entry.treatment_id === treatment.id)!;
     // posting moves YOUR watermark - you were in the thread to write
     expect(ownRow.unread).toBe(0);
+    // X17(d): the patient row knows its own last word and the care team
+    expect(ownRow.last_author_id).toBe(patient.id);
+    expect(typeof ownRow.team_name).toBe('string');
+    expect((ownRow.team_name ?? '').length).toBeGreaterThan(0);
 
     // the outbox carries references for WP-25, never message text - the
     // seeded conversations write none, so this post's row is the only one
@@ -202,6 +222,10 @@ describe('the thread lifecycle', () => {
     ]);
     expect(staffBody.items.some((item) => item.kind === 'note')).toBe(true);
     expect(Array.isArray(staffBody.alerts)).toBe(true);
+    // X17(a): each alert marker can name its survey for the stream chip
+    for (const alert of staffBody.alerts as Record<string, unknown>[]) {
+      expect('survey_name' in alert).toBe(true);
+    }
 
     const patientView = await inject(
       'GET',

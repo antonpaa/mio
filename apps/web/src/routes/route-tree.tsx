@@ -23,6 +23,7 @@ import { AlertPage } from '../alerts/alert-page.js';
 import { ResponseDetailPage } from '../surveys/response-detail.js';
 import { MessagesPage } from '../messages/messages-page.js';
 import { MessageThreadPage } from '../messages/thread-page.js';
+import { StaffInbox } from '../messages/inbox.js';
 import { NotificationsPage } from '../notifications/notifications-page.js';
 import { SettingsPage } from '../notifications/settings-page.js';
 import { greetingIdForHour, PatientHomePage } from '../home/patient-home.js';
@@ -346,18 +347,32 @@ const responseDetailRoute = createRoute({
   component: () => <ShellPage page={<ResponseDetailPage />} />,
 });
 
+/** /messages: P10's list for patients, the C4 two-pane inbox for staff -
+ * on the thread route the inbox keeps the list beside the conversation. */
+function MessagesSurface({ withThread }: { withThread: boolean }): ReactElement {
+  const session = useSession();
+  if (session.loading || !session.account) return <Splash />;
+  if (session.realm === 'staff')
+    return (
+      <SignedInShell>
+        <StaffInbox />
+      </SignedInShell>
+    );
+  return <SignedInShell>{withThread ? <MessageThreadPage /> : <MessagesPage />}</SignedInShell>;
+}
+
 const messagesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/messages',
   beforeLoad: requireSession,
-  component: () => <ShellPage page={<MessagesPage />} />,
+  component: () => <MessagesSurface withThread={false} />,
 });
 
 const messageThreadRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/messages/$treatmentId',
   beforeLoad: requireSession,
-  component: () => <ShellPage page={<MessageThreadPage />} />,
+  component: () => <MessagesSurface withThread={true} />,
 });
 
 /** Both realms have a centre now: the patient's own (P11) and the staff
