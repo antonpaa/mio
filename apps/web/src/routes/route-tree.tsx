@@ -42,6 +42,7 @@ import { AdminTeamsPage } from '../admin/teams-page.js';
 import { AdminRolesPage } from '../admin/roles-page.js';
 import { AdminAuditPage } from '../admin/audit-page.js';
 import { ReportingPage } from '../reporting/reporting-page.js';
+import { OnBehalfFillPage } from '../surveys/fill-on-behalf.js';
 
 function Root(): ReactElement {
   const [locale, setLocaleState] = useState<Locale>(() => detectLocale());
@@ -233,6 +234,14 @@ const patientProfileRoute = createRoute({
   beforeLoad: requireSession,
   component: () => <ShellPage page={<PatientProfilePage />} />,
 });
+/** On-behalf survey entry (PP "Report"): the patient's own fill screen,
+ * driven by the clinician, under a banner saying exactly that. */
+const onBehalfFillRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/patients/$patientId/fill/$responseId',
+  beforeLoad: requireSession,
+  component: () => <ShellPage page={<OnBehalfFillPage />} />,
+});
 const treatmentsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/treatments',
@@ -332,14 +341,23 @@ const messageThreadRoute = createRoute({
   component: () => <ShellPage page={<MessageThreadPage />} />,
 });
 
-/** P11 and the P8 slice are patient surfaces; staff land on the shared
- * placeholder until WP-27 gives them a centre of their own. */
+/** Both realms have a centre now: the patient's own (P11) and the staff
+ * one, where a B7 rule's team-addressed notification lands. The admin
+ * plane has neither - it holds no notification capability. */
 function NotificationsIndex(): ReactElement {
   const session = useSession();
   if (session.loading || !session.account) return <Splash />;
+  const role = (session.realm === 'patient' ? 'patient' : session.account.role) as Role;
+  const may = ROLE_CAPABILITIES[role]?.includes('notification.view') ?? false;
   return (
     <SignedInShell>
-      {session.realm === 'patient' ? <NotificationsPage /> : <PlaceholderHome />}
+      {!may ? (
+        <PlaceholderHome />
+      ) : session.realm === 'patient' ? (
+        <NotificationsPage />
+      ) : (
+        <NotificationsPage realm="staff" />
+      )}
     </SignedInShell>
   );
 }
@@ -456,6 +474,7 @@ export const routeTree = rootRoute.addChildren([
   resetRoute,
   patientsRoute,
   patientProfileRoute,
+  onBehalfFillRoute,
   treatmentsRoute,
   treatmentDetailRoute,
   calendarRoute,

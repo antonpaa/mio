@@ -4,6 +4,7 @@ import { authorize } from '@mio/authz/engine';
 import { withUserContext, writeAccessEvent, writeChangeEvent } from '@mio/db';
 import { APP_POOL } from '../../shared/db.module.js';
 import type { PatientPrincipal } from '../../shared/patient-session.js';
+import type { StaffPrincipal } from '../../shared/staff-session.js';
 
 /**
  * P11 + the P8 email-toggle slice (WP-25). The centre lists rows the
@@ -32,6 +33,73 @@ export class NotificationsService {
         subjectUserId: patient.userId,
       },
     }).decision;
+  }
+
+  /**
+   * The staff side of the centre (WP-25 completed): a B7 rule may
+   * address its custom notification to the team or its leads, and the
+   * dispatch has always written those rows - this is where they are
+   * read. Same self-slice decision as the patient's own centre: a
+   * notification is readable by exactly the person it was addressed to,
+   * whichever realm they are in.
+   */
+  private decideStaff(staff: StaffPrincipal, action: 'view' | 'mark_read'): 'allow' | 'deny' {
+    return authorize({
+      principal: { userId: staff.userId, role: staff.role },
+      action,
+      resource: {
+        type: 'notification',
+        id: staff.userId,
+        subjectUserId: staff.userId,
+      },
+    }).decision;
+  }
+
+  async listForStaff(staff: StaffPrincipal): Promise<object> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const decision = this.decideStaff(staff, 'view');
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'notification.view',
+        resourceType: 'notification',
+        resourceId: null,
+        patientId: null,
+        decision,
+      });
+      if (decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
+      const { rows } = await client.query(
+        `SELECT n.id, n.kind, n.treatment_id, n.patient_id, n.ref, n.body,
+                n.created_at::text AS created_at, n.read_at::text AS read_at,
+                t.name AS treatment_name,
+                p.given_name AS patient_given, p.family_name AS patient_family
+           FROM clinical.notification n
+           LEFT JOIN clinical.treatment t ON t.id = n.treatment_id
+           LEFT JOIN identity.patient_account p ON p.id = n.patient_id
+          WHERE n.recipient_id = $1 AND n.recipient_realm = 'staff'
+          ORDER BY n.created_at DESC
+          LIMIT 50`,
+        [staff.userId],
+      );
+      const unread = (rows as { read_at: string | null }[]).filter(
+        (row) => row.read_at === null,
+      ).length;
+      return { items: rows, unread };
+    });
+  }
+
+  async markAllReadForStaff(staff: StaffPrincipal): Promise<object> {
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      if (this.decideStaff(staff, 'mark_read') !== 'allow') {
+        throw new ForbiddenException({ status: 'forbidden' });
+      }
+      const { rowCount } = await client.query(
+        `UPDATE clinical.notification SET read_at = now()
+          WHERE recipient_id = $1 AND recipient_realm = 'staff' AND read_at IS NULL`,
+        [staff.userId],
+      );
+      return { marked: rowCount ?? 0 };
+    });
   }
 
   async list(patient: PatientPrincipal): Promise<object> {

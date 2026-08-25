@@ -73,6 +73,7 @@ implementation start except X1 for the affected copy.
 | X10 | **Icon language** (owner-requested, 2026-08-23): the canvases show text-only nav and card headers — no icon system exists beyond the bell, trend arrows and the logo mark. The owner asked for icons where they aid scanning, deliberately *not* the stock-icon-library look. | Implemented as **print-registration icons**: hand-drawn stroke glyphs in `@mio/ui` (no icon dependency, ADR-0009), each carrying the logo's light circle as a tinted layer that rests misregistered low-left — like the lockup — and slides into register on hover/focus and on the current nav page (motion respects `prefers-reduced-motion`). Applied to primary nav (all three shells), the bell, and card headers. Decorative only: always `aria-hidden`, labels stay the accessible name. **Owner approved 2026-08-24 ("until further note").** |
 | X11 | **A-plane deltas from the build (WP-28, 2026-08-24)**: (a) A5 team cards say "used in 18 treatments", but treatment attachment lives in `clinical.*`, which the admin plane cannot read by construction — the count has no lawful source. (b) A1 rows carry a generic "Edit"; v1 identity administration is lifecycle + credential reset (deactivate/reactivate/reset login), with no free-form identity editor. (c) A2's canvas shows a summarised capability grid; the owner-confirmed principle (roles rendered *from* the matrix) makes the build render the full generated capability table instead. | Implemented per the constraints: team cards show member count only; A1 actions are reset login / deactivate / reactivate; A2 renders every generated capability grouped by resource, ✓/· per role. Canvas updates to follow at next sync — or the owner overrules and the deltas become work items. |
 | X12 | **A4 reporting shell placement** (gate P8): the canvas draws A4 inside the administration shell, but its metrics (response rates, open alerts, acknowledge times) are clinical aggregates, and `report.view` is denied to administrators by the same principle that denies them `patient_clinical_profile.view`. | **Resolved (owner, 2026-08-24): "move it" — implemented.** A4 lives in the clinician shell (nav "Reporting", `report.view`-gated), scoped to the caller's own treatments and aggregated in-database; administrators and auditors get no route to it. Canvas moves the screen at next sync. |
+| X13 | **One authored text, two audiences** (surfaced by the staff notification centre, 2026-08-24): a B7 `notify` outcome carries `recipients` (patient / team / lead) but a single `notifyText`. With only the patient centre built, that was invisible; now that the team can read their copy, a rule written in patient voice ("your care team has been notified") arrives at the care team reading oddly. | **Needs an owner decision — not improvised.** Options: (a) per-recipient text in the rule schema and the B7 editor, (b) keep one text and let authors write audience-neutral copy, guided by editor hint text. (a) is the honest fix and a schema + editor change; (b) is free. Nothing is broken today: the note is delivered, attributed and readable. |
 
 ## Open questions the design answers (pending confirmation)
 
@@ -95,6 +96,43 @@ implementation start except X1 for the affected copy.
   their own actions), so narrowing authorship to a dedicated role later
   is a grants edit plus regeneration, not a build — nothing to regret
   now.
+
+## Scope audit (2026-08-24) — closed
+
+A full board-by-board and capability-by-capability sweep after WP-33
+found four deltas between what the design and matrix promised and what
+was reachable. All four are now built:
+
+1. **Clinician on-behalf survey fill** — the PP "Report" group's third
+   flow. The submission core is shared with the patient's own path so
+   the rules fire identically; provenance (`on_behalf_by`, and
+   `on_behalf_of_patient` on every derived observation and value entry)
+   follows the actor. Exercises `survey_response.submit_on_behalf_of_patient`
+   and `treatment.enter_on_behalf_of_patient`.
+2. **PP5 assisted contact edits** — the care team corrects phone,
+   address and correspondence language: exactly the field set the
+   patient can change themselves in P8. Email stays out, being the
+   login identity. Exercises `patient_identity.update_contact_details`.
+3. **Staff notification centre** — a B7 rule's team- or lead-addressed
+   custom notification is now readable by the people it names. Same
+   screen and same self-slice decision as P11, with the patient the
+   note concerns rendered on staff rows.
+4. **A3 filters and export** — range, event and person filters over a
+   bounded default window, with facet lists computed from the range
+   rather than the current narrowing, and a CSV export of exactly the
+   filtered view (spreadsheet-formula characters neutralised). The
+   WP-29 watermarked JSONL job remains the separate bulk/ops path.
+
+Matrix capabilities that remain deliberately granted but unexercised
+(slots for later, no surface designed): `care_relationship.*`
+(relationships derive from team membership via sync),
+`survey_assignment.cancel`/`send_reminder` (the flows ride
+`activity`-level cancel/remind), `symptom_taxonomy.view`/`manage`
+(taxonomy is seeded data; no management UI), `treatment.enrol_patient`
+(enrolment is treatment creation), and the staff-realm self-service
+trio (`own_settings.*`, `own_data_export.*`,
+`audit_log.view_own_access_history` — the shells design these menus
+for patients only).
 
 ## Rhythm with the canvases
 

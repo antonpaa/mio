@@ -38,6 +38,7 @@ export interface PatientProfile {
   dateOfBirth: string | null;
   email: string;
   phone: string | null;
+  address: Record<string, string> | null;
   locale: string;
   careTeamSize: number;
   deceasedOn: string | null;
@@ -166,10 +167,11 @@ export class PatientsService {
           date_of_birth: string | null;
           email: string;
           phone: string | null;
+          address: Record<string, string> | null;
           locale: string;
           deceased_on: string | null;
         }>(
-          `SELECT id, given_name, family_name, date_of_birth::text, email, phone, locale,
+          `SELECT id, given_name, family_name, date_of_birth::text, email, phone, address, locale,
                   deceased_on::text AS deceased_on
            FROM identity.patient_account WHERE id = $1`,
           [patientId],
@@ -184,6 +186,7 @@ export class PatientsService {
           dateOfBirth: patient.date_of_birth,
           email: patient.email,
           phone: patient.phone,
+          address: patient.address,
           locale: patient.locale,
           careTeamSize: careTeam.length,
           deceasedOn: patient.deceased_on,
@@ -280,6 +283,101 @@ export class PatientsService {
         patientId,
       });
       return { marked: true };
+    });
+  }
+
+  /**
+   * PP5 assisted edits: the care team corrects the contact details a
+   * patient gave them at the desk or over the phone. Deliberately the
+   * SAME field set the patient can change themselves in P8 - helping
+   * someone do what they could do alone. Email is not in it: that is
+   * the login identity, and moving it is an A1 credential act, not a
+   * contact correction.
+   */
+  async updateContactDetails(
+    staff: StaffPrincipal,
+    patientId: string,
+    input: { phone?: unknown; address?: unknown; locale?: unknown },
+  ): Promise<object> {
+    const phone = input.phone;
+    const locale = input.locale;
+    const address = input.address as Record<string, string> | undefined;
+    if (
+      (phone !== undefined && (typeof phone !== 'string' || phone.length > 40)) ||
+      (locale !== undefined && !['en', 'fi', 'sv'].includes(locale as string)) ||
+      (address !== undefined &&
+        (typeof address !== 'object' ||
+          address === null ||
+          Object.entries(address).some(
+            ([key, value]) =>
+              !['street', 'postalCode', 'city', 'country'].includes(key) ||
+              typeof value !== 'string' ||
+              value.length > 120,
+          )))
+    ) {
+      throw new BadRequestException({ status: 'invalid_profile' });
+    }
+    if (phone === undefined && address === undefined && locale === undefined) {
+      throw new BadRequestException({ status: 'nothing_to_update' });
+    }
+    return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
+      const { rows: careRows } = await client.query<{ team: string[] }>(
+        `SELECT app.care_team_of($1) AS team`,
+        [patientId],
+      );
+      const decision = authorize({
+        principal: { userId: staff.userId, role: staff.role },
+        action: 'update_contact_details',
+        resource: {
+          type: 'patient_identity',
+          id: patientId,
+          patientId,
+          subjectUserId: patientId,
+          careTeamUserIds: careRows[0]?.team ?? [],
+        },
+      }).decision;
+      await writeAccessEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'patient_identity.update_contact_details',
+        resourceType: 'patient_identity',
+        resourceId: patientId,
+        patientId,
+        decision,
+      });
+      // an outsider learns nothing: the same 404 an unknown id gets
+      if (decision !== 'allow') throw new NotFoundException({ status: 'unknown_patient' });
+      const { rowCount } = await client.query(
+        `UPDATE identity.patient_account
+            SET phone = COALESCE($2, phone),
+                address = COALESCE($3, address),
+                locale = COALESCE($4, locale)
+          WHERE id = $1 AND deceased_on IS NULL`,
+        [
+          patientId,
+          phone ?? null,
+          address !== undefined ? JSON.stringify(address) : null,
+          locale ?? null,
+        ],
+      );
+      if (rowCount === 0) throw new BadRequestException({ status: 'unknown_patient' });
+      // WHICH fields moved, never the values: the audit trail is not a
+      // second copy of the patient's contact details
+      await writeChangeEvent(client, {
+        actorUserId: staff.userId,
+        actorRealm: 'staff',
+        action: 'patient_identity.update_contact_details',
+        resourceType: 'patient_identity',
+        resourceId: patientId,
+        patientId,
+        detail: {
+          keys: Object.entries({ phone, address, locale })
+            .filter(([, value]) => value !== undefined)
+            .map(([key]) => key),
+          assisted: true,
+        },
+      });
+      return { updated: true };
     });
   }
 

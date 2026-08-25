@@ -11,6 +11,9 @@ export interface NotificationItem {
   body: Record<string, string> | null;
   created_at: string;
   read_at: string | null;
+  /** staff rows only: whose care the note concerns */
+  patient_given?: string;
+  patient_family?: string;
 }
 
 export interface NotificationsPayload {
@@ -18,13 +21,23 @@ export interface NotificationsPayload {
   unread: number;
 }
 
-export const NOTIFICATIONS_QUERY = {
-  queryKey: ['notifications'],
-  queryFn: async (): Promise<NotificationsPayload> => {
-    const response = await fetch('/api/patient/notifications', { credentials: 'same-origin' });
-    if (!response.ok) throw new Error(`notifications: ${response.status}`);
-    return (await response.json()) as NotificationsPayload;
-  },
-  staleTime: 60_000,
-  retry: false,
-} as const;
+/** Both realms have a centre: the patient's own (P11) and the staff
+ * one, where a B7 rule's team-addressed notification lands. Same
+ * shape, same shared query key per realm - the bell badge and the page
+ * ride one audited disclosure. */
+export type NotificationRealm = 'patient' | 'staff';
+
+export function notificationsQuery(realm: NotificationRealm) {
+  return {
+    queryKey: ['notifications', realm],
+    queryFn: async (): Promise<NotificationsPayload> => {
+      const response = await fetch(`/api/${realm}/notifications`, { credentials: 'same-origin' });
+      if (!response.ok) throw new Error(`notifications: ${response.status}`);
+      return (await response.json()) as NotificationsPayload;
+    },
+    staleTime: 60_000,
+    retry: false,
+  } as const;
+}
+
+export const NOTIFICATIONS_QUERY = notificationsQuery('patient');

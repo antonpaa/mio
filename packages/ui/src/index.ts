@@ -26,6 +26,7 @@ export {
   IconTasks,
   IconTeams,
   IconTreatments,
+  IconUpdates,
   IconUsers,
   IconValues,
   type IconProps,

@@ -53,6 +53,24 @@ const CENTRE = {
   unread: 1,
 };
 
+const STAFF_CENTRE = {
+  items: [
+    {
+      id: 'sn1',
+      kind: 'rule.notify',
+      treatment_id: 't1',
+      treatment_name: 'Chemo cycle 2',
+      patient_given: 'Anna',
+      patient_family: 'Virtanen',
+      ref: { triggerId: 'tr1', treatmentId: 't1' },
+      body: { en: 'Nausea has increased for three surveys running.' },
+      created_at: '2026-08-21T10:00:00Z',
+      read_at: null,
+    },
+  ],
+  unread: 1,
+};
+
 const SETTINGS = {
   kinds: ['message.new', 'rule.notify', 'survey_reminder'],
   emailPrefs: { survey_reminder: false },
@@ -101,6 +119,12 @@ beforeEach(() => {
   vi.mocked(api.whoami).mockResolvedValue(PATIENT);
   fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
+    if (url === '/api/staff/notifications') {
+      return new Response(JSON.stringify(STAFF_CENTRE), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    }
     if (url === '/api/patient/notifications') {
       return new Response(JSON.stringify(CENTRE), {
         status: 200,
@@ -186,6 +210,32 @@ describe('P8 email toggles', () => {
       expect(put).toBeTruthy();
       expect(String((put![1] as RequestInit).body)).toContain('"message.new":false');
     });
+    const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });
+    expect(results.violations.map((violation) => violation.id)).toEqual([]);
+  });
+});
+
+describe('the staff notification centre', () => {
+  it('shows a team-addressed rule note, names whose care it concerns, and is axe-clean', async () => {
+    vi.mocked(api.whoami).mockResolvedValue({
+      realm: 'staff' as const,
+      account: {
+        id: 's1',
+        givenName: 'Elina',
+        familyName: 'Koskinen',
+        locale: 'en' as const,
+        role: 'treatment_lead',
+      },
+    });
+    const { container } = render(appAt('/notifications'));
+    await screen.findByText('Nausea has increased for three surveys running.');
+    // staff voice, not the patient's: this came from a rule, about someone
+    expect(screen.getByText('From a survey rule')).toBeTruthy();
+    expect(screen.getByText('About Anna Virtanen — Chemo cycle 2')).toBeTruthy();
+    expect(screen.getByText(/a survey rule addressed to your care team/)).toBeTruthy();
+    // and it never borrows the patient-facing email explainer
+    expect(screen.queryByText(/Emails only say something is waiting/)).toBeNull();
+
     const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });
     expect(results.violations.map((violation) => violation.id)).toEqual([]);
   });

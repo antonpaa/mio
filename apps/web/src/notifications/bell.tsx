@@ -2,14 +2,18 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
 import { useIntl } from 'react-intl';
-import { IconBell } from '@mio/ui';
-import { NOTIFICATIONS_QUERY } from './model.js';
+import { IconBell, IconUpdates } from '@mio/ui';
+import { notificationsQuery, type NotificationRealm } from './model.js';
 
-/** The patient bell (P11 entry point): unread count over the same
- * audited disclosure the centre page makes. */
-export function NotificationBell(): ReactElement {
+/** The bell (P11 entry point, and its staff twin): unread count over
+ * the same audited disclosure the centre page makes. */
+export function NotificationBell({
+  realm = 'patient',
+}: {
+  realm?: NotificationRealm;
+} = {}): ReactElement {
   const intl = useIntl();
-  const payload = useQuery(NOTIFICATIONS_QUERY);
+  const payload = useQuery(notificationsQuery(realm));
   const unread = payload.data?.unread ?? 0;
 
   return (
@@ -18,7 +22,8 @@ export function NotificationBell(): ReactElement {
       aria-label={intl.formatMessage({ id: 'notifications.bellLabel' }, { count: unread })}
       className="relative inline-flex h-9 w-9 items-center justify-center rounded-pill text-secondary transition-colors hover:bg-surface-sunken hover:text-ink"
     >
-      <IconBell size={20} />
+      {/* alerts own the bell; the centre is "something to read" */}
+      {realm === 'staff' ? <IconUpdates size={20} /> : <IconBell size={20} />}
       {unread > 0 ? (
         <span
           aria-hidden

@@ -11,6 +11,7 @@ import {
   Skeleton,
   StatusChip,
 } from '@mio/ui';
+import { FillOnBehalfButton } from './fill-on-behalf.js';
 
 /**
  * PP4: the completed surveys list - each response color-coded by what
@@ -50,7 +51,11 @@ export function ResponsesCard({ patientId }: { patientId: string }): ReactElemen
 
   return (
     <Card>
-      <CardHeader icon={<IconSurveys size={17} />} title={<FormattedMessage id="pp4.title" />} />
+      <CardHeader
+        icon={<IconSurveys size={17} />}
+        title={<FormattedMessage id="pp4.title" />}
+        action={<FillOnBehalfButton patientId={patientId} />}
+      />
       {responses.data.length === 0 ? (
         <p className="text-sm text-secondary">
           <FormattedMessage id="pp4.empty" />

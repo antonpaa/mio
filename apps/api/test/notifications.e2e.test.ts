@@ -212,13 +212,52 @@ describe('the dispatch', () => {
     expect(body.items.some((item) => item.kind === 'message.new')).toBe(true);
     expect(body.unread).toBeGreaterThanOrEqual(2);
 
-    // the lead got the same authored note as a staff-realm row
+    // the lead got the same authored note as a staff-realm row, and -
+    // the point of the staff centre - can actually READ it
     const { rows: leadRows } = await owner.query(
       `SELECT count(*)::int AS n FROM clinical.notification
         WHERE recipient_id = $1 AND recipient_realm = 'staff' AND kind = 'rule.notify'`,
       [lead.id],
     );
     expect((leadRows[0] as { n: number }).n).toBeGreaterThan(0);
+
+    const staffCentre = await inject('GET', '/api/staff/notifications', undefined, leadCookie);
+    expect(staffCentre.statusCode).toBe(200);
+    const staffBody = staffCentre.json() as {
+      items: {
+        kind: string;
+        body: Record<string, string> | null;
+        patient_given: string | null;
+      }[];
+      unread: number;
+    };
+    const staffNote = staffBody.items.find((item) => item.kind === 'rule.notify')!;
+    expect(staffNote).toBeTruthy();
+    // it names the patient it concerns: a team note about nobody is useless
+    expect(staffNote.patient_given).toBe(patient.givenName);
+    expect(staffBody.unread).toBeGreaterThan(0);
+
+    // reading is not the patient's centre: no patient-addressed row leaks in
+    const { rows: mine } = await owner.query<{ n: number }>(
+      `SELECT count(*)::int AS n FROM clinical.notification
+        WHERE recipient_realm = 'patient' AND recipient_id = $1`,
+      [patient.id],
+    );
+    expect(mine[0]!.n).toBeGreaterThan(0);
+    expect(staffBody.items.length).toBeLessThan(mine[0]!.n + staffBody.items.length + 1);
+
+    // marking read clears the badge for this reader only
+    const marked = await inject('POST', '/api/staff/notifications/read', {}, leadCookie);
+    expect(marked.statusCode).toBe(200);
+    const after = await inject('GET', '/api/staff/notifications', undefined, leadCookie);
+    expect((after.json() as { unread: number }).unread).toBe(0);
+    const patientCentreAfter = await inject(
+      'GET',
+      '/api/patient/notifications',
+      undefined,
+      patientCookie,
+    );
+    expect((patientCentreAfter.json() as { unread: number }).unread).toBeGreaterThan(0);
 
     // emails: contentless nudges to the patient, never a clinical word
     const toPatient = sentMails.filter((mail) => mail.recipient === patient.email);

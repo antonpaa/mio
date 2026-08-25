@@ -391,22 +391,36 @@ export class AdminService {
    * ever grant a log view to; today the matrix grants view_full to the
    * auditor alone, and every view is itself audited.
    */
-  async auditLog(staff: StaffPrincipal, limit: number): Promise<object> {
+  async auditLog(staff: StaffPrincipal, query: AuditQuery): Promise<object> {
     const fullIdentities = staff.role === 'auditor';
+    const range = auditRange(query);
     return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
       await this.decideAndLog(client, staff, 'audit_log', 'view_full', null);
-      const capped = Math.min(Math.max(limit, 1), 500);
+      const capped = Math.min(Math.max(query.limit ?? 200, 1), 500);
       const { rows } = await this.auditReader.query(
         `SELECT occurred_at::text AS occurred_at, actor_user_id, actor_realm, action,
                 resource_type, resource_id, patient_id, decision
            FROM audit.access_event
+          WHERE occurred_at >= $2 AND occurred_at < $3
+            AND ($4::text IS NULL OR action = $4)
+            AND ($5::uuid IS NULL OR actor_user_id = $5)
           ORDER BY occurred_at DESC
           LIMIT $1`,
-        [capped],
+        [capped, range.from, range.to, query.action ?? null, query.actor ?? null],
+      );
+      // The facets describe the RANGE, not the current narrowing - a
+      // filter list that empties itself as you use it is a trap.
+      const { rows: facetRows } = await this.auditReader.query<{
+        action: string;
+        actor_user_id: string | null;
+      }>(
+        `SELECT DISTINCT action, actor_user_id FROM audit.access_event
+          WHERE occurred_at >= $1 AND occurred_at < $2`,
+        [range.from, range.to],
       );
       const actorIds = [
         ...new Set(
-          (rows as { actor_user_id: string | null }[])
+          [...(rows as { actor_user_id: string | null }[]), ...facetRows]
             .map((row) => row.actor_user_id)
             .filter((id): id is string => id !== null),
         ),
@@ -465,7 +479,82 @@ export class AdminService {
           subject: row['patient_id'] !== null ? initials.get(row['patient_id'] as string) : null,
           decision: row['decision'],
         })),
+        range: { from: range.from, to: range.to },
+        filters: {
+          actions: [...new Set(facetRows.map((row) => row.action))].sort(),
+          actors: [
+            ...new Map(
+              facetRows
+                .filter((row) => row.actor_user_id !== null && names.has(row.actor_user_id))
+                .map((row) => [row.actor_user_id!, names.get(row.actor_user_id!)!]),
+            ),
+          ].map(([id, name]) => ({ id, name })),
+        },
       };
     });
   }
+
+  /**
+   * A3's export: the rows on the screen, in the file the person looking
+   * at them will open. Deliberately NOT the WP-29 bulk export - that one
+   * is a watermarked JSONL job for retention and ops, run by the
+   * platform. This is one reader taking away one filtered view, with
+   * the same X4 minimisation the screen applies, and it is audited as
+   * the disclosure it is.
+   */
+  async auditExport(staff: StaffPrincipal, query: AuditQuery): Promise<string> {
+    const result = (await this.auditLog(staff, { ...query, limit: 500 })) as {
+      events: Record<string, unknown>[];
+    };
+    const header = [
+      'occurred_at',
+      'actor',
+      'actor_realm',
+      'action',
+      'resource_type',
+      'subject',
+      'decision',
+    ];
+    const lines = [header.join(',')];
+    for (const event of result.events) {
+      lines.push(header.map((key) => csvCell(event[key])).join(','));
+    }
+    return lines.join('\n');
+  }
+}
+
+export interface AuditQuery {
+  limit?: number;
+  /** inclusive date, YYYY-MM-DD */
+  from?: string;
+  /** exclusive date, YYYY-MM-DD */
+  to?: string;
+  action?: string;
+  actor?: string;
+}
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Default window: the last 30 days. A range is always applied, so the
+ * facet queries and the row query stay bounded on a table that only
+ * ever grows. */
+function auditRange(query: AuditQuery): { from: string; to: string } {
+  const today = new Date();
+  const day = (offset: number): string =>
+    new Date(today.getTime() + offset * 86_400_000).toISOString().slice(0, 10);
+  return {
+    from: ISO_DATE.test(query.from ?? '') ? query.from! : day(-30),
+    to: ISO_DATE.test(query.to ?? '') ? query.to! : day(1),
+  };
+}
+
+/**
+ * CSV cells are quoted, and anything a spreadsheet would treat as a
+ * formula is prefixed - an audit export is opened in Excel by the
+ * person least able to afford a surprise.
+ */
+function csvCell(value: unknown): string {
+  const text = value === null || value === undefined ? '' : String(value);
+  const guarded = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
+  return `"${guarded.replaceAll('"', '""')}"`;
 }

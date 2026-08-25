@@ -165,6 +165,22 @@ export function IconBell(props: IconProps): ReactElement {
   );
 }
 
+/**
+ * Updates - the notification centre. Deliberately NOT the bell: on the
+ * clinician shell it sits beside IconBell, which carries alerts, and
+ * two identical bells side by side would say the two are the same
+ * urgency. An open envelope reads as "something to read", the bell as
+ * "something is wrong".
+ */
+export function IconUpdates(props: IconProps): ReactElement {
+  return (
+    <IconBase {...props}>
+      <path d="M3.6 10.2 12 4.75l8.4 5.45v7.05a1.55 1.55 0 0 1-1.55 1.55H5.15a1.55 1.55 0 0 1-1.55-1.55z" />
+      <path d="m3.6 10.2 7.5 4.6c.55.34 1.25.34 1.8 0l7.5-4.6" />
+    </IconBase>
+  );
+}
+
 export function IconUsers(props: IconProps): ReactElement {
   return (
     <IconBase {...props}>

@@ -4,7 +4,7 @@ import type { ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button, ErrorState, IconMessages, IconSymptoms, Skeleton } from '@mio/ui';
 import { useLocaleControls } from '../app/locale-context.js';
-import { NOTIFICATIONS_QUERY, type NotificationItem } from './model.js';
+import { notificationsQuery, type NotificationItem, type NotificationRealm } from './model.js';
 
 /**
  * P11: the in-app notification centre - the CONTENT-BEARING layer. A
@@ -18,21 +18,25 @@ function itemText(item: NotificationItem, locale: string): string | null {
   return item.body[locale] ?? item.body['en'] ?? Object.values(item.body)[0] ?? null;
 }
 
-export function NotificationsPage(): ReactElement {
+export function NotificationsPage({
+  realm = 'patient',
+}: {
+  realm?: NotificationRealm;
+} = {}): ReactElement {
   const intl = useIntl();
   const { locale } = useLocaleControls();
   const queryClient = useQueryClient();
-  const payload = useQuery(NOTIFICATIONS_QUERY);
+  const payload = useQuery(notificationsQuery(realm));
 
   const markRead = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/patient/notifications/read', {
+      const response = await fetch(`/api/${realm}/notifications/read`, {
         method: 'POST',
         credentials: 'same-origin',
       });
       if (!response.ok) throw new Error(`read: ${response.status}`);
     },
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['notifications', realm] }),
   });
 
   if (payload.isPending) {
@@ -64,7 +68,9 @@ export function NotificationsPage(): ReactElement {
         ) : null}
       </header>
       <p className="text-sm text-secondary">
-        <FormattedMessage id="notifications.emailExplainer" />
+        <FormattedMessage
+          id={realm === 'staff' ? 'notifications.staffLede' : 'notifications.emailExplainer'}
+        />
       </p>
 
       <section className="rounded-card border border-black/5 bg-surface shadow-resting">
@@ -95,10 +101,23 @@ export function NotificationsPage(): ReactElement {
                           id="notifications.newMessage"
                           values={{ treatment: item.treatment_name ?? '' }}
                         />
+                      ) : realm === 'staff' ? (
+                        <FormattedMessage id="notifications.ruleNote" />
                       ) : (
                         <FormattedMessage id="notifications.careTeamNote" />
                       )}
                     </span>
+                    {realm === 'staff' && item.patient_given !== undefined ? (
+                      <span className="block text-xs text-muted">
+                        <FormattedMessage
+                          id="notifications.aboutPatient"
+                          values={{
+                            patient: `${item.patient_given} ${item.patient_family ?? ''}`.trim(),
+                            program: item.treatment_name ?? '',
+                          }}
+                        />
+                      </span>
+                    ) : null}
                     {text !== null ? (
                       <span className="block text-sm text-secondary">{text}</span>
                     ) : null}

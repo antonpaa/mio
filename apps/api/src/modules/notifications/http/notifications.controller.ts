@@ -4,6 +4,11 @@ import {
   PatientSessionGuard,
   type PatientPrincipal,
 } from '../../../shared/patient-session.js';
+import {
+  CurrentStaff,
+  StaffSessionGuard,
+  type StaffPrincipal,
+} from '../../../shared/staff-session.js';
 import { NotificationsService } from '../notifications.service.js';
 
 @Controller('api/patient')
@@ -33,5 +38,24 @@ export class PatientNotificationsController {
     @Body() body: { emailPrefs?: unknown },
   ) {
     return this.notifications.updateEmailPrefs(patient, body.emailPrefs ?? {});
+  }
+}
+
+/** The staff notification centre: rule-authored notifications a B7
+ * author addressed to the care team or its leads. */
+@Controller('api/staff')
+@UseGuards(StaffSessionGuard)
+export class StaffNotificationsController {
+  constructor(private readonly notifications: NotificationsService) {}
+
+  @Get('notifications')
+  list(@CurrentStaff() staff: StaffPrincipal) {
+    return this.notifications.listForStaff(staff);
+  }
+
+  @Post('notifications/read')
+  @HttpCode(200)
+  markRead(@CurrentStaff() staff: StaffPrincipal) {
+    return this.notifications.markAllReadForStaff(staff);
   }
 }

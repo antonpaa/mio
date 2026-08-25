@@ -29,14 +29,54 @@ interface FillPayload {
   answers: Answers;
 }
 
+/**
+ * Where a fill reads and writes. The patient fills their own survey
+ * through the patient realm; a clinician entering answers on the
+ * patient's behalf goes through the staff realm at different URLs. The
+ * SCREEN is deliberately the same one - a different fill experience for
+ * on-behalf entry would be a different instrument.
+ */
+export interface FillTransport {
+  loadUrl: string;
+  saveUrl: string;
+  submitUrl: string;
+  onSubmitted: () => void;
+  /** "Save & exit" - back to wherever the fill was opened from. */
+  onSaveExit: () => void;
+}
+
 export function SurveyFillPage(): ReactElement {
-  const intl = useIntl();
   const navigate = useNavigate();
   const { responseId } = useParams({ strict: false }) as { responseId: string };
+  return (
+    <SurveyFillScreen
+      responseId={responseId}
+      transport={{
+        loadUrl: `/api/patient/responses/${responseId}`,
+        saveUrl: `/api/patient/responses/${responseId}/answers`,
+        submitUrl: `/api/patient/responses/${responseId}/submit`,
+        onSubmitted: () =>
+          void navigate({ to: '/surveys/done/$responseId', params: { responseId } }),
+        onSaveExit: () => void navigate({ to: '/surveys' }),
+      }}
+    />
+  );
+}
+
+export function SurveyFillScreen({
+  responseId,
+  transport,
+  banner,
+}: {
+  responseId: string;
+  transport: FillTransport;
+  banner?: ReactElement;
+}): ReactElement {
+  const intl = useIntl();
   const payload = useQuery({
-    queryKey: ['response', responseId],
+    queryKey: ['response', responseId, transport.loadUrl],
     queryFn: async () => {
-      const response = await fetch(`/api/patient/responses/${responseId}`, {
+      const response = await fetch(transport.loadUrl, {
         credentials: 'same-origin',
       });
       if (!response.ok) throw new Error(`response: ${response.status}`);
@@ -62,21 +102,27 @@ export function SurveyFillPage(): ReactElement {
       </div>
     );
   }
+
   return (
-    <FillFrame initial={payload.data} responseId={responseId} navigate={navigate} intl={intl} />
+    <FillFrame
+      initial={payload.data}
+      transport={transport}
+      intl={intl}
+      {...(banner !== undefined ? { banner } : {})}
+    />
   );
 }
 
 function FillFrame({
   initial,
-  responseId,
-  navigate,
+  transport,
   intl,
+  banner,
 }: {
   initial: FillPayload;
-  responseId: string;
-  navigate: ReturnType<typeof useNavigate>;
+  transport: FillTransport;
   intl: ReturnType<typeof useIntl>;
+  banner?: ReactElement;
 }): ReactElement {
   const [answers, setAnswers] = useState<Answers>(initial.answers);
   const [step, setStep] = useState(0);
@@ -90,7 +136,7 @@ function FillFrame({
 
   const save = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`/api/patient/responses/${responseId}/answers`, {
+      const response = await fetch(transport.saveUrl, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         credentials: 'same-origin',
@@ -101,7 +147,7 @@ function FillFrame({
   });
   const submit = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`/api/patient/responses/${responseId}/submit`, {
+      const response = await fetch(transport.submitUrl, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         credentials: 'same-origin',
@@ -109,7 +155,7 @@ function FillFrame({
       });
       if (!response.ok) throw new Error(`submit: ${response.status}`);
     },
-    onSuccess: () => void navigate({ to: '/surveys/done/$responseId', params: { responseId } }),
+    onSuccess: () => transport.onSubmitted(),
   });
 
   if (!current) {
@@ -141,6 +187,7 @@ function FillFrame({
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-4">
+      {banner}
       <header className="flex items-baseline justify-between">
         <h1 className="font-display text-xl italic text-ink">{bundle.title}</h1>
         <p className="text-sm text-muted" aria-live="polite">
@@ -220,7 +267,7 @@ function FillFrame({
           <Button
             variant="quiet"
             isDisabled={save.isPending}
-            onPress={() => void save.mutateAsync().then(() => navigate({ to: '/surveys' }))}
+            onPress={() => void save.mutateAsync().then(() => transport.onSaveExit())}
           >
             <FormattedMessage id="surveys.saveExit" />
           </Button>
