@@ -36,8 +36,9 @@ interface and in translation.
 |---|---|---|---|
 | Patient | Potilas | Patient | |
 | Care team | Hoitotiimi | Vårdteam | |
-| Treatment Member | Hoitotiimin jäsen | Vårdteammedlem | Role name |
-| Treatment Lead | Hoidon vastuuhenkilö | Behandlingsansvarig | Role name ⚠️ |
+| Clinician | Kliinikko | Kliniker | Role name (2026-08-25 restructure) — any treating staff account |
+| Author | Laatija | Författare | Role name (2026-08-25) — authors survey/treatment templates and alert rules; matches the rule-authoring copy already in product |
+| Treatment lead | Hoidon vastuuhenkilö | Behandlingsansvarig | ⚠️ A **position on one treatment's care team**, not an account role (2026-08-25) |
 | Administrator | Ylläpitäjä | Administratör | Role name |
 | Auditor | Auditoija | Revisor | Role name — oversight of the full audit log (P2, 2026-08-24) |
 | Care relationship | Hoitosuhde | Vårdrelation | Established FI term |

@@ -62,12 +62,13 @@ Every seeded account signs in with the password
 **`demo-password-mio-42`**. Emails are deterministic for the demo
 profile (seed 42); useful ones:
 
-| Role | Email |
+| Roles | Email |
 |---|---|
 | Administrator | `satu.jokinen.0@staff.example` |
+| Administrator + Clinician | `greta.lindstrom.1@staff.example` |
 | Auditor | `nils.jonsson.2@staff.example` |
-| Treatment Lead | `eetu.virtanen.5@staff.example` |
-| Treatment member | `elias.heikkinen.9@staff.example` |
+| Clinician + Author (leads a team) | `eetu.virtanen.5@staff.example` |
+| Clinician | `elias.heikkinen.9@staff.example` |
 | Patient | `sampo.jarvinen.1@patient.example` |
 
 (Any account you see in A1 works the same way; the OTP at sign-in

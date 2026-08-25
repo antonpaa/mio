@@ -2,6 +2,12 @@
 
 - **Date:** 2026-08-21
 - **Status:** Accepted
+- **Amended 2026-08-25:** the role vocabulary changed — an account now
+  HOLDS a set of roles (patient, clinician, author, administrator,
+  auditor; grants union; auditor exclusive), and "treatment lead"
+  became a care-team position expressed through the `team_lead` scope
+  rather than a role. Everything below about Cedar being the sole
+  decision point stands; read its role names as historical.
 
 ## Context
 
