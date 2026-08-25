@@ -214,10 +214,12 @@ function FillFrame({
       </div>
 
       <section className="rounded-card border border-black/5 bg-surface p-6 shadow-resting">
-        <h2 className="text-lg font-medium text-ink">
+        {/* the canvas asks in the serif voice - the question is the page's
+            one big thing */}
+        <h2 className="font-display text-2xl text-ink">
           {text?.label ?? current.id}
           {current.required !== true ? (
-            <span className="ml-2 text-xs font-normal text-muted">
+            <span className="ml-2 font-sans text-xs font-normal text-muted">
               <FormattedMessage id="surveys.optional" />
             </span>
           ) : null}

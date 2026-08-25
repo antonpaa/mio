@@ -72,7 +72,7 @@ function Widget({
     >
       <header className="flex items-center gap-2 border-b border-hairline px-5 py-3">
         <span className="text-teal">{icon}</span>
-        <h2 className="flex-1 text-sm font-semibold text-ink">
+        <h2 className="flex-1 font-display text-lg italic text-ink">
           <FormattedMessage id={titleId} />
         </h2>
         {badge !== undefined && badge > 0 ? (
@@ -144,7 +144,7 @@ export function PatientHomePage(): ReactElement {
   const loading = surveys.isPending || threads.isPending || updates.isPending || calendar.isPending;
   if (loading) {
     return (
-      <div className="mx-auto flex max-w-3xl flex-col gap-3 pt-4">
+      <div className="mx-auto flex max-w-5xl flex-col gap-3 pt-4">
         <Skeleton className="h-10 w-64" />
         <Skeleton className="h-40 w-full" />
         <Skeleton className="h-40 w-full" />
@@ -153,7 +153,7 @@ export function PatientHomePage(): ReactElement {
   }
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4">
+    <div className="mx-auto flex max-w-5xl flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-3xl italic text-ink">
@@ -169,180 +169,189 @@ export function PatientHomePage(): ReactElement {
         {/* X7: the self-report entry point */}
         <ReportSymptom />
       </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <Widget
-          icon={<IconSurveys size={17} />}
-          titleId="home.actionNeeded"
-          to="/surveys"
-          linkId="home.allSurveys"
-          badge={due.length + drafts.length}
-        >
-          {due.length === 0 && drafts.length === 0 ? (
-            <EmptyLine id="home.nothingDue" />
-          ) : (
-            <ul className="divide-y divide-hairline">
-              {due.slice(0, 3).map((row) => (
-                <li key={row.activityId} className="flex items-center gap-2 py-2">
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-ink">{row.title}</span>
-                    <span className="block text-xs text-secondary">
-                      {row.treatmentName} —{' '}
-                      {intl.formatDate(`${row.dueDate}T12:00:00`, {
-                        day: 'numeric',
-                        month: 'short',
-                      })}
-                    </span>
-                  </span>
-                  {row.overdue ? (
-                    <StatusChip tone="amber">
-                      {intl.formatMessage({ id: 'surveys.overdue' })}
-                    </StatusChip>
-                  ) : null}
-                  <Button
-                    size="sm"
-                    isDisabled={fill.isPending}
-                    onPress={() => void fill.mutate(row.activityId)}
-                  >
-                    <FormattedMessage
-                      id={row.responseId !== null ? 'surveys.resume' : 'surveys.start'}
-                    />
-                  </Button>
-                </li>
-              ))}
-              {drafts.slice(0, 2).map((row) => (
-                <li key={row.responseId} className="flex items-center gap-2 py-2">
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
-                    {row.title}
-                  </span>
-                  <StatusChip tone="neutral">{intl.formatMessage({ id: 'home.draft' })}</StatusChip>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Widget>
-
-        <Widget
-          icon={<IconMessages size={17} />}
-          titleId="home.messages"
-          to="/messages"
-          linkId="home.openMessages"
-          badge={unreadThreads.reduce((sum, row) => sum + row.unread, 0)}
-        >
-          {unreadThreads.length === 0 ? (
-            <EmptyLine id="home.noNewMessages" />
-          ) : (
-            <ul className="divide-y divide-hairline">
-              {unreadThreads.slice(0, 3).map((row) => (
-                <li key={row.treatment_id} className="py-2">
-                  <Link
-                    to="/messages/$treatmentId"
-                    params={{ treatmentId: row.treatment_id }}
-                    className="block"
-                  >
-                    <span className="block truncate text-sm font-medium text-ink">
-                      {row.treatment_name}
-                    </span>
-                    {row.last_preview !== null ? (
-                      <span className="block truncate text-sm text-secondary">
-                        {row.last_preview}
-                      </span>
-                    ) : null}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Widget>
-
-        <Widget
-          icon={<IconBell size={17} />}
-          titleId="home.updates"
-          to="/notifications"
-          linkId="home.allUpdates"
-          badge={updates.data?.unread ?? 0}
-        >
-          {latestUpdates.length === 0 ? (
-            <EmptyLine id="home.noUpdates" />
-          ) : (
-            <ul className="divide-y divide-hairline">
-              {latestUpdates.map((item) => (
-                <li key={item.id} className="py-2">
-                  <span className="block text-sm text-ink">
-                    {item.kind === 'message.new' ? (
-                      <FormattedMessage
-                        id="notifications.newMessage"
-                        values={{ treatment: item.treatment_name ?? '' }}
-                      />
-                    ) : (
-                      (item.body?.[locale] ?? item.body?.['en'] ?? '')
-                    )}
-                  </span>
-                  <span className="block text-xs text-muted">
-                    {intl.formatDate(item.created_at, { day: 'numeric', month: 'short' })}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Widget>
-
-        <Widget
-          icon={<IconCalendar size={17} />}
-          titleId="home.upcoming"
-          to="/calendar"
-          linkId="home.openCalendar"
-        >
-          {upcoming.length === 0 ? (
-            <EmptyLine id="home.noUpcoming" />
-          ) : (
-            <ul className="divide-y divide-hairline">
-              {upcoming.map((row) => {
-                const when = row.scheduled_at ?? `${row.occurrence_date ?? today}T12:00:00`;
-                const detail = [
-                  row.scheduled_at !== null
-                    ? intl.formatTime(when, { hour: 'numeric', minute: '2-digit' })
-                    : '',
-                  row.location ?? '',
-                ]
-                  .filter((part) => part !== '')
-                  .join(', ');
-                return (
-                  <li key={row.id} className="flex items-center gap-3 py-2">
-                    {/* the canvas's date tile - decorative, the sr-only date
-                        below keeps the row readable without it */}
-                    <span
-                      aria-hidden
-                      className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-inner border border-amber-chip-border bg-amber-tint"
-                    >
-                      <span className="text-[9px] font-medium uppercase leading-none tracking-wide text-amber">
-                        {intl.formatDate(when, { weekday: 'short' })}
-                      </span>
-                      <span className="mt-0.5 font-display text-lg leading-none text-teal">
-                        {intl.formatDate(when, { day: 'numeric' })}
-                      </span>
-                    </span>
+      {/* P7's asymmetric layout: the act-now column wide, Upcoming beside it */}
+      <div className="grid items-start gap-4 lg:grid-cols-5">
+        <div className="flex flex-col gap-4 lg:col-span-3">
+          <Widget
+            icon={<IconSurveys size={17} />}
+            titleId="home.actionNeeded"
+            to="/surveys"
+            linkId="home.allSurveys"
+            badge={due.length + drafts.length}
+          >
+            {due.length === 0 && drafts.length === 0 ? (
+              <EmptyLine id="home.nothingDue" />
+            ) : (
+              <ul className="divide-y divide-hairline">
+                {due.slice(0, 3).map((row) => (
+                  <li key={row.activityId} className="flex items-center gap-2 py-2">
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium text-ink">
                         {row.title}
                       </span>
-                      <span className="block truncate text-xs text-secondary">
-                        <span className="sr-only">
-                          {intl.formatDate(when, {
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'short',
-                          })}
-                          {detail !== '' ? ', ' : ''}
-                        </span>
-                        {detail}
+                      <span className="block text-xs text-secondary">
+                        {row.treatmentName} —{' '}
+                        {intl.formatDate(`${row.dueDate}T12:00:00`, {
+                          day: 'numeric',
+                          month: 'short',
+                        })}
                       </span>
                     </span>
+                    {row.overdue ? (
+                      <StatusChip tone="amber">
+                        {intl.formatMessage({ id: 'surveys.overdue' })}
+                      </StatusChip>
+                    ) : null}
+                    <Button
+                      size="sm"
+                      isDisabled={fill.isPending}
+                      onPress={() => void fill.mutate(row.activityId)}
+                    >
+                      <FormattedMessage
+                        id={row.responseId !== null ? 'surveys.resume' : 'surveys.start'}
+                      />
+                    </Button>
                   </li>
-                );
-              })}
-            </ul>
-          )}
-        </Widget>
+                ))}
+                {drafts.slice(0, 2).map((row) => (
+                  <li key={row.responseId} className="flex items-center gap-2 py-2">
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
+                      {row.title}
+                    </span>
+                    <StatusChip tone="neutral">
+                      {intl.formatMessage({ id: 'home.draft' })}
+                    </StatusChip>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Widget>
+
+          <Widget
+            icon={<IconMessages size={17} />}
+            titleId="home.messages"
+            to="/messages"
+            linkId="home.openMessages"
+            badge={unreadThreads.reduce((sum, row) => sum + row.unread, 0)}
+          >
+            {unreadThreads.length === 0 ? (
+              <EmptyLine id="home.noNewMessages" />
+            ) : (
+              <ul className="divide-y divide-hairline">
+                {unreadThreads.slice(0, 3).map((row) => (
+                  <li key={row.treatment_id} className="py-2">
+                    <Link
+                      to="/messages/$treatmentId"
+                      params={{ treatmentId: row.treatment_id }}
+                      className="block"
+                    >
+                      <span className="block truncate text-sm font-medium text-ink">
+                        {row.treatment_name}
+                      </span>
+                      {row.last_preview !== null ? (
+                        <span className="block truncate text-sm text-secondary">
+                          {row.last_preview}
+                        </span>
+                      ) : null}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Widget>
+
+          <Widget
+            icon={<IconBell size={17} />}
+            titleId="home.updates"
+            to="/notifications"
+            linkId="home.allUpdates"
+            badge={updates.data?.unread ?? 0}
+          >
+            {latestUpdates.length === 0 ? (
+              <EmptyLine id="home.noUpdates" />
+            ) : (
+              <ul className="divide-y divide-hairline">
+                {latestUpdates.map((item) => (
+                  <li key={item.id} className="py-2">
+                    <span className="block text-sm text-ink">
+                      {item.kind === 'message.new' ? (
+                        <FormattedMessage
+                          id="notifications.newMessage"
+                          values={{ treatment: item.treatment_name ?? '' }}
+                        />
+                      ) : (
+                        (item.body?.[locale] ?? item.body?.['en'] ?? '')
+                      )}
+                    </span>
+                    <span className="block text-xs text-muted">
+                      {intl.formatDate(item.created_at, { day: 'numeric', month: 'short' })}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Widget>
+        </div>
+
+        <div className="flex flex-col gap-4 lg:col-span-2">
+          <Widget
+            icon={<IconCalendar size={17} />}
+            titleId="home.upcoming"
+            to="/calendar"
+            linkId="home.openCalendar"
+          >
+            {upcoming.length === 0 ? (
+              <EmptyLine id="home.noUpcoming" />
+            ) : (
+              <ul className="divide-y divide-hairline">
+                {upcoming.map((row) => {
+                  const when = row.scheduled_at ?? `${row.occurrence_date ?? today}T12:00:00`;
+                  const detail = [
+                    row.scheduled_at !== null
+                      ? intl.formatTime(when, { hour: 'numeric', minute: '2-digit' })
+                      : '',
+                    row.location ?? '',
+                  ]
+                    .filter((part) => part !== '')
+                    .join(', ');
+                  return (
+                    <li key={row.id} className="flex items-center gap-3 py-2">
+                      {/* the canvas's date tile - decorative, the sr-only date
+                        below keeps the row readable without it */}
+                      <span
+                        aria-hidden
+                        className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-inner border border-amber-chip-border bg-amber-tint"
+                      >
+                        <span className="text-[9px] font-medium uppercase leading-none tracking-wide text-amber">
+                          {intl.formatDate(when, { weekday: 'short' })}
+                        </span>
+                        <span className="mt-0.5 font-display text-lg leading-none text-teal">
+                          {intl.formatDate(when, { day: 'numeric' })}
+                        </span>
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium text-ink">
+                          {row.title}
+                        </span>
+                        <span className="block truncate text-xs text-secondary">
+                          <span className="sr-only">
+                            {intl.formatDate(when, {
+                              weekday: 'short',
+                              day: 'numeric',
+                              month: 'short',
+                            })}
+                            {detail !== '' ? ', ' : ''}
+                          </span>
+                          {detail}
+                        </span>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Widget>
+        </div>
       </div>
     </div>
   );
