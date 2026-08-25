@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router';
 import type { ReactElement, ReactNode } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import {
+  Button,
   CountBadge,
   IconBell,
   IconCalendar,
@@ -16,6 +17,7 @@ import { useLocaleControls } from '../app/locale-context.js';
 import { threadsQuery } from '../messages/model.js';
 import { ReportSymptom } from './report-symptom.js';
 import { NOTIFICATIONS_QUERY } from '../notifications/model.js';
+import { useFillOccurrence } from '../surveys/start.js';
 
 /**
  * P1/P7 (WP-26): the patient landing - Action needed, Messages, Updates,
@@ -49,12 +51,16 @@ function Widget({
   icon,
   titleId,
   to,
+  linkId,
   badge,
   children,
 }: {
   icon: ReactNode;
   titleId: string;
   to: string;
+  /** The card's labeled action link, per the P1 canvas ("Open messages",
+   * "All updates") - never a bare "Open". */
+  linkId: string;
   badge?: number;
   children: ReactNode;
 }): ReactElement {
@@ -75,13 +81,20 @@ function Widget({
             label={intl.formatMessage({ id: 'home.unreadBadge' }, { count: badge })}
           />
         ) : null}
-        <Link to={to} className="text-sm text-teal hover:text-teal-hover">
-          <FormattedMessage id="home.open" />
+        <Link to={to} className="text-sm font-medium text-teal underline-offset-4 hover:underline">
+          <FormattedMessage id={linkId} />
         </Link>
       </header>
       <div className="flex-1 px-5 py-3">{children}</div>
     </section>
   );
+}
+
+/** The canvas greets by the time of day; the date line sits under it. */
+export function greetingIdForHour(hour: number): string {
+  if (hour < 12) return 'home.greetingMorning';
+  if (hour < 18) return 'home.greetingAfternoon';
+  return 'home.greetingEvening';
 }
 
 function EmptyLine({ id }: { id: string }): ReactElement {
@@ -96,6 +109,7 @@ export function PatientHomePage(): ReactElement {
   const intl = useIntl();
   const session = useSession();
   const { locale } = useLocaleControls();
+  const fill = useFillOccurrence();
 
   const surveys = useQuery({
     queryKey: ['patient-surveys'],
@@ -140,13 +154,18 @@ export function PatientHomePage(): ReactElement {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl italic text-ink">
-          <FormattedMessage
-            id="home.greeting"
-            values={{ name: session.account?.givenName ?? '' }}
-          />
-        </h1>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl italic text-ink">
+            <FormattedMessage
+              id={greetingIdForHour(new Date().getHours())}
+              values={{ name: session.account?.givenName ?? '' }}
+            />
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
+            {intl.formatDate(new Date(), { weekday: 'long', day: 'numeric', month: 'long' })}
+          </p>
+        </div>
         {/* X7: the self-report entry point */}
         <ReportSymptom />
       </div>
@@ -155,6 +174,7 @@ export function PatientHomePage(): ReactElement {
           icon={<IconSurveys size={17} />}
           titleId="home.actionNeeded"
           to="/surveys"
+          linkId="home.allSurveys"
           badge={due.length + drafts.length}
         >
           {due.length === 0 && drafts.length === 0 ? (
@@ -178,6 +198,15 @@ export function PatientHomePage(): ReactElement {
                       {intl.formatMessage({ id: 'surveys.overdue' })}
                     </StatusChip>
                   ) : null}
+                  <Button
+                    size="sm"
+                    isDisabled={fill.isPending}
+                    onPress={() => void fill.mutate(row.activityId)}
+                  >
+                    <FormattedMessage
+                      id={row.responseId !== null ? 'surveys.resume' : 'surveys.start'}
+                    />
+                  </Button>
                 </li>
               ))}
               {drafts.slice(0, 2).map((row) => (
@@ -196,6 +225,7 @@ export function PatientHomePage(): ReactElement {
           icon={<IconMessages size={17} />}
           titleId="home.messages"
           to="/messages"
+          linkId="home.openMessages"
           badge={unreadThreads.reduce((sum, row) => sum + row.unread, 0)}
         >
           {unreadThreads.length === 0 ? (
@@ -228,6 +258,7 @@ export function PatientHomePage(): ReactElement {
           icon={<IconBell size={17} />}
           titleId="home.updates"
           to="/notifications"
+          linkId="home.allUpdates"
           badge={updates.data?.unread ?? 0}
         >
           {latestUpdates.length === 0 ? (
@@ -255,7 +286,12 @@ export function PatientHomePage(): ReactElement {
           )}
         </Widget>
 
-        <Widget icon={<IconCalendar size={17} />} titleId="home.upcoming" to="/calendar">
+        <Widget
+          icon={<IconCalendar size={17} />}
+          titleId="home.upcoming"
+          to="/calendar"
+          linkId="home.openCalendar"
+        >
           {upcoming.length === 0 ? (
             <EmptyLine id="home.noUpcoming" />
           ) : (

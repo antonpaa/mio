@@ -55,7 +55,8 @@ interface and in translation.
 | Task | Tehtävä | Uppgift | Clinician-side work item |
 | Claim (a task) | Ota tehtävä | Ta uppgift | ⚠️ |
 | Assign (a task) | Osoita tehtävä | Tilldela uppgift | Hand to a named team member |
-| Unclaimed | Ottamatta | Ej tagen | Team-queue state ⚠️ |
+| Assign (a survey) | Osoita kysely | Tilldela enkät | 2026-08-25: FI unified on *osoittaa* for every assignment (was *määrätä*); *vastuuttaa* retired |
+| Unclaimed (in queue) | Jonossa | I kön | Team-queue state ⚠️ (2026-08-25: was *Ottamatta* / *Ej tagen*) |
 | Team queue | Tiimin jono | Teamets kö | ⚠️ |
 
 ## Treatment lifecycle
@@ -66,7 +67,7 @@ interface and in translation.
 | Active | Aktiivinen | Aktiv |
 | Paused | Tauolla | Pausad |
 | Completed | Päättynyt | Avslutad |
-| Discontinued | Lopetettu | Avbruten |
+| Discontinued | Keskeytetty | Avbruten |
 
 ## Surveys
 
@@ -220,11 +221,11 @@ Resolved — Poistunut — Avklingat ⚠️.
 | Verification code | Vahvistuskoodi | Verifieringskod | The email MFA code |
 | Access log | Käyttöloki | Åtkomstlogg | Established FI term |
 | Audit log | Käyttöloki | Åtkomstlogg | Internal; patients see "access log". FI and SV deliberately reuse the access-log term — one word for one concept on both sides (WP-28) |
-| Reset login | Nollaa kirjautuminen | Återställ inloggning | Admin action (A1): new setup link, sessions signed out, data untouched |
+| Reset sign-in | Palauta kirjautuminen | Återställ inloggning | Admin action (A1): new setup link, sessions signed out, data untouched (2026-08-25: EN was *Reset login*, FI *Nollaa kirjautuminen*) |
 | Deactivate | Poista käytöstä | Avaktivera | Account lifecycle (A1) |
 | Reactivate | Palauta käyttöön | Återaktivera | Inverse of deactivate; restores sign-in only |
 | Capability | Oikeus | Behörighet | A2 role matrix column/row language |
-| Deceased | Menehtynyt | Avliden | ⚠️ Respectful register — FI deliberately *menehtynyt*, never *kuollut*, in UI text (WP-29) |
+| Deceased | Kuollut | Avliden | ⚠️ Reversed 2026-08-25 (owner): FI aligns with clinical-records convention *kuollut*; the WP-29 *menehtynyt* choice is superseded. Clinician-facing surfaces only |
 | Mark as deceased | Merkitse menehtyneeksi | Markera som avliden | Lead-only care action (WP-29) |
 | Date of death | Kuolinpäivä | Dödsdatum | Dialog field label |
 | Archived (treatment) | Arkistoitu | Arkiverad | Read-only after the quiet period (WP-29) |

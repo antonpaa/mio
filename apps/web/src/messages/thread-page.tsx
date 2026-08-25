@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
 import { FormattedMessage, useIntl } from 'react-intl';
 import type { MessageDoc } from '@mio/contracts';
-import { ErrorState, SeverityChip, Skeleton } from '@mio/ui';
+import { Avatar, ErrorState, SeverityChip, Skeleton } from '@mio/ui';
 import { useSession } from '../session/session.js';
 import { MessageDocView } from './doc-view.js';
 import { Composer } from './composer.js';
@@ -116,10 +116,7 @@ export function MessageThreadPage(): ReactElement {
         ) : null}
         {realm === 'patient' ? (
           <p className="mt-1 text-sm text-secondary">
-            <FormattedMessage id="messages.expectation" />{' '}
-            <span className="text-ink-strong-secondary">
-              <FormattedMessage id="messages.emergency" />
-            </span>
+            <FormattedMessage id="messages.expectation" />
           </p>
         ) : null}
       </header>
@@ -194,35 +191,55 @@ export function MessageThreadPage(): ReactElement {
                   </li>
                 );
               }
+              // P6's bubble language: your own messages are solid teal
+              // with the timestamp tucked below; the other party gets an
+              // avatar and a name-and-time line under their bubble.
+              const authorName = `${item.author_given ?? ''} ${item.author_family ?? ''}`.trim();
+              const stamp = intl.formatDate(item.created_at, {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              });
               return (
                 <li key={item.id} className={`flex ${own ? 'justify-end' : 'justify-start'}`}>
-                  <div
-                    className={`max-w-[85%] rounded-card px-4 py-2.5 ${
-                      own ? 'bg-teal-tint' : 'bg-surface-sunken'
-                    }`}
-                  >
-                    <p className="text-xs text-muted">
-                      {own ? (
-                        <FormattedMessage id="messages.you" />
-                      ) : (
-                        `${item.author_given ?? ''} ${item.author_family ?? ''}`.trim()
-                      )}
-                      {' — '}
-                      {intl.formatDate(item.created_at, {
-                        dateStyle: 'medium',
-                        timeStyle: 'short',
-                      })}
-                    </p>
-                    <div className="mt-1">
-                      <MessageDocView
-                        doc={item.body}
-                        attachmentBase={
-                          realm === 'staff' ? '/api/staff/attachments' : '/api/patient/attachments'
-                        }
-                        attachmentAlt={intl.formatMessage({ id: 'messages.attachmentAlt' })}
-                      />
+                  {own ? (
+                    <div className="flex max-w-[85%] flex-col items-end">
+                      <div className="rounded-card bg-teal px-4 py-2.5 text-white">
+                        <MessageDocView
+                          doc={item.body}
+                          attachmentBase={
+                            realm === 'staff'
+                              ? '/api/staff/attachments'
+                              : '/api/patient/attachments'
+                          }
+                          attachmentAlt={intl.formatMessage({ id: 'messages.attachmentAlt' })}
+                        />
+                      </div>
+                      <p className="mt-1 text-xs text-muted">{stamp}</p>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex max-w-[85%] items-end gap-2">
+                      <Avatar
+                        initials={`${item.author_given?.[0] ?? ''}${item.author_family?.[0] ?? ''}`}
+                        label={authorName}
+                      />
+                      <div className="flex min-w-0 flex-col items-start">
+                        <div className="rounded-card bg-surface-sunken px-4 py-2.5">
+                          <MessageDocView
+                            doc={item.body}
+                            attachmentBase={
+                              realm === 'staff'
+                                ? '/api/staff/attachments'
+                                : '/api/patient/attachments'
+                            }
+                            attachmentAlt={intl.formatMessage({ id: 'messages.attachmentAlt' })}
+                          />
+                        </div>
+                        <p className="mt-1 text-xs text-muted">
+                          {authorName} — {stamp}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </li>
               );
             })}

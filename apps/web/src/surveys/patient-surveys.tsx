@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button, EmptyState, ErrorState, ListRow, Skeleton, StatusChip } from '@mio/ui';
 import { useLocaleControls } from '../app/locale-context.js';
+import { useFillOccurrence } from './start.js';
 
 /** P3 (minimal, WP-14): what can be filled now, open drafts, recent
  * submissions. Due dates and occurrences ride WP-17. */
@@ -45,20 +46,7 @@ export function PatientSurveysPage(): ReactElement {
     },
     retry: false,
   });
-  const fillOccurrence = useMutation({
-    mutationFn: async (activityId: string) => {
-      const response = await fetch(`/api/patient/activities/${activityId}/fill`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        credentials: 'same-origin',
-        body: '{}',
-      });
-      if (!response.ok) throw new Error(`fill: ${response.status}`);
-      return (await response.json()) as { responseId: string };
-    },
-    onSuccess: (data) =>
-      void navigate({ to: '/surveys/fill/$responseId', params: { responseId: data.responseId } }),
-  });
+  const fillOccurrence = useFillOccurrence();
   const start = useMutation({
     mutationFn: async (input: { surveyId: string; treatmentId: string }) => {
       const response = await fetch(`/api/patient/surveys/${input.surveyId}/start`, {

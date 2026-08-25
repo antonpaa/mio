@@ -1,7 +1,7 @@
 import { createRootRouteWithContext, createRoute, Outlet, redirect } from '@tanstack/react-router';
 import type { QueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
-import { IntlProvider, useIntl } from 'react-intl';
+import { FormattedMessage, IntlProvider, useIntl } from 'react-intl';
 import type { Locale } from '@mio/i18n';
 import { Splash } from '@mio/ui';
 import { MESSAGES } from '../i18n/messages.js';
@@ -25,7 +25,7 @@ import { MessagesPage } from '../messages/messages-page.js';
 import { MessageThreadPage } from '../messages/thread-page.js';
 import { NotificationsPage } from '../notifications/notifications-page.js';
 import { SettingsPage } from '../notifications/settings-page.js';
-import { PatientHomePage } from '../home/patient-home.js';
+import { greetingIdForHour, PatientHomePage } from '../home/patient-home.js';
 import { AgendaCard, OverdueCard, UnreadConversationsCard } from '../dashboard/cards.js';
 import { PatientSurveysPage } from '../surveys/patient-surveys.js';
 import { SurveyFillPage } from '../surveys/fill.js';
@@ -121,25 +121,43 @@ function AuthedIndex(): ReactElement {
  * to the caller's assignments. */
 function ClinicianDashboard(): ReactElement {
   const intl = useIntl();
+  const session = useSession();
   const [filter, setFilter] = useState<'all' | 'mine'>('all');
+  const now = new Date();
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4">
-      <div className="flex gap-1.5">
-        {(['all', 'mine'] as const).map((option) => (
-          <button
-            key={option}
-            type="button"
-            aria-pressed={filter === option}
-            onClick={() => setFilter(option)}
-            className={`rounded-pill border px-3.5 py-1.5 text-sm transition-colors ${
-              filter === option
-                ? 'border-teal bg-teal-tint font-medium text-teal'
-                : 'border-border bg-surface text-secondary hover:bg-surface-sunken hover:text-ink'
-            }`}
-          >
-            {intl.formatMessage({ id: `dashboard.filter.${option}` })}
-          </button>
-        ))}
+      {/* C1's greeting header: serif time-of-day salute, the date and
+          clock under it, the worklist filter on the right */}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl italic text-ink">
+            <FormattedMessage
+              id={greetingIdForHour(now.getHours())}
+              values={{ name: session.account?.givenName ?? '' }}
+            />
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
+            {intl.formatDate(now, { weekday: 'long', day: 'numeric', month: 'long' })},{' '}
+            {intl.formatTime(now, { hour: 'numeric', minute: '2-digit' })}
+          </p>
+        </div>
+        <div className="flex gap-1.5">
+          {(['all', 'mine'] as const).map((option) => (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={filter === option}
+              onClick={() => setFilter(option)}
+              className={`rounded-pill border px-3.5 py-1.5 text-sm transition-colors ${
+                filter === option
+                  ? 'border-teal bg-teal-tint font-medium text-teal'
+                  : 'border-border bg-surface text-secondary hover:bg-surface-sunken hover:text-ink'
+              }`}
+            >
+              {intl.formatMessage({ id: `dashboard.filter.${option}` })}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="grid items-start gap-4 lg:grid-cols-5">
         <div className="flex flex-col gap-4 lg:col-span-3">

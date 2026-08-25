@@ -139,7 +139,7 @@ let fetchMock: ReturnType<typeof vi.fn>;
 describe('P1/P7 patient landing', () => {
   it('greets and composes the four widgets from existing disclosures', async () => {
     const { container } = render(appAt('/'));
-    await screen.findByText('Hello, Anna');
+    await screen.findByText(/Good (morning|afternoon|evening), Anna/);
     // Action needed: the overdue survey and the draft
     expect(screen.getByText('Action needed')).toBeTruthy();
     expect(screen.getByText('Weekly symptom survey')).toBeTruthy();
@@ -162,7 +162,7 @@ describe('P1/P7 patient landing', () => {
 describe('X7 self-report', () => {
   it('reports a symptom from the landing and lands the calm confirmation', async () => {
     render(appAt('/'));
-    await screen.findByText('Hello, Anna');
+    await screen.findByText(/Good (morning|afternoon|evening), Anna/);
     fireEvent.click(screen.getByRole('button', { name: /Report a symptom/ }));
     // wait for the taxonomy to load into the select before choosing
     await screen.findByRole('option', { name: 'Headache' });

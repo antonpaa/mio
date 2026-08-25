@@ -6,7 +6,6 @@ import {
   type MessageMark,
   type MessageText,
 } from '@mio/contracts';
-import { Button } from '@mio/ui';
 
 /**
  * The C4/P6 composer: a contentEditable surface with bold, italics and
@@ -312,74 +311,10 @@ export function Composer({
 
   return (
     <div
-      className={`rounded-inner border ${
+      className={`rounded-card border ${
         tone === 'note' ? 'border-amber-chip-border bg-amber-tint/40' : 'border-border bg-surface'
       }`}
     >
-      <div className="flex items-center gap-0.5 border-b border-hairline px-2 py-1">
-        <ToolButton
-          label={intl.formatMessage({ id: 'messages.bold' })}
-          onApply={() => exec('bold')}
-        >
-          <strong>B</strong>
-        </ToolButton>
-        <ToolButton
-          label={intl.formatMessage({ id: 'messages.italic' })}
-          onApply={() => exec('italic')}
-        >
-          <em className="font-display">I</em>
-        </ToolButton>
-        <ToolButton
-          label={intl.formatMessage({ id: 'messages.bulleted' })}
-          onApply={() => exec('insertUnorderedList')}
-        >
-          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden fill="none">
-            <path
-              d="M5.5 3.5h8M5.5 8h8M5.5 12.5h8M2.2 3.5h.01M2.2 8h.01M2.2 12.5h.01"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-            />
-          </svg>
-        </ToolButton>
-        <ToolButton
-          label={intl.formatMessage({ id: 'messages.numbered' })}
-          onApply={() => exec('insertOrderedList')}
-        >
-          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden fill="none">
-            <path
-              d="M6.5 3.5h7M6.5 8h7M6.5 12.5h7"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-            />
-            <text x="1" y="5.4" fontSize="5.5" fill="currentColor" stroke="none">
-              1
-            </text>
-            <text x="1" y="10" fontSize="5.5" fill="currentColor" stroke="none">
-              2
-            </text>
-            <text x="1" y="14.6" fontSize="5.5" fill="currentColor" stroke="none">
-              3
-            </text>
-          </svg>
-        </ToolButton>
-        {attachmentConfig !== undefined ? (
-          <ToolButton
-            label={intl.formatMessage({ id: 'messages.attach' })}
-            onApply={() => fileInput.current?.click()}
-          >
-            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden fill="none">
-              <path
-                d="M10.8 4.2 5.9 9.1a1.9 1.9 0 1 0 2.7 2.7l4.6-4.6a3.2 3.2 0 1 0-4.5-4.5L4 7.4"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </ToolButton>
-        ) : null}
-      </div>
       {attachmentConfig !== undefined ? (
         <input
           ref={fileInput}
@@ -459,14 +394,90 @@ export function Composer({
           ))}
         </ul>
       ) : null}
-      <div className="flex justify-end border-t border-hairline px-2 py-1.5">
-        <Button
-          size="sm"
-          onPress={() => void send()}
-          isDisabled={busy || scanning || (empty && cleanCount === 0)}
+      {/* P6: the tools live UNDER the text, with the round send at the
+          right end of the same row. */}
+      <div className="flex items-center justify-between border-t border-hairline px-2 py-1.5">
+        <div className="flex items-center gap-0.5">
+          <ToolButton
+            label={intl.formatMessage({ id: 'messages.bold' })}
+            onApply={() => exec('bold')}
+          >
+            <strong>B</strong>
+          </ToolButton>
+          <ToolButton
+            label={intl.formatMessage({ id: 'messages.italic' })}
+            onApply={() => exec('italic')}
+          >
+            <em className="font-display">I</em>
+          </ToolButton>
+          <ToolButton
+            label={intl.formatMessage({ id: 'messages.bulleted' })}
+            onApply={() => exec('insertUnorderedList')}
+          >
+            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden fill="none">
+              <path
+                d="M5.5 3.5h8M5.5 8h8M5.5 12.5h8M2.2 3.5h.01M2.2 8h.01M2.2 12.5h.01"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+            </svg>
+          </ToolButton>
+          <ToolButton
+            label={intl.formatMessage({ id: 'messages.numbered' })}
+            onApply={() => exec('insertOrderedList')}
+          >
+            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden fill="none">
+              <path
+                d="M6.5 3.5h7M6.5 8h7M6.5 12.5h7"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+              <text x="1" y="5.4" fontSize="5.5" fill="currentColor" stroke="none">
+                1
+              </text>
+              <text x="1" y="10" fontSize="5.5" fill="currentColor" stroke="none">
+                2
+              </text>
+              <text x="1" y="14.6" fontSize="5.5" fill="currentColor" stroke="none">
+                3
+              </text>
+            </svg>
+          </ToolButton>
+          {attachmentConfig !== undefined ? (
+            <ToolButton
+              label={intl.formatMessage({ id: 'messages.attach' })}
+              onApply={() => fileInput.current?.click()}
+            >
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden fill="none">
+                <path
+                  d="M10.8 4.2 5.9 9.1a1.9 1.9 0 1 0 2.7 2.7l4.6-4.6a3.2 3.2 0 1 0-4.5-4.5L4 7.4"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </ToolButton>
+          ) : null}
+        </div>
+        <button
+          type="button"
+          aria-label={sendLabel}
+          title={sendLabel}
+          disabled={busy || scanning || (empty && cleanCount === 0)}
+          onClick={() => void send()}
+          className="flex h-9 w-9 items-center justify-center rounded-pill bg-teal text-white transition-colors hover:bg-teal-hover disabled:cursor-default disabled:opacity-40"
         >
-          {sendLabel}
-        </Button>
+          <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden fill="none">
+            <path
+              d="M2.2 8h7.6M2.4 2.9 13.8 8 2.4 13.1l1.9-5.1z"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
       </div>
     </div>
   );

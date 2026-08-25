@@ -8,7 +8,7 @@ import {
   type LocaleBundle,
   type SurveyDefinition,
 } from '@mio/survey-schema';
-import { ErrorState, Skeleton } from '@mio/ui';
+import { BodyMapView, ErrorState, Skeleton } from '@mio/ui';
 
 /** P12: a calm confirmation with the answer summary. The plain-language
  * "closer look" wording is tracked for clinical sign-off (register P4). */
@@ -94,6 +94,17 @@ export function SurveySubmittedPage(): ReactElement {
               className="border-b border-hairline pb-3 last:border-b-0 last:pb-0"
             >
               <dt className="text-xs text-muted">{bundle.questions[question.id]?.label}</dt>
+              {question.type === 'body_map' && Array.isArray(answers[question.id]) ? (
+                <dd className="mt-2">
+                  <BodyMapView
+                    selected={answers[question.id] as string[]}
+                    viewLabels={{
+                      front: intl.formatMessage({ id: 'bodymap.front' }),
+                      back: intl.formatMessage({ id: 'bodymap.back' }),
+                    }}
+                  />
+                </dd>
+              ) : null}
               <dd className="mt-0.5 text-sm text-ink">
                 {renderAnswer(bundle, question.id, answers[question.id], (id) =>
                   question.type === 'body_map'

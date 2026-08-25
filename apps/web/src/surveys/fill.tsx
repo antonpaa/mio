@@ -276,12 +276,6 @@ function FillFrame({
           </Button>
         </div>
       </div>
-
-      {initial.kind === 'symptom' ? (
-        <p className="rounded-inner bg-amber-tint px-3 py-2.5 text-sm text-ink">
-          <FormattedMessage id="surveys.escapeHatch" />
-        </p>
-      ) : null}
     </div>
   );
 }

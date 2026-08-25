@@ -38,10 +38,7 @@ export function MessagesPage(): ReactElement {
       </h1>
       {realm === 'patient' ? (
         <p className="text-sm text-secondary">
-          <FormattedMessage id="messages.expectation" />{' '}
-          <span className="text-ink-strong-secondary">
-            <FormattedMessage id="messages.emergency" />
-          </span>
+          <FormattedMessage id="messages.expectation" />
         </p>
       ) : null}
       <section className="rounded-card border border-black/5 bg-surface shadow-resting">
