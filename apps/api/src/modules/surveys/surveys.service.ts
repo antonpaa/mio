@@ -2197,11 +2197,29 @@ function normaliseLocales(input: LocaleBundle[]): LocaleBundle[] {
   return (['en', 'fi', 'sv'] as const).map((locale) => {
     const bundle = input.find((entry) => entry.locale === locale);
     const rules = Object.fromEntries(
-      Object.entries(bundle?.rules ?? {}).filter(
-        ([, texts]) =>
-          (texts.notifyText !== undefined && texts.notifyText.trim() !== '') ||
-          (texts.taskTitle !== undefined && texts.taskTitle.trim() !== ''),
-      ),
+      Object.entries(bundle?.rules ?? {})
+        .map(([ruleId, texts]) => {
+          // X13: keep only non-blank per-audience texts; drop the record
+          // when no audience has one
+          const notifyTexts = Object.fromEntries(
+            Object.entries(texts.notifyTexts ?? {}).filter(
+              ([, text]) => typeof text === 'string' && text.trim() !== '',
+            ),
+          );
+          return [
+            ruleId,
+            {
+              ...(texts.notifyText !== undefined && texts.notifyText.trim() !== ''
+                ? { notifyText: texts.notifyText }
+                : {}),
+              ...(Object.keys(notifyTexts).length > 0 ? { notifyTexts } : {}),
+              ...(texts.taskTitle !== undefined && texts.taskTitle.trim() !== ''
+                ? { taskTitle: texts.taskTitle }
+                : {}),
+            },
+          ] as const;
+        })
+        .filter(([, texts]) => Object.keys(texts).length > 0),
     );
     return {
       locale,

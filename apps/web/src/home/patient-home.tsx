@@ -296,18 +296,50 @@ export function PatientHomePage(): ReactElement {
             <EmptyLine id="home.noUpcoming" />
           ) : (
             <ul className="divide-y divide-hairline">
-              {upcoming.map((row) => (
-                <li key={row.id} className="py-2">
-                  <span className="block truncate text-sm font-medium text-ink">{row.title}</span>
-                  <span className="block text-xs text-secondary">
-                    {intl.formatDate(
-                      row.scheduled_at ?? `${row.occurrence_date ?? today}T12:00:00`,
-                      { weekday: 'short', day: 'numeric', month: 'short' },
-                    )}
-                    {row.location !== null && row.location !== '' ? ` — ${row.location}` : ''}
-                  </span>
-                </li>
-              ))}
+              {upcoming.map((row) => {
+                const when = row.scheduled_at ?? `${row.occurrence_date ?? today}T12:00:00`;
+                const detail = [
+                  row.scheduled_at !== null
+                    ? intl.formatTime(when, { hour: 'numeric', minute: '2-digit' })
+                    : '',
+                  row.location ?? '',
+                ]
+                  .filter((part) => part !== '')
+                  .join(', ');
+                return (
+                  <li key={row.id} className="flex items-center gap-3 py-2">
+                    {/* the canvas's date tile - decorative, the sr-only date
+                        below keeps the row readable without it */}
+                    <span
+                      aria-hidden
+                      className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-inner border border-amber-chip-border bg-amber-tint"
+                    >
+                      <span className="text-[9px] font-medium uppercase leading-none tracking-wide text-amber">
+                        {intl.formatDate(when, { weekday: 'short' })}
+                      </span>
+                      <span className="mt-0.5 font-display text-lg leading-none text-teal">
+                        {intl.formatDate(when, { day: 'numeric' })}
+                      </span>
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium text-ink">
+                        {row.title}
+                      </span>
+                      <span className="block truncate text-xs text-secondary">
+                        <span className="sr-only">
+                          {intl.formatDate(when, {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                          })}
+                          {detail !== '' ? ', ' : ''}
+                        </span>
+                        {detail}
+                      </span>
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </Widget>

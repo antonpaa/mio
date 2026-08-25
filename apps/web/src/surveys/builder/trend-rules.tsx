@@ -53,7 +53,13 @@ export function TrendRulesPanel({
   bundle: LocaleBundle;
   nextRuleId: () => string;
   onChangeRules: (rules: TrendRule[]) => void;
-  onChangeRuleText: (ruleId: string, patch: { notifyText?: string; taskTitle?: string }) => void;
+  onChangeRuleText: (
+    ruleId: string,
+    patch: {
+      notifyTexts?: Partial<Record<NotifyRecipient, string>>;
+      taskTitle?: string;
+    },
+  ) => void;
 }): ReactElement {
   const intl = useIntl();
   const eligible = questions.filter((question) => RULE_ELIGIBLE.includes(question.type));
@@ -284,18 +290,49 @@ export function TrendRulesPanel({
                         {intl.formatMessage({ id: `builder.recipient.${recipient}` })}
                       </label>
                     ))}
-                    <input
-                      className={`${selectClass} min-w-56 flex-1`}
-                      aria-label={intl.formatMessage(
-                        { id: 'builder.notifyTextLabel' },
-                        { id: rule.id },
-                      )}
-                      placeholder={intl.formatMessage({ id: 'builder.notifyTextPlaceholder' })}
-                      value={ruleText?.notifyText ?? ''}
-                      onChange={(event) =>
-                        onChangeRuleText(rule.id, { notifyText: event.currentTarget.value })
-                      }
-                    />
+                    {/* X13: each audience reads its own copy - one field
+                        per selected recipient, legacy single text as the
+                        prefill so pre-X13 drafts surface what still ships */}
+                    <div className="flex w-full flex-col gap-1.5">
+                      {(['team', 'lead', 'patient'] as const)
+                        .filter((recipient) => notify.recipients.includes(recipient))
+                        .map((recipient) => (
+                          <label
+                            key={recipient}
+                            className="flex items-center gap-2 text-xs text-secondary"
+                          >
+                            <span className="w-28 shrink-0 text-right">
+                              {intl.formatMessage({ id: `builder.recipient.${recipient}` })}
+                            </span>
+                            <input
+                              className={`${selectClass} min-w-56 flex-1`}
+                              aria-label={intl.formatMessage(
+                                { id: 'builder.notifyTextLabelFor' },
+                                {
+                                  id: rule.id,
+                                  recipient: intl.formatMessage({
+                                    id: `builder.recipient.${recipient}`,
+                                  }),
+                                },
+                              )}
+                              placeholder={intl.formatMessage({
+                                id: 'builder.notifyTextPlaceholder',
+                              })}
+                              value={
+                                ruleText?.notifyTexts?.[recipient] ?? ruleText?.notifyText ?? ''
+                              }
+                              onChange={(event) =>
+                                onChangeRuleText(rule.id, {
+                                  notifyTexts: {
+                                    ...(ruleText?.notifyTexts ?? {}),
+                                    [recipient]: event.currentTarget.value,
+                                  },
+                                })
+                              }
+                            />
+                          </label>
+                        ))}
+                    </div>
                   </>
                 ) : null}
 

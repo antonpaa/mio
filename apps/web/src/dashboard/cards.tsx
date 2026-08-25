@@ -45,10 +45,16 @@ interface AgendaRow {
 function CardShell({
   icon,
   titleId,
+  to,
+  linkId,
   children,
 }: {
   icon: ReactNode;
   titleId: string;
+  /** the card's labeled action link, per the C1 canvas ("Open calendar",
+   * "Open messages") - given only where a full page actually exists */
+  to?: string;
+  linkId?: string;
   children: ReactNode;
 }): ReactElement {
   return (
@@ -58,9 +64,17 @@ function CardShell({
     >
       <header className="flex items-center gap-2 border-b border-hairline px-5 py-3">
         <span className="text-teal">{icon}</span>
-        <h2 id={`${titleId}-heading`} className="text-sm font-semibold text-ink">
+        <h2 id={`${titleId}-heading`} className="flex-1 text-sm font-semibold text-ink">
           <FormattedMessage id={titleId} />
         </h2>
+        {to !== undefined && linkId !== undefined ? (
+          <Link
+            to={to}
+            className="text-sm font-medium text-teal underline-offset-4 hover:underline"
+          >
+            <FormattedMessage id={linkId} />
+          </Link>
+        ) : null}
       </header>
       <div className="px-5 py-3">{children}</div>
     </section>
@@ -166,7 +180,12 @@ export function AgendaCard(): ReactElement {
     (row.occurrence_date ?? row.scheduled_at ?? '').slice(0, 10);
 
   return (
-    <CardShell icon={<IconCalendar size={17} />} titleId="dashboard.agendaTitle">
+    <CardShell
+      icon={<IconCalendar size={17} />}
+      titleId="dashboard.agendaTitle"
+      to="/calendar"
+      linkId="home.openCalendar"
+    >
       {agenda.isPending ? (
         <Skeleton className="h-16 w-full" />
       ) : agenda.isError ? (
@@ -210,7 +229,12 @@ export function UnreadConversationsCard(): ReactElement {
   const unread = (threads.data ?? []).filter((row) => row.unread > 0).slice(0, 4);
 
   return (
-    <CardShell icon={<IconMessages size={17} />} titleId="dashboard.unreadTitle">
+    <CardShell
+      icon={<IconMessages size={17} />}
+      titleId="dashboard.unreadTitle"
+      to="/messages"
+      linkId="home.openMessages"
+    >
       {threads.isPending ? (
         <Skeleton className="h-16 w-full" />
       ) : threads.isError ? (

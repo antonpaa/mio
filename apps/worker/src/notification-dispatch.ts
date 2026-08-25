@@ -164,7 +164,7 @@ export async function dispatchNotifications(
       patient_id: string;
       trigger_id: string;
       recipients: string[];
-      body: Record<string, string>;
+      body: Record<string, unknown>;
     }>(
       `SELECT id, treatment_id, patient_id, trigger_id, recipients, body
          FROM clinical.rule_notification
@@ -173,12 +173,19 @@ export async function dispatchNotifications(
         LIMIT 500`,
     );
     for (const rule of ruleRows) {
+      // X13: body is keyed by audience ({team: {en: …}, …}); rows written
+      // before the change carry one flat locale map every audience shares.
+      const legacy = Object.values(rule.body).some((value) => typeof value === 'string');
+      const bodyFor = (audience: string): Record<string, string> => {
+        if (legacy) return rule.body as Record<string, string>;
+        const entry = rule.body[audience];
+        return typeof entry === 'object' && entry !== null ? (entry as Record<string, string>) : {};
+      };
       const base = {
         kind: 'rule.notify',
         patientId: rule.patient_id,
         treatmentId: rule.treatment_id,
         ref: { triggerId: rule.trigger_id, treatmentId: rule.treatment_id },
-        body: rule.body,
       };
       if (rule.recipients.includes('patient')) {
         const contact = await patientContact(client, rule.patient_id);
@@ -187,6 +194,7 @@ export async function dispatchNotifications(
             ...base,
             recipientId: rule.patient_id,
             recipientRealm: 'patient',
+            body: bodyFor('patient'),
           });
           result.rowsWritten += 1;
           if (emailAllowed(contact.email_prefs, 'rule.notify')) {
@@ -213,10 +221,14 @@ export async function dispatchNotifications(
             (rule.recipients.includes('lead') && member.is_lead),
         );
         for (const member of wanted) {
+          // a lead addressed as 'lead' reads the lead copy even when the
+          // whole team is also notified - the more specific audience wins
+          const audience = rule.recipients.includes('lead') && member.is_lead ? 'lead' : 'team';
           await insertRow(client, {
             ...base,
             recipientId: member.staff_id,
             recipientRealm: 'staff',
+            body: bodyFor(audience),
           });
           result.rowsWritten += 1;
         }

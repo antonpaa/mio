@@ -212,14 +212,18 @@ describe('the dispatch', () => {
     expect(body.items.some((item) => item.kind === 'message.new')).toBe(true);
     expect(body.unread).toBeGreaterThanOrEqual(2);
 
-    // the lead got the same authored note as a staff-realm row, and -
-    // the point of the staff centre - can actually READ it
+    // the lead got a staff-realm row with the LEAD copy (X13): the
+    // clinical prompt, not the patient's "your care team has been
+    // notified" sentence
     const { rows: leadRows } = await owner.query(
-      `SELECT count(*)::int AS n FROM clinical.notification
-        WHERE recipient_id = $1 AND recipient_realm = 'staff' AND kind = 'rule.notify'`,
+      `SELECT body FROM clinical.notification
+        WHERE recipient_id = $1 AND recipient_realm = 'staff' AND kind = 'rule.notify'
+        ORDER BY created_at DESC LIMIT 1`,
       [lead.id],
     );
-    expect((leadRows[0] as { n: number }).n).toBeGreaterThan(0);
+    const leadBody = (leadRows[0] as { body: Record<string, string> }).body;
+    expect(leadBody['en']).toContain('Review the response');
+    expect(JSON.stringify(leadBody)).not.toContain('your care team has been notified');
 
     const staffCentre = await inject('GET', '/api/staff/notifications', undefined, leadCookie);
     expect(staffCentre.statusCode).toBe(200);
@@ -322,5 +326,49 @@ describe('the dispatch', () => {
     expect(other.statusCode).toBe(200);
     // recipient-only: nothing addressed to our patient appears here
     expect(other.body).not.toContain(patient.id);
+  });
+
+  it('a pre-X13 flat-body rule notification still reaches every audience', async () => {
+    // rows written before the per-audience change carry one flat locale
+    // map; dispatch must keep delivering those, to everyone, as-is
+    const { rows: triggers } = await owner.query(
+      `SELECT id FROM clinical.rule_trigger WHERE treatment_id = $1 LIMIT 1`,
+      [treatment.id],
+    );
+    const triggerId = (triggers[0] as { id: string }).id;
+    const { rows: inserted } = await owner.query(
+      `INSERT INTO clinical.rule_notification
+         (id, treatment_id, patient_id, trigger_id, recipients, body)
+       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5) RETURNING id`,
+      [
+        treatment.id,
+        patient.id,
+        triggerId,
+        ['patient', 'lead'],
+        JSON.stringify({ en: 'Legacy single text.', fi: 'Vanha yksi teksti.' }),
+      ],
+    );
+    const legacyId = (inserted[0] as { id: string }).id;
+
+    const result = await dispatchNotifications(workerPool, captureMail);
+    expect(result.rulesDispatched).toBeGreaterThan(0);
+
+    const { rows: delivered } = await owner.query(
+      `SELECT recipient_realm, body FROM clinical.notification
+        WHERE ref->>'triggerId' = $1 AND created_at >= now() - interval '1 minute'
+        ORDER BY created_at DESC`,
+      [triggerId],
+    );
+    const legacyRows = (
+      delivered as { recipient_realm: string; body: Record<string, string> }[]
+    ).filter((row) => row.body?.['en'] === 'Legacy single text.');
+    expect(legacyRows.some((row) => row.recipient_realm === 'patient')).toBe(true);
+    expect(legacyRows.some((row) => row.recipient_realm === 'staff')).toBe(true);
+
+    const { rows: marked } = await owner.query(
+      `SELECT dispatched_at FROM clinical.rule_notification WHERE id = $1`,
+      [legacyId],
+    );
+    expect((marked[0] as { dispatched_at: string | null }).dispatched_at).not.toBeNull();
   });
 });

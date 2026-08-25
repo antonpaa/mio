@@ -87,11 +87,17 @@ const LOCALES = [
     title: 'Mood check',
     questions: { 'q-mood': { label: 'Mood today', options: { 'o-ok': 'Okay', 'o-low': 'Low' } } },
     rules: {
+      // X13: per-audience copy - the patient and the team read different
+      // sentences from the same firing
       'r-low-run': {
-        notifyText: 'Mood has been low two check-ins in a row.',
+        notifyTexts: {
+          patient: 'Your care team is taking a closer look at your check-ins.',
+          team: 'Mood has been low two check-ins in a row.',
+        },
         taskTitle: 'Call the patient',
       },
       'r-missed': {
+        // pre-X13 single-text payload: the lead must still get it (fallback)
         notifyText: 'Two check-ins in a row were missed.',
         taskTitle: 'Follow up on missed check-ins',
       },
@@ -297,9 +303,14 @@ describe('repeat rules on the submit path', () => {
         WHERE patient_id = $1 ORDER BY created_at DESC LIMIT 1`,
       [patient.id],
     );
-    const notification = notifications[0] as { recipients: string[]; body: Record<string, string> };
+    const notification = notifications[0] as {
+      recipients: string[];
+      body: Record<string, Record<string, string>>;
+    };
     expect(notification.recipients.sort()).toEqual(['patient', 'team']);
-    expect(notification.body['en']).toContain('low two check-ins');
+    // X13: the body is keyed by audience - each reads its own sentence
+    expect(notification.body['team']?.['en']).toContain('low two check-ins');
+    expect(notification.body['patient']?.['en']).toContain('closer look');
 
     const { rows: tasks } = await owner.query(
       `SELECT title, assignee_id, created_by, status FROM clinical.task
@@ -338,11 +349,18 @@ describe('missed-response rules via the worker', () => {
     expect(trigger.trace.window.every((entry) => entry.status === 'missed')).toBe(true);
 
     const { rows: notifications } = await owner.query(
-      `SELECT recipients FROM clinical.rule_notification WHERE trigger_id IS NOT NULL
+      `SELECT recipients, body FROM clinical.rule_notification WHERE trigger_id IS NOT NULL
         AND patient_id = $1 ORDER BY created_at DESC LIMIT 1`,
       [patient.id],
     );
-    expect((notifications[0] as { recipients: string[] }).recipients).toEqual(['lead']);
+    const missedNote = notifications[0] as {
+      recipients: string[];
+      body: Record<string, Record<string, string>>;
+    };
+    expect(missedNote.recipients).toEqual(['lead']);
+    // the rule was authored pre-X13 with one notifyText: the lead still
+    // reads it via the fallback
+    expect(missedNote.body['lead']?.['en']).toContain('were missed');
 
     const { rows: tasks } = await owner.query(
       `SELECT count(*)::int AS n FROM clinical.task

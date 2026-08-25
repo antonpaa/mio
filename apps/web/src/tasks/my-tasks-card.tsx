@@ -1,16 +1,17 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Link } from '@tanstack/react-router';
-import { IconTasks, Skeleton, StatusChip } from '@mio/ui';
+import { Button, IconTasks, Skeleton, StatusChip } from '@mio/ui';
 import { useSession } from '../session/session.js';
 import { bucketOf, localToday, type TaskRow } from './task-model.js';
 
-/** C1's tasks slice (WP-13): my next tasks + the team queue pressure.
- * The full dashboard arrives with WP-27. */
+/** C1's tasks slice (WP-13): my next tasks, and the team queue's next
+ * unclaimed ones claimable right on the card (canvas). */
 export function MyTasksCard(): ReactElement {
   const intl = useIntl();
   const session = useSession();
+  const queryClient = useQueryClient();
   const me = session.account?.id ?? '';
   const tasks = useQuery({
     queryKey: ['tasks'],
@@ -21,10 +22,22 @@ export function MyTasksCard(): ReactElement {
     },
     retry: false,
   });
+  const claim = useMutation({
+    mutationFn: async (taskId: string) => {
+      const response = await fetch(`/api/staff/tasks/${taskId}/claim`, {
+        method: 'POST',
+        credentials: 'same-origin',
+      });
+      if (!response.ok) throw new Error(`claim: ${response.status}`);
+      return response.json() as Promise<unknown>;
+    },
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['tasks'] }),
+  });
 
   const today = localToday();
   const mine = (tasks.data ?? []).filter((task) => task.assignee_id === me).slice(0, 5);
-  const unclaimed = (tasks.data ?? []).filter((task) => task.assignee_id === null).length;
+  const queue = (tasks.data ?? []).filter((task) => task.assignee_id === null);
+  const unclaimed = queue.length;
 
   return (
     <section className="rounded-card border border-black/5 bg-surface px-5 py-4 shadow-resting">
@@ -35,7 +48,10 @@ export function MyTasksCard(): ReactElement {
           </span>
           <FormattedMessage id="tasks.myCard" />
         </h2>
-        <Link to="/tasks" className="text-sm text-teal hover:text-teal-hover">
+        <Link
+          to="/tasks"
+          className="text-sm font-medium text-teal underline-offset-4 hover:underline"
+        >
           <FormattedMessage id="tasks.viewAll" />
         </Link>
       </div>
@@ -76,9 +92,38 @@ export function MyTasksCard(): ReactElement {
             </ul>
           )}
           {unclaimed > 0 ? (
-            <p className="mt-2 border-t border-hairline pt-2 text-xs text-secondary">
-              <FormattedMessage id="tasks.unclaimedCount" values={{ count: unclaimed }} />
-            </p>
+            <div className="mt-2 border-t border-hairline pt-1">
+              {/* the queue's next tasks claimable in place (canvas) - the
+                  C5 page remains the full queue */}
+              <ul className="divide-y divide-hairline">
+                {queue.slice(0, 3).map((task) => (
+                  <li key={task.id} className="flex items-center gap-3 py-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm text-ink">{task.title}</p>
+                      <p className="truncate text-xs text-secondary">
+                        {task.patient_given} {task.patient_family} — {task.treatment_name}
+                      </p>
+                    </div>
+                    <StatusChip tone="neutral">
+                      {intl.formatMessage({ id: 'tasks.queueChip' })}
+                    </StatusChip>
+                    <Button
+                      size="sm"
+                      variant="quiet"
+                      isDisabled={claim.isPending}
+                      onPress={() => claim.mutate(task.id)}
+                    >
+                      <FormattedMessage id="tasks.claim" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+              {unclaimed > 3 ? (
+                <p className="pt-1 text-xs text-secondary">
+                  <FormattedMessage id="tasks.unclaimedCount" values={{ count: unclaimed }} />
+                </p>
+              ) : null}
+            </div>
           ) : null}
         </>
       )}

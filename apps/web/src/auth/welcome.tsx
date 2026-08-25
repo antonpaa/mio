@@ -84,6 +84,10 @@ export function WelcomePage(): ReactElement {
         autoComplete="new-password"
         isRequired
         description={`${intl.formatMessage({ id: 'welcome.rule.length' })} — ${intl.formatMessage({ id: 'welcome.rule.personal' })}`}
+        reveal={{
+          show: intl.formatMessage({ id: 'login.showPassword' }),
+          hide: intl.formatMessage({ id: 'login.hidePassword' }),
+        }}
       />
       <label className="flex items-start gap-2 text-sm leading-relaxed text-ink-strong-secondary">
         <input

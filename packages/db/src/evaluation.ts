@@ -34,11 +34,14 @@ export interface EvaluationContext {
   surveyResponseId: string | null;
   /** the anchoring occurrence; null on ad-hoc submissions */
   activityId: string | null;
-  /** rule id -> authored texts per locale, assembled from the version's
-   * bundles by the caller */
+  /** rule id -> authored texts per audience and locale, assembled from
+   * the version's bundles by the caller */
   ruleTexts: Record<
     string,
-    { notifyText: Record<string, string>; taskTitle: Record<string, string> }
+    {
+      notifyTexts: Record<'team' | 'lead' | 'patient', Record<string, string>>;
+      taskTitle: Record<string, string>;
+    }
   >;
 }
 
@@ -49,20 +52,37 @@ export interface EvaluationResultRow {
   taskIds: string[];
 }
 
-/** rule id -> per-locale authored outcome texts, assembled from a
- * version's locale bundles (structural: any bundle-shaped array works). */
+const NOTIFY_AUDIENCES = ['team', 'lead', 'patient'] as const;
+
+/** rule id -> per-audience per-locale authored outcome texts, assembled
+ * from a version's locale bundles (structural: any bundle-shaped array
+ * works). X13: each audience resolves its own text, falling back to the
+ * pre-X13 single notifyText so already-published payloads keep working. */
 export function ruleTextsFromBundles(
   locales: {
     locale: string;
-    rules?: Record<string, { notifyText?: string; taskTitle?: string }>;
+    rules?: Record<
+      string,
+      {
+        notifyText?: string;
+        notifyTexts?: Partial<Record<'team' | 'lead' | 'patient', string>>;
+        taskTitle?: string;
+      }
+    >;
   }[],
 ): EvaluationContext['ruleTexts'] {
   const out: EvaluationContext['ruleTexts'] = {};
   for (const bundle of locales) {
     for (const [ruleId, texts] of Object.entries(bundle.rules ?? {})) {
-      const slot = (out[ruleId] ??= { notifyText: {}, taskTitle: {} });
-      if (texts.notifyText !== undefined && texts.notifyText.trim() !== '') {
-        slot.notifyText[bundle.locale] = texts.notifyText;
+      const slot = (out[ruleId] ??= {
+        notifyTexts: { team: {}, lead: {}, patient: {} },
+        taskTitle: {},
+      });
+      for (const audience of NOTIFY_AUDIENCES) {
+        const text = texts.notifyTexts?.[audience] ?? texts.notifyText;
+        if (text !== undefined && text.trim() !== '') {
+          slot.notifyTexts[audience][bundle.locale] = text;
+        }
       }
       if (texts.taskTitle !== undefined && texts.taskTitle.trim() !== '') {
         slot.taskTitle[bundle.locale] = texts.taskTitle;
@@ -159,6 +179,12 @@ export async function persistEvaluation(
     for (const outcome of fired.outcomes) {
       if (outcome.kind === 'notify') {
         const notificationId = randomUUID();
+        // body keyed by audience (X13): dispatch hands each recipient
+        // their own copy
+        const texts = context.ruleTexts[fired.ruleId]?.notifyTexts;
+        const body = Object.fromEntries(
+          outcome.recipients.map((audience) => [audience, texts?.[audience] ?? {}]),
+        );
         await client.query(
           `INSERT INTO clinical.rule_notification
              (id, treatment_id, patient_id, trigger_id, recipients, body)
@@ -169,7 +195,7 @@ export async function persistEvaluation(
             context.patientId,
             triggerId,
             outcome.recipients,
-            JSON.stringify(context.ruleTexts[fired.ruleId]?.notifyText ?? {}),
+            JSON.stringify(body),
           ],
         );
         result.notificationIds.push(notificationId);
