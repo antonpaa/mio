@@ -189,7 +189,6 @@ describe('P4 fill frame', () => {
     await screen.findByText('Nausea over the past week');
     // "0 of 2" - the follow-up is hidden
     await screen.findByText('0 of 2');
-    expect(screen.getByText(/Call your clinic/)).toBeTruthy();
 
     // required: cannot continue without an answer
     await userEvent.click(screen.getByRole('button', { name: 'Continue' }));

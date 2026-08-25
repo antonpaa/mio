@@ -229,7 +229,7 @@ describe('A1 users', () => {
     await screen.findByText('Elina Koskinen');
     fireEvent.click(screen.getByRole('button', { name: 'Patients 1' }));
     await screen.findByText('Anna Virtanen');
-    fireEvent.click(screen.getByRole('button', { name: 'Reset login' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reset sign-in' }));
 
     const password = screen.getByLabelText('Your password');
     fireEvent.change(password, { target: { value: 'wrong' } });

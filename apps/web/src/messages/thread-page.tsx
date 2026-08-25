@@ -116,10 +116,7 @@ export function MessageThreadPage(): ReactElement {
         ) : null}
         {realm === 'patient' ? (
           <p className="mt-1 text-sm text-secondary">
-            <FormattedMessage id="messages.expectation" />{' '}
-            <span className="text-ink-strong-secondary">
-              <FormattedMessage id="messages.emergency" />
-            </span>
+            <FormattedMessage id="messages.expectation" />
           </p>
         ) : null}
       </header>
