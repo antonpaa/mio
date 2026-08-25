@@ -194,10 +194,25 @@ const SYMPTOM_CORE_TEXT = {
   },
 } as const;
 
+// X13: each audience reads its own copy - the patient a calm what-happens
+// note, the lead a clinical prompt. One shared sentence read wrong at one
+// end or the other.
 const NAUSEA_NOTIFY_TEXT = {
-  en: 'Because nausea has increased, your care team has been notified. They will be in touch if anything needs to change.',
-  fi: 'Koska pahoinvointi on lisääntynyt, hoitotiimillesi on ilmoitettu. He ottavat yhteyttä, jos jotakin pitää muuttaa.',
-  sv: 'Eftersom illamåendet har ökat har ditt vårdteam meddelats. De hör av sig om något behöver ändras.',
+  en: {
+    patient:
+      'Because nausea has increased, your care team has been notified. They will be in touch if anything needs to change.',
+    lead: 'Severe nausea reported in the weekly symptom survey. Review the response and adjust supportive care if needed.',
+  },
+  fi: {
+    patient:
+      'Koska pahoinvointi on lisääntynyt, hoitotiimillesi on ilmoitettu. He ottavat yhteyttä, jos jotakin pitää muuttaa.',
+    lead: 'Viikkokyselyssä on ilmoitettu voimakasta pahoinvointia. Tarkista vastaus ja muuta tarvittaessa tukihoitoa.',
+  },
+  sv: {
+    patient:
+      'Eftersom illamåendet har ökat har ditt vårdteam meddelats. De hör av sig om något behöver ändras.',
+    lead: 'Kraftigt illamående har rapporterats i veckoenkäten. Granska svaret och justera vid behov den stödjande vården.',
+  },
 } as const;
 
 function symptomLocales(titles: { en: string; fi: string; sv: string }): LocaleBundle[] {
@@ -205,7 +220,7 @@ function symptomLocales(titles: { en: string; fi: string; sv: string }): LocaleB
     locale,
     title: titles[locale],
     questions: { ...SYMPTOM_CORE_TEXT[locale] },
-    rules: { 'r-nausea-severe': { notifyText: NAUSEA_NOTIFY_TEXT[locale] } },
+    rules: { 'r-nausea-severe': { notifyTexts: { ...NAUSEA_NOTIFY_TEXT[locale] } } },
   }));
 }
 

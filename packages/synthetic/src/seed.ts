@@ -463,14 +463,23 @@ export async function seedWorld(
             entry.answeredAt,
           ],
         );
-        // WP-20 notify outcomes: the authored per-locale text, exactly as
-        // persistEvaluation writes it - WP-25's dispatch delivers these
+        // WP-20 notify outcomes: the authored texts keyed by audience and
+        // locale (X13), exactly as persistEvaluation writes them - WP-25's
+        // dispatch delivers these
         for (const outcome of fired.outcomes) {
           if (outcome.kind !== 'notify') continue;
           const body = Object.fromEntries(
-            instrument.locales
-              .map((bundle) => [bundle.locale, bundle.rules?.[fired.ruleId]?.notifyText])
-              .filter(([, text]) => typeof text === 'string' && text.length > 0),
+            outcome.recipients.map((audience) => [
+              audience,
+              Object.fromEntries(
+                instrument.locales
+                  .map((bundle) => {
+                    const texts = bundle.rules?.[fired.ruleId];
+                    return [bundle.locale, texts?.notifyTexts?.[audience] ?? texts?.notifyText];
+                  })
+                  .filter(([, text]) => typeof text === 'string' && text.length > 0),
+              ),
+            ]),
           );
           await pool.query(
             `INSERT INTO clinical.rule_notification

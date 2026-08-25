@@ -702,7 +702,7 @@ const en = {
   'builder.recipient.team': 'Care team',
   'builder.recipient.lead': 'Treatment lead',
   'builder.recipient.patient': 'Patient',
-  'builder.notifyTextLabel': 'Notification text of rule {id}',
+  'builder.notifyTextLabelFor': 'Notification text of rule {id} to {recipient}',
   'builder.notifyTextPlaceholder': 'Delivered as written, in-app only…',
   'builder.outcomeTask': 'Create a task',
   'builder.taskTitleLabel': 'Task title of rule {id}',
@@ -1594,7 +1594,7 @@ const fi: Record<MessageId, string> = {
   'builder.recipient.team': 'Hoitotiimi',
   'builder.recipient.lead': 'Hoidon vastuuhenkilö',
   'builder.recipient.patient': 'Potilas',
-  'builder.notifyTextLabel': 'Säännön {id} ilmoitusteksti',
+  'builder.notifyTextLabelFor': 'Säännön {id} ilmoitusteksti vastaanottajalle {recipient}',
   'builder.notifyTextPlaceholder':
     'Näytetään vastaanottajalle sellaisenaan — vain sovelluksessa, ei sähköpostissa',
   'builder.outcomeTask': 'Luo tehtävä',
@@ -2485,7 +2485,7 @@ const sv: Record<MessageId, string> = {
   'builder.recipient.team': 'Vårdteam',
   'builder.recipient.lead': 'Behandlingsansvarig',
   'builder.recipient.patient': 'Patient',
-  'builder.notifyTextLabel': 'Aviseringstext för regel {id}',
+  'builder.notifyTextLabelFor': 'Aviseringstext för regel {id} till {recipient}',
   'builder.notifyTextPlaceholder':
     'Visas för mottagaren som den är — endast i appen, aldrig i e-post',
   'builder.outcomeTask': 'Skapa uppgift',

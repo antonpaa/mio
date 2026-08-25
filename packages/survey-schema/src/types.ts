@@ -186,13 +186,18 @@ export interface LocaleBundle {
       patternMessage?: string;
     }
   >;
-  /** rule id -> authored outcome texts: the custom-notification body
+  /** rule id -> authored outcome texts: the custom-notification bodies
    * delivered AS WRITTEN, and the created task's title. Clinician
    * configuration - stripped from every patient-facing payload. */
   rules?: Record<
     string,
     {
+      /** pre-X13 payloads: one text read by every audience. Still
+       * honoured as the fallback where notifyTexts has no entry. */
       notifyText?: string;
+      /** X13: each audience reads its own copy - what the patient is
+       * told and what the team/lead reads are different sentences. */
+      notifyTexts?: Partial<Record<NotifyRecipient, string>>;
       taskTitle?: string;
     }
   >;
