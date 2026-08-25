@@ -1,20 +1,33 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { ErrorState, IconBell, SeverityChip, Skeleton, StatusChip } from '@mio/ui';
+import { Button, ErrorState, IconBell, SeverityChip, Skeleton, StatusChip } from '@mio/ui';
 import { ALERT_STATUS_TONE, TRIAGE_QUERY } from './alert-model.js';
 import { useSession } from '../session/session.js';
 
 /**
  * C1: the dashboard triage queue - open alerts across the clinician's
  * care patients, new before acknowledged, high before moderate. Each row
- * opens the PP6 detail.
+ * opens the PP6 detail, and the next workflow step (acknowledge, then
+ * resolve) is a button right on the row per the canvas.
  */
 export function TriageCard({ filter = 'all' }: { filter?: 'all' | 'mine' }): ReactElement {
   const intl = useIntl();
   const session = useSession();
+  const queryClient = useQueryClient();
   const triage = useQuery(TRIAGE_QUERY);
+  const advance = useMutation({
+    mutationFn: async ({ id, verb }: { id: string; verb: 'acknowledge' | 'resolve' }) => {
+      const response = await fetch(`/api/staff/alerts/${id}/${verb}`, {
+        method: 'POST',
+        credentials: 'same-origin',
+      });
+      if (!response.ok) throw new Error(`${verb}: ${response.status}`);
+      return response.json() as Promise<unknown>;
+    },
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['alerts'] }),
+  });
   // WP-27: the C1 segmented filter narrows the worklist to alerts
   // assigned to the caller; the disclosure is the same audited query
   const rows = (triage.data ?? []).filter(
@@ -58,11 +71,11 @@ export function TriageCard({ filter = 'all' }: { filter?: 'all' | 'mine' }): Rea
       ) : (
         <ul className="divide-y divide-hairline">
           {rows.map((row) => (
-            <li key={row.id}>
+            <li key={row.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-5 py-3">
               <Link
                 to="/alerts/$alertId"
                 params={{ alertId: row.id }}
-                className="flex flex-wrap items-center gap-x-3 gap-y-1 px-5 py-3 transition-colors hover:bg-surface-sunken"
+                className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 transition-colors hover:text-teal"
               >
                 {/* fixed-width chip column so the text column starts aligned
                     whatever the severity label's length */}
@@ -81,17 +94,39 @@ export function TriageCard({ filter = 'all' }: { filter?: 'all' | 'mine' }): Rea
                     {intl.formatDate(row.created_at, { dateStyle: 'medium', timeStyle: 'short' })}
                   </span>
                 </span>
-                <span className="hidden text-xs text-muted sm:block">
-                  {row.assignee_given !== null ? (
-                    `${row.assignee_given} ${row.assignee_family ?? ''}`
-                  ) : (
-                    <FormattedMessage id="alerts.unassigned" />
-                  )}
-                </span>
-                <StatusChip tone={ALERT_STATUS_TONE[row.status]}>
-                  {intl.formatMessage({ id: `alerts.status.${row.status}` })}
-                </StatusChip>
               </Link>
+              <span className="hidden text-xs text-muted sm:block">
+                {row.assignee_given !== null ? (
+                  `${row.assignee_given} ${row.assignee_family ?? ''}`
+                ) : (
+                  <FormattedMessage id="alerts.unassigned" />
+                )}
+              </span>
+              <StatusChip tone={ALERT_STATUS_TONE[row.status]}>
+                {intl.formatMessage({ id: `alerts.status.${row.status}` })}
+              </StatusChip>
+              {/* the workflow's next step inline (canvas): acknowledge a
+                  new alert, resolve an acknowledged one - the detail page
+                  stays the place for comments and assignment */}
+              {row.status === 'new' ? (
+                <Button
+                  size="sm"
+                  variant="quiet"
+                  isDisabled={advance.isPending}
+                  onPress={() => advance.mutate({ id: row.id, verb: 'acknowledge' })}
+                >
+                  <FormattedMessage id="alerts.acknowledge" />
+                </Button>
+              ) : row.status === 'acknowledged' ? (
+                <Button
+                  size="sm"
+                  variant="quiet"
+                  isDisabled={advance.isPending}
+                  onPress={() => advance.mutate({ id: row.id, verb: 'resolve' })}
+                >
+                  <FormattedMessage id="alerts.resolve" />
+                </Button>
+              ) : null}
             </li>
           ))}
         </ul>

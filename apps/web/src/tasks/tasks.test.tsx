@@ -143,7 +143,9 @@ describe('dashboard tasks slice', () => {
     const { container } = render(appAt('/'));
     await screen.findByRole('heading', { name: 'My tasks' });
     await screen.findByText('Call patient about lab results');
-    await screen.findByText('1 unclaimed task in your teams');
+    // the queue's next unclaimed task is claimable right on the card
+    await screen.findByText('Order infusion supplies');
+    expect(screen.getByRole('button', { name: 'Claim' })).toBeTruthy();
     const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });
     expect(results.violations.map((violation) => violation.id)).toEqual([]);
   });

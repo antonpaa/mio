@@ -6,10 +6,10 @@ import {
   Button,
   EmptyState,
   ErrorState,
-  ListRow,
   Skeleton,
   StatusChip,
   useModalFocus,
+  type ChipTone,
 } from '@mio/ui';
 import { postJson, usersQuery, type PatientRow, type StaffRow } from './api.js';
 import { EditRolesDialog, RoleCheckboxes, type StaffRoleOption } from './roles-dialog.js';
@@ -22,7 +22,19 @@ import { useSession } from '../session/session.js';
  * password again (step-up), and everything here lands in the audit log.
  */
 
-const STATUS_TONE = { invited: 'amber', active: 'teal', deactivated: 'neutral' } as const;
+/** The canvas's role tints: the high-privilege roles announce themselves. */
+const ROLE_TONE: Record<StaffRow['roles'][number], ChipTone> = {
+  clinician: 'teal',
+  author: 'neutral',
+  administrator: 'amber',
+  auditor: 'red',
+};
+/** Status as quiet colored text per the canvas - chips stay for roles. */
+const STATUS_TEXT = {
+  invited: 'text-amber',
+  active: 'text-teal',
+  deactivated: 'text-secondary',
+} as const;
 
 type Tab = 'staff' | 'patients';
 
@@ -106,13 +118,9 @@ export function AdminUsersPage(): ReactElement {
       </div>
 
       {tab === 'staff' ? (
-        <UserList
+        <UserTable
           rows={staffRows}
-          detail={(row) =>
-            (row as StaffRow).roles
-              .map((role) => intl.formatMessage({ id: `admin.role.${role}` }))
-              .join(' + ')
-          }
+          kind="staff"
           onReset={(row) =>
             setResetTarget({
               realm: 'staff',
@@ -123,9 +131,9 @@ export function AdminUsersPage(): ReactElement {
           onEditRoles={(row) => setRolesTarget(row)}
         />
       ) : (
-        <UserList
+        <UserTable
           rows={patientRows}
-          detail={(row) => (row as PatientRow).locale.toUpperCase()}
+          kind="patients"
           onReset={(row) =>
             setResetTarget({
               realm: 'patient',
@@ -135,6 +143,17 @@ export function AdminUsersPage(): ReactElement {
           }
         />
       )}
+
+      {/* the canvas's standing explainer: what a reset does - and does not */}
+      <div
+        role="note"
+        className="rounded-card border border-amber-chip-border bg-amber-tint px-4 py-3 text-sm text-ink"
+      >
+        <FormattedMessage
+          id="admin.resetExplainer"
+          values={{ b: (chunks) => <strong>{chunks}</strong> }}
+        />
+      </div>
 
       {creating ? <CreateStaffDialog onClose={() => setCreating(false)} /> : null}
       {resetTarget ? (
@@ -147,14 +166,17 @@ export function AdminUsersPage(): ReactElement {
   );
 }
 
-function UserList({
+/** The canvas's A1 table: name, email, role chips, quiet status text and
+ * text-link actions per row - a deactivated row greys out. X11(b) holds:
+ * no free-form Edit, the actions are roles, reset and lifecycle. */
+function UserTable({
   rows,
-  detail,
+  kind,
   onReset,
   onEditRoles,
 }: {
   rows: (StaffRow | PatientRow)[];
-  detail: (row: StaffRow | PatientRow) => string;
+  kind: 'staff' | 'patients';
   onReset: (row: StaffRow | PatientRow) => void;
   onEditRoles?: (row: StaffRow) => void;
 }): ReactElement {
@@ -176,65 +198,120 @@ function UserList({
       </EmptyState>
     );
   }
+  const th = 'px-4 py-2.5 text-left text-[11px] font-medium uppercase tracking-wide text-muted';
+  const linkButton =
+    'text-sm font-medium text-teal underline underline-offset-4 hover:text-teal-hover';
   return (
-    <div className="rounded-card border border-black/5 bg-surface px-5 shadow-resting">
-      {rows.map((row) => (
-        <ListRow
-          key={row.id}
-          leading={<Avatar initials={`${row.given_name[0] ?? ''}${row.family_name[0] ?? ''}`} />}
-          trailing={
-            <div className="flex items-center gap-2">
-              <StatusChip tone={STATUS_TONE[row.status]}>
-                {intl.formatMessage({ id: `admin.status.${row.status}` })}
-              </StatusChip>
-              {onEditRoles && 'roles' in row && row.id !== session.account?.id ? (
-                // never self-targeting: your own roles are another
-                // administrator's to change
-                <Button size="sm" variant="quiet" onPress={() => onEditRoles(row)}>
-                  <FormattedMessage id="admin.editRoles" />
-                </Button>
-              ) : null}
-              <Button size="sm" variant="quiet" onPress={() => onReset(row)}>
-                <FormattedMessage id="admin.resetLogin" />
-              </Button>
-              {row.status === 'deactivated' ? (
-                <Button
-                  size="sm"
-                  variant="quiet"
-                  onPress={() => lifecycle.mutate({ row, verb: 'reactivate' })}
-                >
-                  <FormattedMessage id="admin.reactivate" />
-                </Button>
+    <div className="overflow-x-auto rounded-card border border-black/5 bg-surface shadow-resting">
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-hairline">
+            <th scope="col" className={th}>
+              <FormattedMessage id="admin.col.name" />
+            </th>
+            <th scope="col" className={`${th} hidden md:table-cell`}>
+              <FormattedMessage id="admin.col.email" />
+            </th>
+            <th scope="col" className={th}>
+              {kind === 'staff' ? (
+                <FormattedMessage id="admin.col.role" />
               ) : (
-                <Button
-                  size="sm"
-                  variant="quiet"
-                  onPress={() => {
-                    if (
-                      window.confirm(
-                        intl.formatMessage(
-                          { id: 'admin.confirmDeactivate' },
-                          { name: `${row.given_name} ${row.family_name}` },
-                        ),
-                      )
-                    ) {
-                      lifecycle.mutate({ row, verb: 'deactivate' });
-                    }
-                  }}
-                >
-                  <FormattedMessage id="admin.deactivate" />
-                </Button>
+                <FormattedMessage id="admin.col.language" />
               )}
-            </div>
-          }
-        >
-          <p className="text-sm font-medium text-ink">
-            {row.given_name} {row.family_name}
-            <span className="ml-2 text-xs font-normal text-muted">{detail(row)}</span>
-          </p>
-          <p className="text-xs text-secondary">{row.email}</p>
-        </ListRow>
-      ))}
+            </th>
+            <th scope="col" className={th}>
+              <FormattedMessage id="admin.col.status" />
+            </th>
+            <th scope="col" className={th}>
+              <span className="sr-only">
+                <FormattedMessage id="admin.col.actions" />
+              </span>
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-hairline">
+          {rows.map((row) => {
+            const deactivated = row.status === 'deactivated';
+            return (
+              <tr key={row.id}>
+                <td className="px-4 py-3">
+                  <span className="flex items-center gap-2.5">
+                    <Avatar initials={`${row.given_name[0] ?? ''}${row.family_name[0] ?? ''}`} />
+                    <span
+                      className={`whitespace-nowrap text-sm font-medium ${deactivated ? 'text-secondary' : 'text-ink'}`}
+                    >
+                      {row.given_name} {row.family_name}
+                    </span>
+                  </span>
+                </td>
+                <td className="hidden px-4 py-3 text-sm text-secondary md:table-cell">
+                  {row.email}
+                </td>
+                <td className="px-4 py-3">
+                  {'roles' in row ? (
+                    <span className="flex flex-wrap gap-1">
+                      {row.roles.map((role) => (
+                        <StatusChip key={role} tone={ROLE_TONE[role]}>
+                          {intl.formatMessage({ id: `admin.role.${role}` })}
+                        </StatusChip>
+                      ))}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-secondary">{row.locale.toUpperCase()}</span>
+                  )}
+                </td>
+                <td className={`px-4 py-3 text-sm ${STATUS_TEXT[row.status]}`}>
+                  {intl.formatMessage({ id: `admin.status.${row.status}` })}
+                </td>
+                <td className="px-4 py-3">
+                  {/* long FI/SV action labels wrap as a group, never
+                      mid-label, so the table stays inside the card */}
+                  <span className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 [&>button]:whitespace-nowrap">
+                    {onEditRoles && 'roles' in row && row.id !== session.account?.id ? (
+                      // never self-targeting: your own roles are another
+                      // administrator's to change
+                      <button type="button" className={linkButton} onClick={() => onEditRoles(row)}>
+                        <FormattedMessage id="admin.editRoles" />
+                      </button>
+                    ) : null}
+                    <button type="button" className={linkButton} onClick={() => onReset(row)}>
+                      <FormattedMessage id="admin.resetLogin" />
+                    </button>
+                    {deactivated ? (
+                      <button
+                        type="button"
+                        className={linkButton}
+                        onClick={() => lifecycle.mutate({ row, verb: 'reactivate' })}
+                      >
+                        <FormattedMessage id="admin.reactivate" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className={linkButton}
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              intl.formatMessage(
+                                { id: 'admin.confirmDeactivate' },
+                                { name: `${row.given_name} ${row.family_name}` },
+                              ),
+                            )
+                          ) {
+                            lifecycle.mutate({ row, verb: 'deactivate' });
+                          }
+                        }}
+                      >
+                        <FormattedMessage id="admin.deactivate" />
+                      </button>
+                    )}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
