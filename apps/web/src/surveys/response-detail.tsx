@@ -9,7 +9,7 @@ import {
   type Question,
   type SurveyDefinition,
 } from '@mio/survey-schema';
-import { ErrorState, SeverityChip, Skeleton, StatusChip } from '@mio/ui';
+import { BodyMapView, ErrorState, SeverityChip, Skeleton, StatusChip } from '@mio/ui';
 
 /**
  * C7: one response, every answer against THIS program's rules. The
@@ -175,6 +175,17 @@ export function ResponseDetailPage(): ReactElement {
                   <span className="block text-sm font-medium text-ink">
                     {text?.label || question.id}
                   </span>
+                  {question.type === 'body_map' && Array.isArray(response.answers[question.id]) ? (
+                    <span className="mt-2 block">
+                      <BodyMapView
+                        selected={response.answers[question.id] as string[]}
+                        viewLabels={{
+                          front: intl.formatMessage({ id: 'bodymap.front' }),
+                          back: intl.formatMessage({ id: 'bodymap.back' }),
+                        }}
+                      />
+                    </span>
+                  ) : null}
                   <span className="block text-sm text-secondary">
                     {renderAnswer(intl, question, text, response.answers[question.id])}
                   </span>

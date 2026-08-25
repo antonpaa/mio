@@ -6,6 +6,7 @@
 export { AppShell, CountBadge, type AppShellProps, type NavItem } from './components/app-shell.js';
 export { Button, type ButtonProps, type ButtonVariant } from './components/button.js';
 export { BodyMap, type BodyMapProps } from './components/body-map.js';
+export { BodyMapView } from './components/body-map-view.js';
 export { Card, CardHeader } from './components/card.js';
 export { ConfirmDialog, type ConfirmDialogProps } from './components/confirm-dialog.js';
 export { useModalFocus } from './components/use-modal-focus.js';
