@@ -98,10 +98,16 @@ system-actor `staff_account.bootstrap` change event.
 
 ## 4. Run the apps
 
-Three terminals from the repo root (API and worker share the same
-environment; `MIO_STORAGE_DIR` must be the **same absolute path** for
-both, or the worker will scan a different attachment store than the
-API writes to):
+Three terminals from the repo root, **each left open and running** -
+these are long-lived processes, not steps: you finish this section
+with three windows running side by side (plus Docker's two
+containers). Skipping one is the classic first-run miss: without the
+web terminal the browser gets connection-refused on :5173, and
+without the API terminal the page loads but nothing answers on
+:3000. API and worker share the same environment, and
+`MIO_STORAGE_DIR` must be the **same absolute path** for both, or the
+worker will scan a different attachment store than the API writes
+to:
 
 ```bash
 # terminal 1 — API on :3000

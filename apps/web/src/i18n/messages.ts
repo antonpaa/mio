@@ -7,7 +7,7 @@ import type { Locale } from '@mio/i18n';
 
 const en = {
   'app.slogan': 'Care, together.',
-  'login.title': 'Welcome back',
+  'login.title': 'Welcome',
   'login.subtitle': 'Sign in to your care space.',
   'login.email': 'Email',
   'login.password': 'Password',
@@ -883,7 +883,7 @@ export type MessageId = keyof typeof en;
 
 const fi: Record<MessageId, string> = {
   'app.slogan': 'Hoitoa yhdessä.',
-  'login.title': 'Tervetuloa takaisin',
+  'login.title': 'Tervetuloa',
   'login.subtitle': 'Kirjaudu hoitotilaasi.',
   'login.email': 'Sähköposti',
   'login.password': 'Salasana',
@@ -1760,7 +1760,7 @@ const fi: Record<MessageId, string> = {
 
 const sv: Record<MessageId, string> = {
   'app.slogan': 'Vård, tillsammans.',
-  'login.title': 'Välkommen tillbaka',
+  'login.title': 'Välkommen',
   'login.subtitle': 'Logga in i ditt vårdrum.',
   'login.email': 'E-post',
   'login.password': 'Lösenord',
