@@ -53,7 +53,7 @@ export class PatientAttachmentsController {
     @Res() reply: FastifyReply,
   ) {
     const result = await this.attachments.fetch(
-      { userId: patient.userId, role: 'patient', realm: 'patient' },
+      { userId: patient.userId, roles: ['patient'], realm: 'patient' },
       id,
     );
     if (result.kind === 'bytes') return sendBytes(reply, result);
@@ -82,7 +82,7 @@ export class StaffAttachmentsController {
     @Res() reply: FastifyReply,
   ) {
     const result = await this.attachments.fetch(
-      { userId: staff.userId, role: staff.role, realm: 'staff' },
+      { userId: staff.userId, roles: staff.roles, realm: 'staff' },
       id,
     );
     if (result.kind === 'bytes') return sendBytes(reply, result);

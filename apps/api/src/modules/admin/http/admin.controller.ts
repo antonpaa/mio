@@ -25,7 +25,7 @@ export class AdminController {
       email?: string;
       givenName?: string;
       familyName?: string;
-      role?: string;
+      roles?: string[];
       title?: string;
       locale?: string;
     },
@@ -41,6 +41,16 @@ export class AdminController {
     body: { email?: string; givenName?: string; familyName?: string; locale?: string },
   ) {
     return this.admin.createPatient(staff, body);
+  }
+
+  @Post('users/staff/:id/roles')
+  @HttpCode(200)
+  updateStaffRoles(
+    @CurrentStaff() staff: StaffPrincipal,
+    @Param('id') id: string,
+    @Body() body: { roles?: string[] },
+  ) {
+    return this.admin.updateStaffRoles(staff, id, body.roles);
   }
 
   @Post('users/:realm/:id/deactivate')

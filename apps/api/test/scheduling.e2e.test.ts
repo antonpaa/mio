@@ -26,7 +26,7 @@ let app: NestFastifyApplication;
 let mailer: CapturingMailer;
 
 const world = generateWorld('demo', 42);
-const lead = world.staff.find((s) => s.role === 'treatment_lead')!;
+const lead = world.staff.find((s) => world.teams.some((t) => t.leadIds.includes(s.id)))!;
 
 // a treatment whose team the lead can be added to trivially: use one the
 // lead already leads via seeding? seeding put team leads individually; take

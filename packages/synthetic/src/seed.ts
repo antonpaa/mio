@@ -135,19 +135,24 @@ export async function seedWorld(
     for (const staff of world.staff) {
       await pool.query(
         `INSERT INTO identity.staff_account
-           (id, email, given_name, family_name, locale, role, title, status, password_hash, password_set_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, 'active', $8, now())`,
+           (id, email, given_name, family_name, locale, title, status, password_hash, password_set_at)
+         VALUES ($1, $2, $3, $4, $5, $6, 'active', $7, now())`,
         [
           staff.id,
           staff.email,
           staff.givenName,
           staff.familyName,
           staff.locale,
-          staff.role,
           staff.title,
           passwordHash,
         ],
       );
+      for (const role of staff.roles) {
+        await pool.query(
+          `INSERT INTO identity.staff_account_role (account_id, role) VALUES ($1, $2)`,
+          [staff.id, role],
+        );
+      }
     }
     log(`staff: ${world.staff.length}`);
 
@@ -188,7 +193,7 @@ export async function seedWorld(
     // Templates from the designed catalog: one published v1 each; the first
     // template also carries a draft v2 so the catalog shows the state.
     const versionByKey = new Map<string, string>();
-    const someLead = world.staff.find((s) => s.role === 'treatment_lead') ?? world.staff[0];
+    const someLead = world.staff.find((s) => s.roles.includes('author')) ?? world.staff[0];
     for (const [index, template] of PROGRAM_TEMPLATES.entries()) {
       const templateId = syntheticId('tmpl', index);
       const versionId = syntheticId('tmplv', index);

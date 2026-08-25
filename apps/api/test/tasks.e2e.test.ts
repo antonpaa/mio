@@ -26,17 +26,20 @@ let app: NestFastifyApplication;
 let mailer: CapturingMailer;
 
 const world = generateWorld('demo', 42);
-const lead = world.staff.find((s) => s.role === 'treatment_lead')!;
+const lead = world.staff.find((s) => world.teams.some((t) => t.leadIds.includes(s.id)))!;
 const treatment = world.treatments.find((t) => {
   const team = world.teams.find((team) => team.id === t.teamId);
   return t.state === 'active' && team?.leadIds.includes(lead.id);
 })!;
 const team = world.teams.find((t) => t.id === treatment.teamId)!;
-// a plain member of the same team whose ACCOUNT role is member too - the
-// 'own' scope on task.complete applies to the role, not the team position
+// a plain clinician on the same team who does NOT hold the lead position
+// there - task.complete is own OR team_lead, so for them only 'own' applies
 const member = world.staff.find(
   (s) =>
-    s.role === 'treatment_member' && team.memberIds.includes(s.id) && !team.leadIds.includes(s.id),
+    s.roles.includes('clinician') &&
+    !s.roles.includes('administrator') &&
+    team.memberIds.includes(s.id) &&
+    !team.leadIds.includes(s.id),
 )!;
 // an active staffer caring for this patient in NO treatment at all, so the
 // RLS backstop (patient-level) and Cedar (treatment-level) both exclude them
@@ -48,7 +51,10 @@ const caringStaff = new Set(
       return tm ? [...tm.memberIds, ...tm.leadIds] : [];
     }),
 );
-const outsider = world.staff.find((s) => s.role !== 'administrator' && !caringStaff.has(s.id))!;
+const outsider = world.staff.find(
+  (s) =>
+    s.roles.includes('clinician') && !s.roles.includes('administrator') && !caringStaff.has(s.id),
+)!;
 
 let leadCookie: string;
 let memberCookie: string;

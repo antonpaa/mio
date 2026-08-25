@@ -49,9 +49,9 @@ export function generateArtifacts(): Artifact[] {
       metadata[id] = { audit: action.audit, patientScoped: resource.patientScoped };
       actionGroups[id] = [];
       for (const role of ROLES) {
-        const scope = action.grants[role];
-        if (scope !== 'deny') {
-          (capabilities[role] as string[]).push(id);
+        const scopes = action.grants[role].filter((scope) => scope !== 'deny');
+        if (scopes.length > 0) (capabilities[role] as string[]).push(id);
+        for (const scope of scopes) {
           (actionGroups[id] as string[]).push(groupId(role, scope));
           populatedGroups.add(groupId(role, scope));
         }
@@ -119,8 +119,10 @@ export function generateArtifacts(): Artifact[] {
       md.push(
         `| \`${actionId(resource.id, action.id)}\` | ${action.audit} | ` +
           ROLES.map((role) => {
-            const scope = action.grants[role];
-            return scope === 'deny' ? '—' : `**${scope.replace(/_/g, ' ')}**`;
+            const scopes = action.grants[role].filter((scope) => scope !== 'deny');
+            return scopes.length === 0
+              ? '—'
+              : scopes.map((scope) => `**${scope.replace(/_/g, ' ')}**`).join(' + ');
           }).join(' | ') +
           ' |',
       );

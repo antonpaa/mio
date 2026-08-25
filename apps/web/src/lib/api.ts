@@ -12,7 +12,8 @@ export interface SessionAccount {
   givenName: string;
   familyName: string;
   locale: 'en' | 'fi' | 'sv';
-  role?: string;
+  /** staff realm only: every role the account holds (the grants union) */
+  roles?: string[];
 }
 
 export type LoginOutcome =

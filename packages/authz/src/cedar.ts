@@ -45,9 +45,11 @@ export function attrsForResource(
   if (!resource) throw new Error(`Unknown resource ${resourceId}`);
   const needed = new Set<string>();
   for (const action of resource.actions) {
-    for (const scope of Object.values(action.grants)) {
-      if (scope !== 'deny' && scope !== 'any') {
-        needed.add(SCOPE_ATTRS[scope]);
+    for (const scopes of Object.values(action.grants)) {
+      for (const scope of scopes) {
+        if (scope !== 'deny' && scope !== 'any') {
+          needed.add(SCOPE_ATTRS[scope]);
+        }
       }
     }
   }
@@ -96,10 +98,11 @@ export function generateSchema(matrix: CapabilityMatrix): string {
 
   for (const resource of matrix.resources) {
     for (const action of resource.actions) {
-      const groups = ROLES.flatMap((role) => {
-        const scope = action.grants[role];
-        return scope === 'deny' ? [] : [`Mio::Action::"${groupId(role, scope)}"`];
-      });
+      const groups = ROLES.flatMap((role) =>
+        action.grants[role]
+          .filter((scope) => scope !== 'deny')
+          .map((scope) => `Mio::Action::"${groupId(role, scope)}"`),
+      );
       const memberOf = groups.length > 0 ? ` in [${groups.join(', ')}]` : '';
       lines.push(
         `  action "${actionId(resource.id, action.id)}"${memberOf} appliesTo {`,

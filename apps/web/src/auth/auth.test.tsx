@@ -154,7 +154,7 @@ describe('signed-in shells', () => {
         givenName: 'Elina',
         familyName: 'Koskinen',
         locale: 'en',
-        role: 'treatment_lead',
+        roles: ['clinician', 'author'],
       },
     });
     const { element } = appAt('/');
@@ -173,7 +173,7 @@ describe('signed-in shells', () => {
         givenName: 'Hanna',
         familyName: 'Korpela',
         locale: 'en',
-        role: 'administrator',
+        roles: ['administrator'],
       },
     });
     const { element } = appAt('/');

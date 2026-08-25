@@ -64,7 +64,7 @@ export class ReportingService {
 
   async overview(staff: StaffPrincipal): Promise<ReportOverview> {
     const decision = authorize({
-      principal: { userId: staff.userId, role: staff.role },
+      principal: { userId: staff.userId, roles: staff.roles },
       action: 'view',
       resource: { type: 'report', id: 'overview', teamUserIds: [staff.userId] },
     });

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as cedar from '@cedar-policy/cedar-wasm/nodejs';
-import { ROLE_REALM, type Realm, type Role } from './roles.js';
+import { realmOf, ROLES, type Realm, type Role } from './roles.js';
 import {
   ACTION_GROUPS,
   ACTION_METADATA,
@@ -49,7 +49,9 @@ export interface ResourceSlice {
 }
 
 export interface AuthorizeInput {
-  principal: { userId: string; role: Role };
+  /** All roles the account holds - the decision is their UNION (a permit
+   * under any held role permits). Realms never mix in one set. */
+  principal: { userId: string; roles: readonly Role[] };
   /** Matrix action id, e.g. 'view' - combined with resource.type. */
   action: string;
   resource: ResourceSlice;
@@ -116,13 +118,17 @@ export function authorize(input: AuthorizeInput): AuthorizeResult {
   ]);
 
   const groups = ACTION_GROUPS[actionId] ?? [];
+  const roleParents = input.principal.roles.map((role) => ({ type: 'Mio::Role', id: role }));
   const entities = [
-    { uid: { type: 'Mio::Role', id: input.principal.role }, attrs: {}, parents: [] },
+    ...input.principal.roles.map((role) => ({
+      uid: { type: 'Mio::Role', id: role },
+      attrs: {},
+      parents: [],
+    })),
     ...[...allUserIds].map((id) => ({
       uid: { type: 'Mio::User', id },
       attrs: {},
-      parents:
-        id === input.principal.userId ? [{ type: 'Mio::Role', id: input.principal.role }] : [],
+      parents: id === input.principal.userId ? roleParents : [],
     })),
     { uid: { type: resourceType, id: input.resource.id }, attrs, parents: [] },
     // Action-group membership as entity parents: with these in the slice
@@ -159,7 +165,7 @@ export function authorize(input: AuthorizeInput): AuthorizeResult {
     audit: metadata.audit,
     accessEvent: {
       actorUserId: input.principal.userId,
-      actorRealm: ROLE_REALM[input.principal.role],
+      actorRealm: realmOf(input.principal.roles),
       action: actionId,
       resourceType: input.resource.type,
       resourceId: input.resource.id,
@@ -179,9 +185,7 @@ export function authorize(input: AuthorizeInput): AuthorizeResult {
  * it, and exactly those findings are excused via EMPTY_GROUPS. Anything
  * else is a real error.
  */
-const POLICY_ORDER: readonly string[] = (
-  ['patient', 'treatment_member', 'treatment_lead', 'administrator'] as const
-).flatMap((role) =>
+const POLICY_ORDER: readonly string[] = ROLES.flatMap((role) =>
   (['self', 'own', 'care_relationship', 'team_member', 'team_lead', 'any'] as const).map(
     (scope) => `grp:${role}:${scope}`,
   ),

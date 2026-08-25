@@ -33,7 +33,7 @@ let app: NestFastifyApplication;
 let mailer: CapturingMailer;
 
 const world = generateWorld('demo', 42);
-const admin = world.staff.find((s) => s.role === 'administrator')!;
+const admin = world.staff.find((s) => s.roles.length === 1 && s.roles[0] === 'administrator')!;
 const treatment = world.treatments.find((t) => {
   const team = world.teams.find((candidate) => candidate.id === t.teamId);
   return t.state === 'active' && (team?.leadIds.length ?? 0) > 0;

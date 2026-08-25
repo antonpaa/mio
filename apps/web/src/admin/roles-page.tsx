@@ -11,13 +11,7 @@ import { rolesQuery } from './api.js';
  * grouped by resource, localized through the shared audit vocabulary.
  */
 
-const ROLE_ORDER = [
-  'patient',
-  'treatment_member',
-  'treatment_lead',
-  'administrator',
-  'auditor',
-] as const;
+const ROLE_ORDER = ['patient', 'clinician', 'author', 'administrator', 'auditor'] as const;
 
 export function AdminRolesPage(): ReactElement {
   const intl = useIntl();

@@ -26,7 +26,7 @@ const ADMIN = {
     givenName: 'Hanna',
     familyName: 'Korpela',
     locale: 'en' as const,
-    role: 'administrator',
+    roles: ['administrator'],
   },
 };
 
@@ -37,7 +37,7 @@ const USERS = {
       email: 'elina.koskinen@clinic.example',
       given_name: 'Elina',
       family_name: 'Koskinen',
-      role: 'treatment_lead',
+      roles: ['clinician', 'author'],
       title: 'Oncologist',
       status: 'active',
     },
@@ -46,7 +46,7 @@ const USERS = {
       email: 'jari.vuori@clinic.example',
       given_name: 'Jari',
       family_name: 'Vuori',
-      role: 'treatment_member',
+      roles: ['clinician'],
       title: null,
       status: 'deactivated',
     },
@@ -67,15 +67,17 @@ const TEAMS = [
   {
     id: 't1',
     name: 'Oncology ward 4',
-    members: [{ id: 's1', given_name: 'Elina', family_name: 'Koskinen', role: 'treatment_lead' }],
+    members: [
+      { id: 's1', given_name: 'Elina', family_name: 'Koskinen', roles: ['clinician', 'author'] },
+    ],
   },
 ];
 
 const ROLES = {
   roles: {
     patient: ['survey_response.submit'],
-    treatment_member: ['patient_clinical_profile.view'],
-    treatment_lead: ['patient_clinical_profile.view', 'survey_template.create'],
+    clinician: ['patient_clinical_profile.view'],
+    author: ['survey_template.create'],
     administrator: ['staff_account.create', 'team.create'],
   },
 };
@@ -281,7 +283,7 @@ describe('A3 audit view (P2: auditor)', () => {
         givenName: 'Aida',
         familyName: 'Tarkka',
         locale: 'en' as const,
-        role: 'auditor',
+        roles: ['auditor'],
       },
     });
     render(appAt('/audit'));
@@ -302,7 +304,7 @@ describe('A3 filters and export', () => {
         givenName: 'Aida',
         familyName: 'Tarkka',
         locale: 'en' as const,
-        role: 'auditor',
+        roles: ['auditor'],
       },
     });
     render(appAt('/audit'));

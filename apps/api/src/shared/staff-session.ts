@@ -12,10 +12,12 @@ import type { AuthService } from '../modules/identity/index.js';
 import { readSessionCookie } from '../modules/identity/http/cookies.js';
 import { Inject } from '@nestjs/common';
 
-/** The staff principal attached to a request by StaffSessionGuard. */
+/** The staff principal attached to a request by StaffSessionGuard.
+ * An account HOLDS roles (plural - the grants union); an account whose
+ * role set is somehow empty never gets past the guard. */
 export interface StaffPrincipal {
   userId: string;
-  role: Role;
+  roles: readonly Role[];
   givenName: string;
   familyName: string;
 }
@@ -32,9 +34,11 @@ export class StaffSessionGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<RequestWithPrincipal>();
     const state = await this.staffAuth.validateSession(readSessionCookie(request, 'staff'));
     if (state.status !== 'active') throw new UnauthorizedException({ status: 'none' });
+    const roles = (state.account.roles ?? []) as Role[];
+    if (roles.length === 0) throw new UnauthorizedException({ status: 'none' });
     request.staffPrincipal = {
       userId: state.account.id,
-      role: (state.account.role ?? 'treatment_member') as Role,
+      roles,
       givenName: state.account.given_name,
       familyName: state.account.family_name,
     };

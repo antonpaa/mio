@@ -54,7 +54,7 @@ export class TreatmentsService {
     resource: ResourceSlice,
   ): Promise<'allow' | 'deny'> {
     const decision = authorize({
-      principal: { userId: staff.userId, role: staff.role },
+      principal: { userId: staff.userId, roles: staff.roles },
       action,
       resource,
     });
@@ -106,7 +106,7 @@ export class TreatmentsService {
     return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
       // Catalogue content: audit 'never' per the matrix; Cedar still gates.
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'view',
         resource: { type: 'treatment_template', id: 'catalog' },
       });
@@ -297,7 +297,7 @@ export class TreatmentsService {
         const found = await this.treatmentSlice(client, treatmentId);
         if (!found) return 'missing';
         const decision = authorize({
-          principal: { userId: staff.userId, role: staff.role },
+          principal: { userId: staff.userId, roles: staff.roles },
           action: 'view',
           resource: found.slice,
         });
@@ -381,7 +381,7 @@ export class TreatmentsService {
         const found = await this.treatmentSlice(client, treatmentId);
         if (!found) return 'missing';
         const decision = authorize({
-          principal: { userId: staff.userId, role: staff.role },
+          principal: { userId: staff.userId, roles: staff.roles },
           action: 'change_lifecycle_state',
           resource: found.slice,
         });
@@ -440,7 +440,7 @@ export class TreatmentsService {
         const found = await this.treatmentSlice(client, treatmentId);
         if (!found) return 'missing';
         const decision = authorize({
-          principal: { userId: staff.userId, role: staff.role },
+          principal: { userId: staff.userId, roles: staff.roles },
           action: 'manage_team',
           resource: found.slice,
         });
@@ -490,7 +490,7 @@ export class TreatmentsService {
         [patientId],
       );
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'view',
         resource: {
           type: 'treatment',

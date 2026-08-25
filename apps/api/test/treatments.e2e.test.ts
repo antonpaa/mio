@@ -82,8 +82,15 @@ async function signIn(realm: 'patient' | 'staff', email: string): Promise<string
   return (value as string).split(';')[0] as string;
 }
 
-const lead = world.staff.find((s) => s.role === 'treatment_lead')!;
-const member = world.staff.find((s) => s.role === 'treatment_member')!;
+const lead = world.staff.find(
+  (s) => s.roles.includes('author') && world.teams.some((t) => t.leadIds.includes(s.id)),
+)!;
+const member = world.staff.find(
+  (s) =>
+    s.roles.includes('clinician') &&
+    !s.roles.includes('author') &&
+    !s.roles.includes('administrator'),
+)!;
 let leadCookie: string;
 let memberCookie: string;
 
@@ -305,7 +312,9 @@ describe('instantiate -> team -> lifecycle (T1)', () => {
 
     const outsider = world.staff.find(
       (s) =>
-        s.role === 'treatment_member' &&
+        s.roles.includes('clinician') &&
+        !s.roles.includes('administrator') &&
+        s.id !== lead.id && // the instantiate test above gave the lead a relationship
         !(world.careRelationships.get(patientId) ?? []).includes(s.id) &&
         !world.teams[0]!.memberIds.includes(s.id),
     );

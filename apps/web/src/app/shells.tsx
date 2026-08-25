@@ -75,11 +75,19 @@ const CLINICIAN_ITEMS: ShellItem[] = [
   { labelId: 'nav.patients', href: '/patients', capability: 'patient_clinical_profile.view' },
   { labelId: 'nav.messages', href: '/messages', capability: 'message_thread.view' },
   { labelId: 'nav.surveys', href: '/surveys', capability: 'survey_template.view' },
-  { labelId: 'nav.treatments', href: '/treatments', capability: 'treatment.view' },
+  // the staff /treatments page is the TEMPLATE catalog, so the item
+  // follows the capability of what it opens (authors hold it too)
+  { labelId: 'nav.treatments', href: '/treatments', capability: 'treatment_template.view' },
   { labelId: 'nav.tasks', href: '/tasks', capability: 'task.view' },
   // A4 lives here, not in admin (P8 decided 2026-08-24): the metrics
   // are clinical aggregates, so the nav follows report.view
   { labelId: 'nav.reporting', href: '/reporting', capability: 'report.view' },
+];
+
+/** A standalone author's surface is the two catalogs. */
+const AUTHOR_ITEMS: ShellItem[] = [
+  { labelId: 'nav.surveys', href: '/', capability: 'survey_template.view' },
+  { labelId: 'nav.treatments', href: '/treatments', capability: 'treatment_template.view' },
 ];
 
 /** P2: the auditor's whole surface is the audit log. */
@@ -92,11 +100,51 @@ const ADMIN_ITEMS: ShellItem[] = [
   { labelId: 'nav.audit', href: '/audit', capability: 'audit_log.view_full' },
 ];
 
-function shellFor(role: Role): { variant: 'patient' | 'clinician' | 'admin'; items: ShellItem[] } {
-  if (role === 'patient') return { variant: 'patient', items: PATIENT_ITEMS };
-  if (role === 'administrator') return { variant: 'admin', items: ADMIN_ITEMS };
-  if (role === 'auditor') return { variant: 'admin', items: AUDITOR_ITEMS };
-  return { variant: 'clinician', items: CLINICIAN_ITEMS };
+/** The admin areas as APPENDED entries for a dual-capacity account whose
+ * home is the clinician shell - users cannot sit on '/' there. */
+const ADMIN_APPENDED_ITEMS: ShellItem[] = [
+  { labelId: 'nav.users', href: '/users', capability: 'staff_account.create' },
+  { labelId: 'nav.teams', href: '/teams', capability: 'team.create' },
+  { labelId: 'nav.roles', href: '/roles' },
+  { labelId: 'nav.audit', href: '/audit', capability: 'audit_log.view_full' },
+];
+
+/** The roles a session holds: ['patient'], or the staff account's set. */
+export function sessionRoles(session: {
+  realm: 'patient' | 'staff' | null;
+  account: { roles?: string[] } | null;
+}): readonly Role[] {
+  if (session.realm === 'patient') return ['patient'];
+  return (session.account?.roles ?? []) as Role[];
+}
+
+/** Capability UNION across held roles - exactly the engine's semantics. */
+export function capabilityUnion(roles: readonly Role[]): Set<string> {
+  return new Set(roles.flatMap((role) => ROLE_CAPABILITIES[role] ?? []));
+}
+
+/**
+ * Shell composition for a role SET (2026-08-25 restructure). A clinician
+ * keeps the clinical shell; holding administrator besides appends the
+ * admin areas to it. Auditor is exclusive by rule; a standalone author
+ * gets the catalogs; a pure administrator keeps the admin shell.
+ */
+function shellFor(roles: readonly Role[]): {
+  variant: 'patient' | 'clinician' | 'admin';
+  items: ShellItem[];
+} {
+  if (roles.includes('patient')) return { variant: 'patient', items: PATIENT_ITEMS };
+  if (roles.includes('clinician')) {
+    return {
+      variant: 'clinician',
+      items: roles.includes('administrator')
+        ? [...CLINICIAN_ITEMS, ...ADMIN_APPENDED_ITEMS]
+        : CLINICIAN_ITEMS,
+    };
+  }
+  if (roles.includes('auditor')) return { variant: 'admin', items: AUDITOR_ITEMS };
+  if (roles.includes('administrator')) return { variant: 'admin', items: ADMIN_ITEMS };
+  return { variant: 'clinician', items: AUTHOR_ITEMS };
 }
 
 export function SignedInShell({ children }: { children: ReactNode }): ReactElement {
@@ -105,12 +153,9 @@ export function SignedInShell({ children }: { children: ReactNode }): ReactEleme
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  const role: Role =
-    session.realm === 'patient'
-      ? 'patient'
-      : ((session.account?.role ?? 'treatment_member') as Role);
-  const capabilities = new Set(ROLE_CAPABILITIES[role]);
-  const { variant, items } = shellFor(role);
+  const roles = sessionRoles(session);
+  const capabilities = capabilityUnion(roles);
+  const { variant, items } = shellFor(roles);
 
   // the same audited disclosure the messages page makes - shared cache,
   // one query key per realm (the WP-19 bell precedent)

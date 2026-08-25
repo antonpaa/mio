@@ -27,8 +27,13 @@ let app: NestFastifyApplication;
 let mailer: CapturingMailer;
 
 const world = generateWorld('demo', 42);
-const lead = world.staff.find((s) => s.role === 'treatment_lead')!;
-const member = world.staff.find((s) => s.role === 'treatment_member')!;
+const author = world.staff.find((s) => s.roles.includes('author'))!;
+const member = world.staff.find(
+  (s) =>
+    s.roles.includes('clinician') &&
+    !s.roles.includes('author') &&
+    !s.roles.includes('administrator'),
+)!;
 
 let leadCookie: string;
 let memberCookie: string;
@@ -51,7 +56,7 @@ beforeAll(async () => {
   app = moduleRef.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
   await app.init();
   await app.getHttpAdapter().getInstance().ready();
-  leadCookie = await signIn(lead.email);
+  leadCookie = await signIn(author.email);
   memberCookie = await signIn(member.email);
 });
 

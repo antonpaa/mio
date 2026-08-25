@@ -42,7 +42,7 @@ export class SelfServiceService {
     action: string,
   ): 'allow' | 'deny' {
     return authorize({
-      principal: { userId: patient.userId, role: 'patient' },
+      principal: { userId: patient.userId, roles: ['patient'] },
       action,
       resource: { type: resource, id: patient.userId, subjectUserId: patient.userId },
     }).decision;

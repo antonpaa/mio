@@ -27,7 +27,7 @@ const LEAD = {
     givenName: 'Elina',
     familyName: 'Koskinen',
     locale: 'en' as const,
-    role: 'treatment_lead',
+    roles: ['clinician', 'author'],
   },
 };
 

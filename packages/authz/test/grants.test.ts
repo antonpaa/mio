@@ -7,8 +7,10 @@ import { defaultMatrixPath, loadMatrix, type Scope } from '../src/matrix.js';
 /**
  * The exhaustive suite (ADR-0006): every grant in the capability matrix,
  * asserted against the real Cedar engine with the real generated schema and
- * the real hand-written policies. For each non-deny grant: the satisfying
- * slice allows and the near-miss slice denies. For each deny grant: even a
+ * the real hand-written policies. A grant is a scope SET (usually one, [] is
+ * deny, several is a union). For each scope in a grant: the satisfying slice
+ * allows and the near-miss slice denies - unless a sibling scope in the same
+ * union legitimately covers that near-miss. For a deny grant: even a
  * MAXIMALLY favorable slice - principal as subject, owner, care team, team
  * and lead all at once - is denied, because no policy path may exist at all.
  */
@@ -63,6 +65,25 @@ function scenarios(
   }
 }
 
+/** Whether a slice satisfies a scope FOR THE PRINCIPAL - used to skip a
+ * near-miss that a sibling scope in the same union legitimately covers. */
+function sliceSatisfies(s: ResourceSlice, scope: Exclude<Scope, 'deny'>): boolean {
+  switch (scope) {
+    case 'any':
+      return true;
+    case 'self':
+      return s.subjectUserId === PRINCIPAL;
+    case 'own':
+      return s.ownerUserId === PRINCIPAL;
+    case 'care_relationship':
+      return (s.careTeamUserIds ?? []).includes(PRINCIPAL);
+    case 'team_member':
+      return (s.teamUserIds ?? []).includes(PRINCIPAL);
+    case 'team_lead':
+      return (s.leadUserIds ?? []).includes(PRINCIPAL);
+  }
+}
+
 /** Every relation satisfied at once - the strongest test of a deny grant. */
 function maximallyFavorable(resourceType: string): ResourceSlice {
   return slice(resourceType, {
@@ -79,28 +100,33 @@ let grantsChecked = 0;
 for (const resource of matrix.resources) {
   describe(resource.id, () => {
     for (const action of resource.actions) {
-      it(`${action.id}: all four roles behave per the matrix`, () => {
+      it(`${action.id}: every role behaves per the matrix`, () => {
         const failures: string[] = [];
         for (const role of ROLES) {
           grantsChecked += 1;
-          const scope = action.grants[role];
-          const principal = { userId: PRINCIPAL, role };
+          const scopes = action.grants[role] as readonly Exclude<Scope, 'deny'>[];
+          const principal = { userId: PRINCIPAL, roles: [role] };
           const call = (resourceSlice: ResourceSlice): 'allow' | 'deny' =>
             authorize({ principal, action: action.id, resource: resourceSlice }).decision;
 
-          if (scope === 'deny') {
+          if (scopes.length === 0) {
             if (call(maximallyFavorable(resource.id)) !== 'deny') {
               failures.push(`${role}: deny grant allowed despite being a deny`);
             }
             continue;
           }
-          const { positive, negatives } = scenarios(resource.id, scope);
-          if (call(positive) !== 'allow') {
-            failures.push(`${role}: ${scope} positive scenario denied`);
-          }
-          for (const [index, negative] of negatives.entries()) {
-            if (call(negative) !== 'deny') {
-              failures.push(`${role}: ${scope} near-miss #${index} allowed`);
+          for (const scope of scopes) {
+            const { positive, negatives } = scenarios(resource.id, scope);
+            if (call(positive) !== 'allow') {
+              failures.push(`${role}: ${scope} positive scenario denied`);
+            }
+            for (const [index, negative] of negatives.entries()) {
+              if (scopes.some((sibling) => sliceSatisfies(negative, sibling))) {
+                continue;
+              }
+              if (call(negative) !== 'deny') {
+                failures.push(`${role}: ${scope} near-miss #${index} allowed`);
+              }
             }
           }
         }
@@ -112,7 +138,7 @@ for (const resource of matrix.resources) {
 
 describe('coverage', () => {
   it('walked every grant in the matrix', () => {
-    // 4 roles x every action. If this number surprises you, the matrix
+    // Every role x every action. If this number surprises you, the matrix
     // changed - which is fine; the suite scales with it automatically.
     expect(grantsChecked).toBe(
       ROLES.length * matrix.resources.reduce((n, r) => n + r.actions.length, 0),

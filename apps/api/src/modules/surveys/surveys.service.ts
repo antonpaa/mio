@@ -108,7 +108,7 @@ function isoToday(): string {
  * audit trail record.
  */
 type FillActor =
-  { realm: 'patient'; userId: string } | { realm: 'staff'; userId: string; role: Role };
+  { realm: 'patient'; userId: string } | { realm: 'staff'; userId: string; roles: readonly Role[] };
 
 @Injectable()
 export class SurveysService {
@@ -121,7 +121,7 @@ export class SurveysService {
     patientId: string,
   ): 'allow' | 'deny' {
     return authorize({
-      principal: { userId: patient.userId, role: 'patient' },
+      principal: { userId: patient.userId, roles: ['patient'] },
       action,
       resource: {
         type: 'survey_response',
@@ -751,7 +751,7 @@ export class SurveysService {
     return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
       // Catalogue content: audit 'never' per the matrix; Cedar still gates.
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'view',
         resource: { type: 'survey_template', id: 'catalog' },
       });
@@ -776,7 +776,7 @@ export class SurveysService {
       const context = await this.treatmentContext(client, treatmentId);
       if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'view',
         resource: {
           type: 'survey_assignment',
@@ -848,7 +848,7 @@ export class SurveysService {
       const context = await this.treatmentContext(client, treatmentId);
       if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: input.mode === 'recurring' ? 'schedule_recurring' : 'create',
         resource: {
           type: 'survey_assignment',
@@ -1177,7 +1177,7 @@ export class SurveysService {
         return [];
       }
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'view',
         resource: {
           type: 'survey_assignment',
@@ -1246,7 +1246,7 @@ export class SurveysService {
         throw new NotFoundException({ status: 'unknown_treatment' });
       }
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'enter_on_behalf_of_patient',
         resource: {
           type: 'treatment',
@@ -1389,7 +1389,7 @@ export class SurveysService {
     return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
       const { response, version } = await this.loadResponse(client, responseId);
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'view',
         resource: {
           type: 'survey_response',
@@ -1443,7 +1443,7 @@ export class SurveysService {
       }
       const context = await this.treatmentContext(client, response.treatment_id);
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'enter_on_behalf_of_patient',
         resource: {
           type: 'treatment',
@@ -1490,7 +1490,7 @@ export class SurveysService {
         throw new BadRequestException({ status: 'already_submitted' });
       }
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'submit_on_behalf_of_patient',
         resource: {
           type: 'survey_response',
@@ -1515,7 +1515,7 @@ export class SurveysService {
       ]);
       return this.finishSubmission(
         client,
-        { realm: 'staff', userId: staff.userId, role: staff.role },
+        { realm: 'staff', userId: staff.userId, roles: staff.roles },
         response,
         version,
         answers,
@@ -1529,7 +1529,7 @@ export class SurveysService {
     resourceId: string,
   ): 'allow' | 'deny' {
     return authorize({
-      principal: { userId: staff.userId, role: staff.role },
+      principal: { userId: staff.userId, roles: staff.roles },
       action,
       resource: { type: 'survey_template', id: resourceId },
     }).decision;
@@ -1924,7 +1924,7 @@ export class SurveysService {
     context: { patientId: string; teamUserIds: string[]; leadUserIds: string[] },
   ): 'allow' | 'deny' {
     return authorize({
-      principal: { userId: staff.userId, role: staff.role },
+      principal: { userId: staff.userId, roles: staff.roles },
       action: 'configure_program_rules',
       resource: {
         type: 'treatment',
@@ -2033,7 +2033,7 @@ export class SurveysService {
       const context = await this.treatmentContext(client, response.treatment_id);
       if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'view',
         resource: {
           type: 'survey_response',
@@ -2137,7 +2137,7 @@ export class SurveysService {
       );
       if (care.length === 0) throw new NotFoundException({ status: 'unknown_patient' });
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'view',
         resource: {
           type: 'survey_response',

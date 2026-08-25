@@ -36,6 +36,9 @@ export interface TaskRow {
   patient_family?: string;
   assignee_given?: string | null;
   assignee_family?: string | null;
+  /** whether the CALLER holds the lead position on this task's treatment
+   * (task.complete is own OR team_lead - the button follows the truth) */
+  viewer_is_lead?: boolean;
 }
 
 const TASK_COLUMNS = `
@@ -82,7 +85,10 @@ export class TasksService {
   async worklist(staff: StaffPrincipal): Promise<TaskRow[]> {
     return withUserContext(this.pool, { userId: staff.userId, realm: 'staff' }, async (client) => {
       const { rows } = await client.query<TaskRow>(
-        `SELECT ${TASK_COLUMNS} ${TASK_JOINS}
+        `SELECT ${TASK_COLUMNS},
+                EXISTS (SELECT 1 FROM app.treatment_staff(k.treatment_id) tl
+                         WHERE tl.staff_id = $1 AND tl.is_lead) AS viewer_is_lead
+           ${TASK_JOINS}
           WHERE k.status = 'open'
             AND EXISTS (SELECT 1 FROM app.treatment_staff(k.treatment_id) ts
                          WHERE ts.staff_id = $1)
@@ -94,7 +100,7 @@ export class TasksService {
       // disagree - fail loud, never leak.
       for (const row of rows) {
         const decision = authorize({
-          principal: { userId: staff.userId, role: staff.role },
+          principal: { userId: staff.userId, roles: staff.roles },
           action: 'view',
           resource: {
             type: 'task',
@@ -127,7 +133,7 @@ export class TasksService {
       const context = await this.treatmentContext(client, treatmentId);
       if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'view',
         resource: {
           type: 'task',
@@ -147,10 +153,13 @@ export class TasksService {
       });
       if (decision.decision !== 'allow') throw new ForbiddenException({ status: 'forbidden' });
       const { rows } = await client.query<TaskRow>(
-        `SELECT ${TASK_COLUMNS} ${TASK_JOINS}
+        `SELECT ${TASK_COLUMNS},
+                EXISTS (SELECT 1 FROM app.treatment_staff($1) tl
+                         WHERE tl.staff_id = $2 AND tl.is_lead) AS viewer_is_lead
+           ${TASK_JOINS}
           WHERE k.treatment_id = $1
           ORDER BY k.status, k.due_date NULLS LAST, k.created_at`,
-        [treatmentId],
+        [treatmentId, staff.userId],
       );
       return rows;
     });
@@ -162,7 +171,7 @@ export class TasksService {
       const context = await this.treatmentContext(client, treatmentId);
       if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'view',
         resource: {
           type: 'treatment',
@@ -209,7 +218,7 @@ export class TasksService {
       const context = await this.treatmentContext(client, treatmentId);
       if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'create',
         resource: {
           type: 'task',
@@ -282,7 +291,7 @@ export class TasksService {
       const context = await this.treatmentContext(client, task.treatment_id);
       if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'claim',
         resource: {
           type: 'task',
@@ -331,7 +340,7 @@ export class TasksService {
       const context = await this.treatmentContext(client, task.treatment_id);
       if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'assign_to_other',
         resource: {
           type: 'task',
@@ -378,13 +387,16 @@ export class TasksService {
       const context = await this.treatmentContext(client, task.treatment_id);
       if (!context) throw new NotFoundException({ status: 'unknown_treatment' });
       const decision = authorize({
-        principal: { userId: staff.userId, role: staff.role },
+        principal: { userId: staff.userId, roles: staff.roles },
         action: 'complete',
         resource: {
           type: 'task',
           id: taskId,
           patientId: task.patient_id,
           teamUserIds: context.teamUserIds,
+          // 'complete' is own OR team-lead (matrix union): the assignee
+          // finishes their task; this treatment's leads can close any.
+          leadUserIds: context.leadUserIds,
           ...(task.assignee_id !== null ? { ownerUserId: task.assignee_id } : {}),
         },
       });

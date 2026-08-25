@@ -4,7 +4,7 @@
  * and the Cedar engine ('@mio/authz/engine') are node-only.
  */
 
-export { ROLE_REALM, ROLES, type Realm, type Role } from './roles.js';
+export { realmOf, ROLE_REALM, ROLES, type Realm, type Role } from './roles.js';
 export {
   ACTION_METADATA,
   EMPTY_GROUPS,

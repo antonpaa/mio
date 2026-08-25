@@ -36,9 +36,14 @@ const GOOD_PASSWORD = 'calm-harbour-morning-42';
 
 async function seedAccounts(): Promise<{ staffId: string; patientId: string }> {
   const staff = await owner.query<{ id: string }>(
-    `INSERT INTO identity.staff_account (email, given_name, family_name, role, status)
-     VALUES ($1, 'Elina', 'Koskinen', 'treatment_lead', 'invited') RETURNING id`,
+    `INSERT INTO identity.staff_account (email, given_name, family_name, status)
+     VALUES ($1, 'Elina', 'Koskinen', 'invited') RETURNING id`,
     [STAFF_EMAIL],
+  );
+  await owner.query(
+    `INSERT INTO identity.staff_account_role (account_id, role)
+     VALUES ($1, 'clinician'), ($1, 'author')`,
+    [staff.rows[0]!.id],
   );
   const patient = await owner.query<{ id: string }>(
     `INSERT INTO identity.patient_account (email, given_name, family_name, status)
@@ -143,9 +148,9 @@ describe('login -> otp -> session (staff)', () => {
     const code = mailer.lastCodeFor(STAFF_EMAIL);
     const verify = await inject('POST', '/api/staff/auth/verify', { challengeId, code });
     expect(verify.statusCode).toBe(200);
-    const body = verify.json() as { account: { givenName: string; role: string } };
+    const body = verify.json() as { account: { givenName: string; roles: string[] } };
     expect(body.account.givenName).toBe('Elina');
-    expect(body.account.role).toBe('treatment_lead');
+    expect(body.account.roles).toEqual(['author', 'clinician']);
     cookie = sessionCookieFrom(verify.headers['set-cookie']);
 
     const whoami = await inject('GET', '/api/staff/auth/session', undefined, cookie);

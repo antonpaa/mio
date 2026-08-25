@@ -77,7 +77,7 @@ export class MessagesService {
     team: string[],
   ): Promise<void> {
     const decision = authorize({
-      principal: { userId: staff.userId, role: staff.role },
+      principal: { userId: staff.userId, roles: staff.roles },
       action,
       resource: {
         type: resource,
@@ -105,7 +105,7 @@ export class MessagesService {
     action: 'view' | 'post',
   ): Promise<void> {
     const decision = authorize({
-      principal: { userId: patient.userId, role: 'patient' },
+      principal: { userId: patient.userId, roles: ['patient'] },
       action,
       resource: {
         type: 'message_thread',

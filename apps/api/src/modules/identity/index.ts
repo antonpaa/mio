@@ -7,6 +7,11 @@ export {
 } from './identity.tokens.js';
 export type { AuthService } from './domain/auth.service.js';
 export type { OnboardingService } from './domain/onboarding.service.js';
+export {
+  STAFF_ACCOUNT_ROLES,
+  validateStaffRoles,
+  type StaffAccountRole,
+} from './domain/onboarding.service.js';
 export { CURRENT_TERMS_VERSION } from './domain/terms.js';
 // the admin plane's step-up re-verifies the administrator's own password
 export { verifyPassword } from './domain/passwords.js';

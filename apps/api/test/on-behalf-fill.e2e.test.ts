@@ -44,8 +44,8 @@ const lead = world.staff.find((s) => team.leadIds.includes(s.id))!;
 const patient = world.patients.find((p) => p.id === treatment.patientId)!;
 const outsider = world.staff.find(
   (s) =>
-    s.role !== 'administrator' &&
-    s.role !== 'auditor' &&
+    !s.roles.includes('administrator') &&
+    !s.roles.includes('auditor') &&
     !team.memberIds.includes(s.id) &&
     !team.leadIds.includes(s.id) &&
     !(world.careRelationships.get(patient.id) ?? []).includes(s.id),

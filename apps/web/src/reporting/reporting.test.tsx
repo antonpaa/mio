@@ -26,7 +26,7 @@ const CLINICIAN = {
     givenName: 'Elina',
     familyName: 'Koskinen',
     locale: 'en' as const,
-    role: 'treatment_lead',
+    roles: ['clinician', 'author'],
   },
 };
 
@@ -114,7 +114,7 @@ describe('A4 reporting (P8: clinical side)', () => {
         givenName: 'Hanna',
         familyName: 'Korpela',
         locale: 'en' as const,
-        role: 'administrator',
+        roles: ['administrator'],
       },
     });
     render(appAt('/reporting'));

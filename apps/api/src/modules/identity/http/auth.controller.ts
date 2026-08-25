@@ -67,7 +67,7 @@ abstract class RealmAuthController {
         givenName: result.account.given_name,
         familyName: result.account.family_name,
         locale: result.account.locale,
-        ...(result.account.role !== undefined ? { role: result.account.role } : {}),
+        ...(result.account.roles !== undefined ? { roles: result.account.roles } : {}),
       },
     };
   }
@@ -87,7 +87,7 @@ abstract class RealmAuthController {
         givenName: state.account.given_name,
         familyName: state.account.family_name,
         locale: state.account.locale,
-        ...(state.account.role !== undefined ? { role: state.account.role } : {}),
+        ...(state.account.roles !== undefined ? { roles: state.account.roles } : {}),
       },
     };
   }

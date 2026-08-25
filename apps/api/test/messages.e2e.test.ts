@@ -45,7 +45,10 @@ const team = world.teams.find((candidate) => candidate.id === treatment.teamId)!
 const lead = world.staff.find((s) => team.leadIds.includes(s.id))!;
 const member = world.staff.find(
   (s) =>
-    team.memberIds.includes(s.id) && !team.leadIds.includes(s.id) && s.role === 'treatment_member',
+    team.memberIds.includes(s.id) &&
+    !team.leadIds.includes(s.id) &&
+    s.roles.includes('clinician') &&
+    !s.roles.includes('administrator'),
 )!;
 const patient = world.patients.find((p) => p.id === treatment.patientId)!;
 const outsider = world.staff.find(

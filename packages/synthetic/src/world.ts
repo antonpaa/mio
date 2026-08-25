@@ -18,12 +18,17 @@ export interface SyntheticPatient {
   address: { street: string; postalCode: string; city: string; country: 'FI' | 'SE' };
 }
 
+export type StaffRole = 'clinician' | 'author' | 'administrator' | 'auditor';
+
 export interface SyntheticStaff {
   id: string;
   givenName: string;
   familyName: string;
   email: string;
-  role: 'treatment_member' | 'treatment_lead' | 'administrator' | 'auditor';
+  /** Roles the ACCOUNT holds (union of grants; auditor is exclusive).
+   * Being a treatment lead is a care-team position, not a role - see
+   * SyntheticTeam.leadIds. */
+  roles: StaffRole[];
   title: string;
   locale: Locale;
 }

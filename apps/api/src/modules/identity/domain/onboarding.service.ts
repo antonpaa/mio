@@ -18,14 +18,34 @@ import type { ContentlessMail, Mailer } from '../ports/mailer.js';
  * construction, one instance per realm.
  */
 
+export const STAFF_ACCOUNT_ROLES = ['clinician', 'author', 'administrator', 'auditor'] as const;
+export type StaffAccountRole = (typeof STAFF_ACCOUNT_ROLES)[number];
+
 export interface InviteInput {
   email: string;
   givenName: string;
   familyName: string;
   locale?: 'en' | 'fi' | 'sv';
-  /** staff realm only */
-  role?: 'treatment_member' | 'treatment_lead' | 'administrator' | 'auditor';
+  /** staff realm only: every role the account holds. At least one;
+   * auditor never combines with anything else (segregation of duties). */
+  roles?: readonly StaffAccountRole[];
   title?: string;
+}
+
+/** Shared by invite and role edits: the rules a staff role SET must obey. */
+export function validateStaffRoles(roles: readonly string[]): StaffAccountRole[] {
+  const unique = [...new Set(roles)];
+  if (unique.length === 0) throw new Error('staff account requires at least one role');
+  for (const role of unique) {
+    if (!(STAFF_ACCOUNT_ROLES as readonly string[]).includes(role)) {
+      throw new Error(`unknown staff role '${role}'`);
+    }
+  }
+  if (unique.includes('auditor') && unique.length > 1) {
+    throw new Error('auditor is an exclusive role');
+  }
+  // canonical order: every surface (list, edit echo, audit detail) sorts
+  return (unique as StaffAccountRole[]).sort();
 }
 
 export type AcceptInviteResult =
@@ -58,20 +78,25 @@ export class OnboardingService {
         if (existing.status === 'deactivated') throw new Error('account is deactivated');
         accountId = existing.id;
       } else if (this.realm === 'staff') {
-        if (!input.role) throw new Error('staff invite requires a role');
+        const roles = validateStaffRoles(input.roles ?? []);
         const { rows } = await client.query<{ id: string }>(
-          `INSERT INTO identity.staff_account (email, given_name, family_name, locale, role, title)
-           VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+          `INSERT INTO identity.staff_account (email, given_name, family_name, locale, title)
+           VALUES ($1, $2, $3, $4, $5) RETURNING id`,
           [
             input.email,
             input.givenName,
             input.familyName,
             input.locale ?? 'en',
-            input.role,
             input.title ?? null,
           ],
         );
         accountId = rows[0]!.id;
+        for (const role of roles) {
+          await client.query(
+            `INSERT INTO identity.staff_account_role (account_id, role) VALUES ($1, $2)`,
+            [accountId, role],
+          );
+        }
       } else {
         const { rows } = await client.query<{ id: string }>(
           `INSERT INTO identity.patient_account (email, given_name, family_name, locale)
