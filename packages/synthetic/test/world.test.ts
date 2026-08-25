@@ -81,6 +81,44 @@ describe('demo world sanity', () => {
   });
 });
 
+describe('role model (2026-08-25 restructure)', () => {
+  const world = generateWorld('demo', 42);
+  const staffById = new Map(world.staff.map((s) => [s.id, s]));
+
+  it('every staff account holds at least one role, with no duplicates', () => {
+    for (const staff of world.staff) {
+      expect(staff.roles.length).toBeGreaterThan(0);
+      expect(new Set(staff.roles).size).toBe(staff.roles.length);
+    }
+  });
+
+  it('exactly one auditor, and the auditor role is exclusive', () => {
+    const auditors = world.staff.filter((s) => s.roles.includes('auditor'));
+    expect(auditors).toHaveLength(1);
+    expect(auditors[0]!.roles).toEqual(['auditor']);
+  });
+
+  it('the world exercises dual capacity: an administrator who is also a clinician', () => {
+    expect(
+      world.staff.some((s) => s.roles.includes('administrator') && s.roles.includes('clinician')),
+    ).toBe(true);
+  });
+
+  it('care teams hold clinicians only - never the auditor or a pure administrator', () => {
+    for (const team of world.teams) {
+      for (const memberId of team.memberIds) {
+        expect(staffById.get(memberId)?.roles ?? []).toContain('clinician');
+      }
+      for (const leadId of team.leadIds) {
+        expect(team.memberIds).toContain(leadId);
+        // seeded leads mirror the migration backfill: clinician + author
+        expect(staffById.get(leadId)?.roles ?? []).toContain('clinician');
+        expect(staffById.get(leadId)?.roles ?? []).toContain('author');
+      }
+    }
+  });
+});
+
 describe('synthetic-only PII discipline (E8)', () => {
   const world = generateWorld('demo', 42);
 
