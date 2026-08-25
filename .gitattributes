@@ -1,0 +1,5 @@
+# The toolchain requires LF everywhere: prettier checks it, and the
+# containers that build and run Mio are Linux. This keeps a Windows
+# checkout (core.autocrlf=true) from turning every file CRLF and
+# lighting up `pnpm format`. Binary files are auto-detected.
+* text=auto eol=lf

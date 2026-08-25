@@ -2,6 +2,15 @@
 # Postgres matches the managed-service major (ADR-0002); Mailpit catches
 # every outbound email so the contentless-email rule is inspectable at
 # http://localhost:8025 from the first invitation onward.
+#
+# Host ports are deliberately NOT the services' well-known ports:
+# publishing Postgres on 5432 collides with whatever PostgreSQL a
+# machine already runs (a native install, another project), and on
+# Windows the high ephemeral range can be randomly reserved by
+# Hyper-V/WSL2 - so the default is 15432, low and unclaimed by
+# convention. Override any of them without editing this file by
+# putting e.g. MIO_PG_PORT=25432 in a repo-root .env (gitignored;
+# compose reads it automatically).
 services:
   postgres:
     image: postgres:17-alpine
@@ -10,7 +19,7 @@ services:
       POSTGRES_USER: mio
       POSTGRES_PASSWORD: mio-local-only
     ports:
-      - '5432:5432'
+      - '${MIO_PG_PORT:-15432}:5432'
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -22,8 +31,8 @@ services:
   mailpit:
     image: axllent/mailpit:latest
     ports:
-      - '1025:1025'
-      - '8025:8025'
+      - '${MIO_MAILPIT_SMTP_PORT:-1025}:1025'
+      - '${MIO_MAILPIT_UI_PORT:-8025}:8025'
 
 volumes:
   postgres-data:

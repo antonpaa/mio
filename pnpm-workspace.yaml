@@ -1,3 +1,10 @@
 packages:
   - apps/*
   - packages/*
+
+# Build-script allowlist (pnpm 10 moved this here from package.json's
+# "pnpm" field, which is no longer read). Everything else ships
+# prebuilt binaries or has a skippable script.
+onlyBuiltDependencies:
+  - '@swc/core'
+  - esbuild
