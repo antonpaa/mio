@@ -173,6 +173,10 @@ export interface LocaleBundle {
   locale: string;
   title: string;
   description?: string;
+  /** page id -> section name: P4's category eyebrow above the question
+   * and the builder outline's label. Patient-facing content - survives
+   * patientBundleView, optional per page. */
+  pageTitles?: Record<string, string>;
   questions: Record<
     string,
     {

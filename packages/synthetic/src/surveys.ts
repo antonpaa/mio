@@ -215,10 +215,14 @@ const NAUSEA_NOTIFY_TEXT = {
   },
 } as const;
 
+const SYMPTOM_PAGE_TITLE = { en: 'Symptoms', fi: 'Oireet', sv: 'Symtom' } as const;
+
 function symptomLocales(titles: { en: string; fi: string; sv: string }): LocaleBundle[] {
   return (['en', 'fi', 'sv'] as const).map((locale) => ({
     locale,
     title: titles[locale],
+    // X18(v): the P4 section eyebrow
+    pageTitles: { symptoms: SYMPTOM_PAGE_TITLE[locale] },
     questions: { ...SYMPTOM_CORE_TEXT[locale] },
     rules: { 'r-nausea-severe': { notifyTexts: { ...NAUSEA_NOTIFY_TEXT[locale] } } },
   }));
@@ -295,6 +299,7 @@ export const SYNTHETIC_SURVEYS: SyntheticSurvey[] = [
         fi: 'Solunsalpaajahoidon oirekysely',
         sv: 'Symtomenkät vid cytostatikabehandling',
       }[locale],
+      pageTitles: { symptoms: SYMPTOM_PAGE_TITLE[locale] },
       questions: {
         ...SYMPTOM_CORE_TEXT[locale],
         'skin-change': {

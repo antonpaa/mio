@@ -2106,6 +2106,7 @@ export class SurveysService {
           treatment_id: response.treatment_id,
           patient_id: response.patient_id,
           version: version.version,
+          version_id: response.survey_version_id,
           ...head[0],
         },
         definition: version.definition,
@@ -2196,6 +2197,12 @@ function allQuestionCount(definition: SurveyDefinition): number {
 function normaliseLocales(input: LocaleBundle[]): LocaleBundle[] {
   return (['en', 'fi', 'sv'] as const).map((locale) => {
     const bundle = input.find((entry) => entry.locale === locale);
+    // X18(v): keep only non-blank page titles; drop the record when empty
+    const pageTitleEntries = Object.entries(bundle?.pageTitles ?? {}).filter(
+      ([, text]) => typeof text === 'string' && text.trim() !== '',
+    );
+    const pageTitles =
+      pageTitleEntries.length > 0 ? Object.fromEntries(pageTitleEntries) : undefined;
     const rules = Object.fromEntries(
       Object.entries(bundle?.rules ?? {})
         .map(([ruleId, texts]) => {
@@ -2225,6 +2232,7 @@ function normaliseLocales(input: LocaleBundle[]): LocaleBundle[] {
       locale,
       title: typeof bundle?.title === 'string' ? bundle.title : '',
       ...(bundle?.description !== undefined ? { description: bundle.description } : {}),
+      ...(pageTitles !== undefined ? { pageTitles } : {}),
       questions: bundle?.questions ?? {},
       ...(Object.keys(rules).length > 0 ? { rules } : {}),
     };

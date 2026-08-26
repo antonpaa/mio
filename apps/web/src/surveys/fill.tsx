@@ -185,35 +185,67 @@ function FillFrame({
 
   const text = bundle.questions[current.id];
 
+  // X18(v): the eyebrow is the current page's authored section name
+  const currentPage = definition.pages.find((entry) =>
+    containsQuestion(entry.questions, current.id),
+  );
+  const eyebrow = currentPage !== undefined ? bundle.pageTitles?.[currentPage.id] : undefined;
+
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-4">
       {banner}
-      <header className="flex items-baseline justify-between">
-        <h1 className="font-display text-xl italic text-ink">{bundle.title}</h1>
+      <h1 className="sr-only">{bundle.title}</h1>
+      {/* the canvas's P4 top bar: Back left, progress centered, Save &
+          exit right - the step controls live where the eye starts */}
+      <header className="flex items-center justify-between gap-3">
+        <Button
+          variant="quiet"
+          size="sm"
+          isDisabled={step === 0}
+          onPress={() => {
+            setShowError(false);
+            setStep(Math.max(0, step - 1));
+          }}
+        >
+          <FormattedMessage id="surveys.back" />
+        </Button>
         <p className="text-sm text-muted" aria-live="polite">
           <FormattedMessage
             id="surveys.progressLabel"
             values={{ answered: progress.answered, total: progress.total }}
           />
         </p>
+        <Button
+          variant="quiet"
+          size="sm"
+          isDisabled={save.isPending}
+          onPress={() => void save.mutateAsync().then(() => transport.onSaveExit())}
+        >
+          <FormattedMessage id="surveys.saveExit" />
+        </Button>
       </header>
       <div
-        className="h-1.5 overflow-hidden rounded-pill bg-surface-sunken"
+        className="flex gap-1"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={progress.total}
         aria-valuenow={progress.answered}
         aria-label={intl.formatMessage({ id: 'surveys.title' })}
       >
-        <div
-          className="h-full rounded-pill bg-teal transition-all"
-          style={{
-            width: `${progress.total === 0 ? 0 : (progress.answered / progress.total) * 100}%`,
-          }}
-        />
+        {Array.from({ length: progress.total }, (_, index) => (
+          <span
+            key={index}
+            className={`h-1.5 flex-1 rounded-pill transition-colors ${
+              index < progress.answered ? 'bg-teal' : 'bg-surface-sunken'
+            }`}
+          />
+        ))}
       </div>
 
       <section className="rounded-card border border-black/5 bg-surface p-6 shadow-resting">
+        {eyebrow !== undefined ? (
+          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber">{eyebrow}</p>
+        ) : null}
         {/* the canvas asks in the serif voice - the question is the page's
             one big thing */}
         <h2 className="font-display text-2xl text-ink">
@@ -254,31 +286,19 @@ function FillFrame({
         ) : null}
       </section>
 
-      <div className="flex items-center justify-between gap-2">
-        <Button
-          variant="quiet"
-          isDisabled={step === 0}
-          onPress={() => {
-            setShowError(false);
-            setStep(Math.max(0, step - 1));
-          }}
-        >
-          <FormattedMessage id="surveys.back" />
-        </Button>
-        <div className="flex gap-2">
-          <Button
-            variant="quiet"
-            isDisabled={save.isPending}
-            onPress={() => void save.mutateAsync().then(() => transport.onSaveExit())}
-          >
-            <FormattedMessage id="surveys.saveExit" />
-          </Button>
-          <Button isDisabled={submit.isPending} onPress={advance}>
-            <FormattedMessage id={isLast ? 'surveys.submit' : 'surveys.next'} />
-          </Button>
-        </div>
-      </div>
+      <Button className="w-full" isDisabled={submit.isPending} onPress={advance}>
+        <FormattedMessage id={isLast ? 'surveys.submit' : 'surveys.next'} />
+      </Button>
     </div>
+  );
+}
+
+/** Does this page (follow-ups included) hold the question? */
+function containsQuestion(questions: Question[], id: string): boolean {
+  return questions.some(
+    (question) =>
+      question.id === id ||
+      (question.followUps !== undefined && containsQuestion(question.followUps, id)),
   );
 }
 
