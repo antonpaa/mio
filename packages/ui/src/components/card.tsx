@@ -30,7 +30,8 @@ export function CardHeader({
 }): ReactElement {
   return (
     <header className="mb-3 flex items-center justify-between gap-3">
-      <h2 className="flex items-center gap-2 text-sm font-semibold tracking-wide text-ink">
+      {/* the canvases title every card in the serif display voice */}
+      <h2 className="flex items-center gap-2 font-display text-lg italic text-ink">
         {icon !== undefined ? <span className="text-teal">{icon}</span> : null}
         {title}
       </h2>

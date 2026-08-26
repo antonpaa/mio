@@ -145,8 +145,12 @@ describe('C4 team inbox', () => {
   it('lists conversations with unread counts and previews', async () => {
     stubFetch({ '/api/staff/messages': STAFF_THREADS, '/api/staff/alerts': [] });
     const { container } = render(appAt('/messages'));
-    await screen.findByText('Anna Virtanen — Chemo cycle 2');
+    // X17(a): the two-pane inbox - the list beside a pick-one prompt
+    await screen.findByText('Anna Virtanen');
+    expect(screen.getByText('Chemo cycle 2')).toBeTruthy();
     expect(screen.getByText('The nausea got worse over the weekend.')).toBeTruthy();
+    expect(screen.getByText('Select a conversation from the list.')).toBeTruthy();
+    expect(screen.getByRole('searchbox', { name: 'Search messages' })).toBeTruthy();
     // the badge appears in the list row AND on the nav item - same query
     expect(screen.getAllByLabelText('2 unread').length).toBeGreaterThanOrEqual(2);
     const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });
@@ -160,12 +164,13 @@ describe('C4 team inbox', () => {
       '/api/staff/alerts': [],
     });
     const { container } = render(appAt('/messages/t1'));
-    await screen.findByText('The nausea got worse over the weekend.');
+    // the string sits in the bubble AND in the list pane's preview now
+    await screen.findAllByText('The nausea got worse over the weekend.');
     // the note is visibly distinct AND programmatically labelled
     expect(screen.getByText('Internal note — not visible to the patient')).toBeTruthy();
     expect(screen.getByText('Check the antiemetic dosing before the next visit.')).toBeTruthy();
-    // the alert cross-reference marker
-    expect(screen.getByText('Alert raised')).toBeTruthy();
+    // the alert cross-reference marker (the pill appends the time)
+    expect(screen.getByText(/Alert raised/)).toBeTruthy();
     // Reply vs Internal note composer toggle (C4)
     expect(screen.getByRole('button', { name: 'Reply' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Internal note' })).toBeTruthy();

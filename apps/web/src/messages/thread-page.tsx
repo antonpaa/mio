@@ -1,9 +1,9 @@
-import { useEffect, useState, type ReactElement } from 'react';
+import { Fragment, useEffect, useState, type ReactElement } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
 import { FormattedMessage, useIntl } from 'react-intl';
 import type { MessageDoc } from '@mio/contracts';
-import { Avatar, ErrorState, SeverityChip, Skeleton } from '@mio/ui';
+import { Avatar, ErrorState, Skeleton } from '@mio/ui';
 import { useSession } from '../session/session.js';
 import { MessageDocView } from './doc-view.js';
 import { Composer } from './composer.js';
@@ -20,7 +20,14 @@ import { messagesBase, type ThreadDetail, type TimelineItem } from './model.js';
 
 type Marker =
   | { kind: 'item'; item: TimelineItem }
-  | { kind: 'alert'; id: string; severity: 'low' | 'moderate' | 'high'; created_at: string };
+  | {
+      kind: 'alert';
+      id: string;
+      severity: 'low' | 'moderate' | 'high';
+      status: string;
+      created_at: string;
+      survey_name: string | null;
+    };
 
 export function MessageThreadPage(): ReactElement {
   const { treatmentId } = useParams({ strict: false }) as { treatmentId: string };
@@ -92,32 +99,41 @@ export function MessageThreadPage(): ReactElement {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4">
-      <header>
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="font-display text-2xl italic text-ink">
-            {realm === 'staff'
-              ? `${detail.treatment.patient_given ?? ''} ${detail.treatment.patient_family ?? ''}`
-              : detail.treatment.name}
-          </h1>
+      {/* C4's thread header: avatar, patient, programme and the shared-
+          inbox lede, with the profile as a proper action on the right */}
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           {realm === 'staff' ? (
-            <span className="text-sm text-secondary">{detail.treatment.name}</span>
+            <Avatar
+              initials={`${detail.treatment.patient_given?.[0] ?? ''}${detail.treatment.patient_family?.[0] ?? ''}`}
+            />
           ) : null}
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-baseline gap-x-3">
+              <h1 className="font-display text-2xl italic text-ink">
+                {realm === 'staff'
+                  ? `${detail.treatment.patient_given ?? ''} ${detail.treatment.patient_family ?? ''}`
+                  : detail.treatment.name}
+              </h1>
+              {realm === 'staff' ? (
+                <span className="text-sm text-secondary">{detail.treatment.name}</span>
+              ) : null}
+            </div>
+            <p className="mt-0.5 text-sm text-secondary">
+              <FormattedMessage
+                id={realm === 'staff' ? 'messages.sharedInboxLede' : 'messages.expectation'}
+              />
+            </p>
+          </div>
         </div>
         {realm === 'staff' && detail.treatment.patient_id !== undefined ? (
-          <p className="mt-1 text-sm">
-            <Link
-              to="/patients/$patientId"
-              params={{ patientId: detail.treatment.patient_id }}
-              className="text-teal underline-offset-4 hover:underline"
-            >
-              <FormattedMessage id="messages.openProfile" />
-            </Link>
-          </p>
-        ) : null}
-        {realm === 'patient' ? (
-          <p className="mt-1 text-sm text-secondary">
-            <FormattedMessage id="messages.expectation" />
-          </p>
+          <Link
+            to="/patients/$patientId"
+            params={{ patientId: detail.treatment.patient_id }}
+            className="shrink-0 rounded-pill border border-border bg-surface px-3.5 py-1.5 text-sm text-ink transition-colors hover:bg-surface-sunken"
+          >
+            <FormattedMessage id="messages.openProfile" />
+          </Link>
         ) : null}
       </header>
 
@@ -137,58 +153,96 @@ export function MessageThreadPage(): ReactElement {
           </p>
         ) : (
           <ul className="flex flex-col gap-3">
-            {markers.map((marker) => {
-              if (marker.kind === 'alert') {
-                return (
-                  <li
-                    key={`alert-${marker.id}`}
-                    className="flex items-center justify-center gap-2 text-xs text-muted"
-                  >
-                    <SeverityChip
-                      severity={marker.severity}
-                      label={intl.formatMessage({ id: `severity.${marker.severity}` })}
-                    />
-                    <FormattedMessage id="messages.alertMarker" />
-                    <Link
-                      to="/alerts/$alertId"
-                      params={{ alertId: marker.id }}
-                      className="text-teal underline-offset-4 hover:underline"
-                    >
-                      <FormattedMessage id="messages.openAlert" />
-                    </Link>
+            {markers.map((marker, index) => {
+              // C4's day separators: a quiet centered chip whenever the
+              // timeline crosses into a new day
+              const dayOf = (entry: Marker): string =>
+                (entry.kind === 'item' ? entry.item.created_at : entry.created_at).slice(0, 10);
+              const day = dayOf(marker);
+              const separator =
+                index === 0 || dayOf(markers[index - 1]!) !== day ? (
+                  <li key={`day-${day}`} className="flex justify-center">
+                    <span className="rounded-pill bg-surface-sunken px-3 py-1 text-xs text-secondary">
+                      {intl.formatDate(`${day}T12:00:00`, {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                      })}
+                    </span>
                   </li>
+                ) : null;
+              if (marker.kind === 'alert') {
+                const tone =
+                  marker.severity === 'high'
+                    ? 'border-red-chip-border bg-red-tint text-red'
+                    : marker.severity === 'moderate'
+                      ? 'border-amber-chip-border bg-amber-tint text-amber'
+                      : 'border-teal-chip-border bg-teal-tint text-teal';
+                return (
+                  <Fragment key={`alert-${marker.id}`}>
+                    {separator}
+                    <li className="flex justify-center">
+                      {/* the canvas's in-stream alert chip - the whole pill
+                          opens the PP6 detail */}
+                      <Link
+                        to="/alerts/$alertId"
+                        params={{ alertId: marker.id }}
+                        className={`rounded-pill border px-3 py-1 text-xs font-medium transition-opacity hover:opacity-80 ${tone}`}
+                      >
+                        {marker.survey_name !== null && marker.survey_name !== undefined
+                          ? intl.formatMessage(
+                              { id: 'messages.alertFrom' },
+                              {
+                                severity: intl.formatMessage({
+                                  id: `severity.${marker.severity}`,
+                                }),
+                                survey: marker.survey_name,
+                              },
+                            )
+                          : intl.formatMessage({ id: 'messages.alertMarker' })}
+                        {' — '}
+                        {intl.formatTime(marker.created_at, {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                        })}
+                      </Link>
+                    </li>
+                  </Fragment>
                 );
               }
               const item = marker.item;
               const own = item.author_id === myId;
               if (item.kind === 'note') {
                 return (
-                  <li key={item.id} className="flex justify-end">
-                    <div className="max-w-[85%] rounded-card border border-amber-chip-border bg-amber-tint px-4 py-2.5">
-                      <p className="text-xs font-medium text-amber">
-                        <FormattedMessage id="messages.internalNote" />
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted">
-                        {item.author_given} {item.author_family}
-                        {' — '}
-                        {intl.formatDate(item.created_at, {
-                          dateStyle: 'medium',
-                          timeStyle: 'short',
-                        })}
-                      </p>
-                      <div className="mt-1.5">
-                        <MessageDocView
-                          doc={item.body}
-                          attachmentBase={
-                            realm === 'staff'
-                              ? '/api/staff/attachments'
-                              : '/api/patient/attachments'
-                          }
-                          attachmentAlt={intl.formatMessage({ id: 'messages.attachmentAlt' })}
-                        />
+                  <Fragment key={item.id}>
+                    {separator}
+                    <li className="flex justify-end">
+                      <div className="max-w-[85%] rounded-card border border-amber-chip-border bg-amber-tint px-4 py-2.5">
+                        <p className="text-xs font-medium text-amber">
+                          <FormattedMessage id="messages.internalNote" />
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted">
+                          {item.author_given} {item.author_family}
+                          {' — '}
+                          {intl.formatDate(item.created_at, {
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                          })}
+                        </p>
+                        <div className="mt-1.5">
+                          <MessageDocView
+                            doc={item.body}
+                            attachmentBase={
+                              realm === 'staff'
+                                ? '/api/staff/attachments'
+                                : '/api/patient/attachments'
+                            }
+                            attachmentAlt={intl.formatMessage({ id: 'messages.attachmentAlt' })}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </li>
+                    </li>
+                  </Fragment>
                 );
               }
               // P6's bubble language: your own messages are solid teal
@@ -200,30 +254,12 @@ export function MessageThreadPage(): ReactElement {
                 timeStyle: 'short',
               });
               return (
-                <li key={item.id} className={`flex ${own ? 'justify-end' : 'justify-start'}`}>
-                  {own ? (
-                    <div className="flex max-w-[85%] flex-col items-end">
-                      <div className="rounded-card bg-teal px-4 py-2.5 text-white">
-                        <MessageDocView
-                          doc={item.body}
-                          attachmentBase={
-                            realm === 'staff'
-                              ? '/api/staff/attachments'
-                              : '/api/patient/attachments'
-                          }
-                          attachmentAlt={intl.formatMessage({ id: 'messages.attachmentAlt' })}
-                        />
-                      </div>
-                      <p className="mt-1 text-xs text-muted">{stamp}</p>
-                    </div>
-                  ) : (
-                    <div className="flex max-w-[85%] items-end gap-2">
-                      <Avatar
-                        initials={`${item.author_given?.[0] ?? ''}${item.author_family?.[0] ?? ''}`}
-                        label={authorName}
-                      />
-                      <div className="flex min-w-0 flex-col items-start">
-                        <div className="rounded-card bg-surface-sunken px-4 py-2.5">
+                <Fragment key={item.id}>
+                  {separator}
+                  <li className={`flex ${own ? 'justify-end' : 'justify-start'}`}>
+                    {own ? (
+                      <div className="flex max-w-[85%] flex-col items-end">
+                        <div className="rounded-card bg-teal px-4 py-2.5 text-white">
                           <MessageDocView
                             doc={item.body}
                             attachmentBase={
@@ -234,13 +270,34 @@ export function MessageThreadPage(): ReactElement {
                             attachmentAlt={intl.formatMessage({ id: 'messages.attachmentAlt' })}
                           />
                         </div>
-                        <p className="mt-1 text-xs text-muted">
-                          {authorName} — {stamp}
-                        </p>
+                        <p className="mt-1 text-xs text-muted">{stamp}</p>
                       </div>
-                    </div>
-                  )}
-                </li>
+                    ) : (
+                      <div className="flex max-w-[85%] items-end gap-2">
+                        <Avatar
+                          initials={`${item.author_given?.[0] ?? ''}${item.author_family?.[0] ?? ''}`}
+                          label={authorName}
+                        />
+                        <div className="flex min-w-0 flex-col items-start">
+                          <div className="rounded-card bg-surface-sunken px-4 py-2.5">
+                            <MessageDocView
+                              doc={item.body}
+                              attachmentBase={
+                                realm === 'staff'
+                                  ? '/api/staff/attachments'
+                                  : '/api/patient/attachments'
+                              }
+                              attachmentAlt={intl.formatMessage({ id: 'messages.attachmentAlt' })}
+                            />
+                          </div>
+                          <p className="mt-1 text-xs text-muted">
+                            {authorName} — {stamp}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                </Fragment>
               );
             })}
           </ul>

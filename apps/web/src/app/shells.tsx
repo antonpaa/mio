@@ -29,6 +29,7 @@ import {
 import { AlertBell } from '../alerts/bell.js';
 import { NotificationBell } from '../notifications/bell.js';
 import { threadsQuery } from '../messages/model.js';
+import { PATIENT_SURVEYS_QUERY } from '../surveys/start.js';
 import { useSession } from '../session/session.js';
 
 /**
@@ -164,6 +165,13 @@ export function SignedInShell({ children }: { children: ReactNode }): ReactEleme
     enabled: capabilities.has('message_thread.view'),
   });
   const unread = (threads.data ?? []).reduce((sum, row) => sum + row.unread, 0);
+  // P7's nav also counts what is waiting to be filled - same shared key
+  // as the landing and P3, so no extra disclosure
+  const surveys = useQuery({
+    ...PATIENT_SURVEYS_QUERY,
+    enabled: session.realm === 'patient',
+  });
+  const due = session.realm === 'patient' ? (surveys.data?.due ?? []).length : 0;
 
   const navItems: NavItem[] = items
     .filter((item) => item.capability === undefined || capabilities.has(item.capability))
@@ -175,6 +183,7 @@ export function SignedInShell({ children }: { children: ReactNode }): ReactEleme
         active: pathname === item.href,
         ...(Icon !== undefined ? { icon: <Icon size={17} /> } : {}),
         ...(item.labelId === 'nav.messages' && unread > 0 ? { badge: unread } : {}),
+        ...(item.labelId === 'nav.surveys' && due > 0 ? { badge: due } : {}),
       };
     });
 
@@ -193,7 +202,10 @@ export function SignedInShell({ children }: { children: ReactNode }): ReactEleme
           {item.badge !== undefined ? (
             <CountBadge
               count={item.badge}
-              label={intl.formatMessage({ id: 'messages.unread' }, { count: item.badge })}
+              label={intl.formatMessage(
+                { id: item.href === '/surveys' ? 'surveys.dueBadge' : 'messages.unread' },
+                { count: item.badge },
+              )}
             />
           ) : null}
         </Link>
