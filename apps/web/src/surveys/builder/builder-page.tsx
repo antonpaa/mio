@@ -354,10 +354,38 @@ function BuilderFrame({
                   : 'border-border bg-surface text-secondary hover:bg-surface-sunken'
               }`}
             >
-              <FormattedMessage id="builder.page" values={{ n: index + 1 }} />
+              {bundle.pageTitles?.[entry.id] ?? (
+                <FormattedMessage id="builder.page" values={{ n: index + 1 }} />
+              )}
             </button>
           ))}
         </div>
+      ) : null}
+
+      {page && !readOnly ? (
+        // X18(v): the page's section name - P4's eyebrow, authored per
+        // locale like every other text
+        <label className="flex flex-wrap items-center gap-2 text-sm text-secondary">
+          <FormattedMessage id="builder.pageTitleLabel" />
+          <input
+            className="min-w-56 flex-1 rounded-inner border border-border bg-surface px-2 py-1 text-sm text-ink"
+            placeholder={intl.formatMessage({ id: 'builder.pageTitlePlaceholder' })}
+            value={bundle.pageTitles?.[page.id] ?? ''}
+            onChange={(event) => {
+              const value = event.currentTarget.value;
+              setLocales(
+                locales.map((entry) => {
+                  if (entry.locale !== activeLocale) return entry;
+                  const next = { ...(entry.pageTitles ?? {}) };
+                  if (value === '') delete next[page.id];
+                  else next[page.id] = value;
+                  return { ...entry, pageTitles: next };
+                }),
+              );
+              setDirty(true);
+            }}
+          />
+        </label>
       ) : null}
 
       <div className={`flex flex-col gap-3 ${readOnly ? 'pointer-events-none opacity-60' : ''}`}>

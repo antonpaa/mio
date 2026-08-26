@@ -1,6 +1,6 @@
+import { useState, type ReactElement } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link, useParams } from '@tanstack/react-router';
-import type { ReactElement } from 'react';
+import { useNavigate, useParams } from '@tanstack/react-router';
 import { FormattedMessage, useIntl } from 'react-intl';
 import {
   visibleQuestions,
@@ -8,7 +8,7 @@ import {
   type LocaleBundle,
   type SurveyDefinition,
 } from '@mio/survey-schema';
-import { BodyMapView, ErrorState, Skeleton } from '@mio/ui';
+import { BodyMapView, Button, ErrorState, Skeleton } from '@mio/ui';
 
 /** P12: a calm confirmation with the answer summary. The plain-language
  * "closer look" wording is tracked for clinical sign-off (register P4). */
@@ -42,6 +42,10 @@ function renderAnswer(
 
 export function SurveySubmittedPage(): ReactElement {
   const intl = useIntl();
+  const navigate = useNavigate();
+  // X18(vii): the canvas leads with calm - the answers wait behind
+  // "Review my answers"
+  const [reviewing, setReviewing] = useState(false);
   const { responseId } = useParams({ strict: false }) as { responseId: string };
   const payload = useQuery({
     queryKey: ['response', responseId, 'submitted'],
@@ -86,46 +90,56 @@ export function SurveySubmittedPage(): ReactElement {
         </p>
       </header>
 
-      <section className="rounded-card border border-black/5 bg-surface px-6 py-5 shadow-resting">
-        <h2 className="mb-3 text-sm font-semibold text-ink">
-          <FormattedMessage id="surveys.yourAnswers" />
-        </h2>
-        <dl className="flex flex-col gap-3">
-          {answeredQuestions.map((question) => (
-            <div
-              key={question.id}
-              className="border-b border-hairline pb-3 last:border-b-0 last:pb-0"
-            >
-              <dt className="text-xs text-muted">{bundle.questions[question.id]?.label}</dt>
-              {question.type === 'body_map' && Array.isArray(answers[question.id]) ? (
-                <dd className="mt-2">
-                  <BodyMapView
-                    selected={answers[question.id] as string[]}
-                    viewLabels={{
-                      front: intl.formatMessage({ id: 'bodymap.front' }),
-                      back: intl.formatMessage({ id: 'bodymap.back' }),
-                    }}
-                  />
-                </dd>
-              ) : null}
-              <dd className="mt-0.5 text-sm text-ink">
-                {renderAnswer(bundle, question.id, answers[question.id], (id) =>
-                  question.type === 'body_map'
-                    ? intl.formatMessage({ id: `bodymap.region.${id}` })
-                    : undefined,
-                )}
-                {question.validation?.unit ? ` ${question.validation.unit}` : ''}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </section>
-
+      <Button className="w-full" onPress={() => void navigate({ to: '/' })}>
+        <FormattedMessage id="surveys.done" />
+      </Button>
       <div className="text-center">
-        <Link to="/" className="text-sm text-teal hover:text-teal-hover">
-          <FormattedMessage id="surveys.backHome" />
-        </Link>
+        <button
+          type="button"
+          aria-expanded={reviewing}
+          onClick={() => setReviewing((current) => !current)}
+          className="text-sm font-medium text-teal underline underline-offset-4 hover:text-teal-hover"
+        >
+          <FormattedMessage id="surveys.reviewAnswers" />
+        </button>
       </div>
+
+      {reviewing ? (
+        <section className="rounded-card border border-black/5 bg-surface px-6 py-5 shadow-resting">
+          <h2 className="mb-3 font-display text-lg italic text-ink">
+            <FormattedMessage id="surveys.yourAnswers" />
+          </h2>
+          <dl className="flex flex-col gap-3">
+            {answeredQuestions.map((question) => (
+              <div
+                key={question.id}
+                className="border-b border-hairline pb-3 last:border-b-0 last:pb-0"
+              >
+                <dt className="text-xs text-muted">{bundle.questions[question.id]?.label}</dt>
+                {question.type === 'body_map' && Array.isArray(answers[question.id]) ? (
+                  <dd className="mt-2">
+                    <BodyMapView
+                      selected={answers[question.id] as string[]}
+                      viewLabels={{
+                        front: intl.formatMessage({ id: 'bodymap.front' }),
+                        back: intl.formatMessage({ id: 'bodymap.back' }),
+                      }}
+                    />
+                  </dd>
+                ) : null}
+                <dd className="mt-0.5 text-sm text-ink">
+                  {renderAnswer(bundle, question.id, answers[question.id], (id) =>
+                    question.type === 'body_map'
+                      ? intl.formatMessage({ id: `bodymap.region.${id}` })
+                      : undefined,
+                  )}
+                  {question.validation?.unit ? ` ${question.validation.unit}` : ''}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ) : null}
     </div>
   );
 }

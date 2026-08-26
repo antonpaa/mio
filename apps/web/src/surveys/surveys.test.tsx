@@ -154,6 +154,7 @@ beforeEach(() => {
           bundle: {
             locale: 'en',
             title: 'Chemotherapy symptom survey',
+            pageTitles: { p: 'Skin & nerves' },
             questions: { 'skin-map': { label: 'Mark where on the body' } },
           },
           answers: {},
@@ -161,6 +162,19 @@ beforeEach(() => {
         });
       }
       if (url === '/api/patient/responses/r2/answers') return json({ progress: {} });
+      if (url === '/api/patient/responses/r3' && (!init || init.method === undefined)) {
+        return json({
+          responseId: 'r3',
+          status: 'submitted',
+          kind: 'symptom',
+          locale: 'en',
+          definition: DEFINITION,
+          bundle: BUNDLE,
+          answers: { nausea: 'severe' },
+          submittedAt: '2026-08-20T10:00:00Z',
+          progress: { answered: 1, total: 2 },
+        });
+      }
       return new Response('{}', { status: 404 });
     }),
   );
@@ -214,11 +228,29 @@ describe('P4 fill frame', () => {
   });
 });
 
+describe('P12 submitted view', () => {
+  it('leads with Done and keeps the answers behind Review', async () => {
+    vi.mocked(api.whoami).mockResolvedValue(PATIENT);
+    const { container } = render(appAt('/surveys/done/r3'));
+    await screen.findByRole('heading', { name: 'Thank you — your answers are in' });
+    expect(screen.getByRole('button', { name: 'Done' })).toBeTruthy();
+    // X18(vii): calm first - the answers wait behind the disclosure
+    expect(screen.queryByText('Nausea over the past week')).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Review my answers' }));
+    await screen.findByText('Nausea over the past week');
+    expect(screen.getByText('Severe')).toBeTruthy();
+    const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });
+    expect(results.violations.map((violation) => violation.id)).toEqual([]);
+  });
+});
+
 describe('P4 body map', () => {
   it('the checkbox list and the summary carry the selection', async () => {
     vi.mocked(api.whoami).mockResolvedValue(PATIENT);
     const { container } = render(appAt('/surveys/fill/r2'));
     await screen.findByText('Mark where on the body');
+    // X18(v): the page's section name is the category eyebrow
+    await screen.findByText('Skin & nerves');
     await screen.findByText('No areas selected');
     await userEvent.click(screen.getByRole('checkbox', { name: 'Chest' }));
     await userEvent.click(screen.getByRole('checkbox', { name: 'Left forearm' }));

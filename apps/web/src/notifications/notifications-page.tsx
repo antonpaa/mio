@@ -104,7 +104,12 @@ export function NotificationsPage({
                   const text = itemText(item, locale);
                   const row = (
                     <span className="flex items-start gap-3">
-                      <span className={`mt-0.5 ${fresh ? 'text-teal' : 'text-muted'}`}>
+                      {/* the canvas's circled icon tile - tinted while unread */}
+                      <span
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-pill ${
+                          fresh ? 'bg-teal-tint text-teal' : 'bg-surface-sunken text-muted'
+                        }`}
+                      >
                         {item.kind === 'message.new' ? (
                           <IconMessages size={18} />
                         ) : (
